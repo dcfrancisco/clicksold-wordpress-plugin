@@ -1,0 +1,414 @@
+<?php
+/*
+* Class used for plugin administration views / processing
+*
+* Copyright (C) 2012 ClickSold.com
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+global $cs_logo_path;
+
+require_once(plugin_dir_path(__FILE__) . 'CS_config.php');
+require_once(plugin_dir_path(__FILE__) . 'cs_functions.php');
+require_once(plugin_dir_path(__FILE__) . 'widgets.php');
+
+$cs_posts_table = "cs_posts";
+$cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
+
+	class CS_admin{
+		
+		private $response;
+		
+		/** Initialization Routines ***********************************************************/
+		
+		/**
+		 * Main constructor function run on object instantiation - sets up menu items and additional hooks for specific page scripts & styles
+		 */
+		function CS_admin(){
+			
+			// setup menu items
+			add_action('init', array($this, 'get_admin_section'));
+						
+			// build plugin admin menu item
+			add_action('admin_menu', array($this, 'cs_admin_menu'));
+			
+			// add a dashboard widget for cs.
+			add_action('wp_dashboard_setup', array($this, 'cs_add_custom_dashboard_widget'));
+			
+		}
+				
+		/**
+		 * Splices the menu items array const based on whether or not this is a brokerage product
+		 */
+		function get_menu_items(){
+			global $CS_ADMIN_MENU_ITEMS;
+			global $cs_opt_brokerage;
+			global $current_blog;
+			global $cs_opt_tier_name;
+
+			$menu = $CS_ADMIN_MENU_ITEMS;
+			
+			if(is_multisite()){
+				$isBrok = get_blog_option($current_blog->blog_id, "cs_opt_brokerage");
+			}else{
+				$isBrok = get_option("cs_opt_brokerage");
+			}
+			
+			foreach($menu as $key => $item){
+				//look for the brokerage field - process if it is set
+				if(array_key_exists("brokerage", $item)){
+					if($item['brokerage'] != $isBrok){
+						//Remove the item
+						unset($menu[$key]);
+					}
+				}
+
+				// Supress the "Upgrade!" menu item if we are platinum.
+				if( $item['menu_slug'] == "cs_plugin_product_config_direct" && get_option( $cs_opt_tier_name, 'Bronze' ) == "Platinum" ) {
+					//Remove the item
+					unset($menu[$key]);
+				}
+			}
+			
+			return $menu;
+		}
+		
+		/**
+		 * Checks page slug (if available) and retrieves data from ClickSold server if necessary
+		 */
+		function get_admin_section(){
+			$menu = $this->get_menu_items();
+			$this->response = null;
+			
+			if(empty($menu)) return; //This will occur when the user is in the network admin section (WPMS)
+			
+			if(!empty($_GET['page'])){
+				$slug = $_GET['page'];
+				//Check if the slug is one of ours
+				if(strpos($slug, "cs_plugin_") == 0){
+					foreach($menu as $item){
+						if($item['server'] == true && $item['menu_slug'] == $slug){
+							$org_req = $item['request'];
+							//Check for any extra query string params (other than the page param) and add to the
+							//request
+							if(count($_GET) > 1){
+								$prepend = "?";
+								foreach($_GET as $param_name => $param_value){
+									if($param_name != "page"){
+										$org_req .= $prepend . $param_name . "=" . $param_value;
+										$prepend = "&";
+									}
+								}
+							}
+							$cs_request = new CS_request($org_req, "wp_admin");
+							$this->response = new CS_response($cs_request->request());
+							
+							/* DEPRECATED
+							//Get page var for plugin config and configure as necessary
+							$page_vars = $this->response->cs_set_vars();
+							$cs_config = new CS_config();
+							$cs_config->cs_plugin_check_brokerage($page_vars);
+							*/
+							
+							//Add actions for setting header/footer resources
+							add_action('admin_enqueue_scripts', array($this->response, 'cs_get_header_contents_linked_only'), 0);
+							add_action('admin_enqueue_scripts', array($this->response, 'cs_get_header_contents_inline_only'), 11);
+							add_action('admin_print_footer_scripts', array($this->response, 'cs_get_footer_contents'));
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		/**
+		 * Sets up the administration menu items for this plugin
+		 */
+		function cs_admin_menu() {
+			global $menu;
+			$csMenu = $this->get_menu_items();
+			global $cs_logo_path;
+			
+			if(empty($csMenu)) return; //This will occur when the user is in the network admin section (WPMS)
+			
+			// Check if plugin is valid
+			$cs_request = new CS_request("pathway=20", "wp_admin");
+			$cs_response = new CS_response($cs_request->request());
+			$valid = $cs_response->get_body_contents();
+			$valid = trim($valid);
+			
+			//Register plugin admin menu items			
+			foreach($csMenu as $name => $config){
+				if($config['level'] == 'top'){
+					
+					add_menu_page($config['page_title'], $name, 'manage_options', $config['menu_slug'], array($this, $config['callback']), $cs_logo_path, '4.1');
+					$menu['4.15'] = array( '', 'manage_options', '', '', 'wp-menu-separator' );
+				} else if ( empty( $valid ) ) {  // Show the submenu if the plugin is valid
+
+					if( isset($config['name']) ) { $name = $config['name']; }
+
+					if( !isset( $config['external_link'] ) || "" == $config['external_link'] ) { // Regular internal link.
+
+						add_submenu_page($config['parent_slug'], $config['page_title'], $name, 'manage_options', $config['menu_slug'], array($this, $config['callback']));
+					} else { // External submenu link.
+
+						// We have to add it directly to the admin menu because there is no function to add arbitrary external links.
+						global $submenu; // Submenu here is a misnomer as it's actually the full menu.
+						array_push( $submenu[ $config['parent_slug'] ], array( $name, 'manage_options' , $config['external_link'] ) );
+					}
+				}
+			}
+/*
+			// testing code. uncomment to see the $menu contents
+			add_action('admin_init','dump_admin_menu');
+			function dump_admin_menu() {
+			  if (is_admin()) {
+			    header('Content-Type:text/plain');
+			    var_dump($GLOBALS['menu']);
+			    exit;
+			  }
+			}
+*/
+		}
+				
+		/**
+		 * Add the ClickSold Dashboard widget.
+		 */
+		function cs_add_custom_dashboard_widget() {
+
+			// First of all enqueue our css as we'll need that.
+			$a_widget = new CS_Widget();		// Dashboard widget css is part of the package of all css for widgets so it's included by doing this call.
+			$a_widget->get_widget_scripts( true );
+
+			// Add the ClickSold Dashboard widget (this get's added to the "core" dashboard).
+			wp_add_dashboard_widget('cs_custom_dashboard_widget', 'ClickSold Dashboard', array($this, 'cs_custom_dashboard_widget'), array($this, 'cs_custom_dashboard_widget_control_callback'));
+	
+			// We only force the widget to the top left if we're trying to show the help links.
+			$show_help_links = 1; // The default.
+			$widget_options = get_option( 'dashboard_widget_options' );
+			if( isset( $widget_options['cs_custom_dashboard_widget']['show_help_links'] ) ) {
+				$show_help_links = $widget_options['cs_custom_dashboard_widget']['show_help_links'];
+			}
+
+			// If the user has configured it such that they don't want the help links we don't bother shoving the dashboard widget to the top.
+			if( !$show_help_links ) {
+				return;
+			}
+
+			global $wp_meta_boxes;
+
+			$core_dashboard = $wp_meta_boxes['dashboard']['normal']['core']; // Get the "core" wp-admin dashboard, normal priority.
+			$high_dashboard = $wp_meta_boxes['dashboard']['normal']['high']; // Get the "high" wp-admin dashboard, high priority.
+
+			// Grab the entry for our dashboard widget and get rid of it from the core_dashboard.
+			$cs_custom_dashboard_widget_entry = array( 'cs_custom_dashboard_widget' => $core_dashboard['cs_custom_dashboard_widget'] );
+			unset( $core_dashboard['cs_custom_dashboard_widget'] );
+			$wp_meta_boxes['dashboard']['normal']['core'] = $core_dashboard; // Re-save the core_dashboard w/o our dashboard widget.
+		
+			// Now pull the old switcherroooo and re-add our widget to the high_dashboard (high priorty that is, because these get displayed first)
+			if( empty( $wp_meta_boxes['dashboard']['normal']['high'] ) ) {
+				$wp_meta_boxes['dashboard']['normal']['high'] = $cs_custom_dashboard_widget_entry;
+			} else {
+				array_push( $wp_meta_boxes['dashboard']['normal']['high'], $cs_custom_dashboard_widget_entry );
+			}
+		}
+		
+		/**
+		 * This function renders the content of the ClickSold dashboard widget.
+		 */
+		function cs_custom_dashboard_widget() {
+			global $cs_opt_tier_name;
+
+			// Check if the user wants the help links to show.
+			$show_help_links = 1; // The default.
+			$widget_options = get_option( 'dashboard_widget_options' );
+			if( isset( $widget_options['cs_custom_dashboard_widget']['show_help_links'] ) ) {
+				$show_help_links = $widget_options['cs_custom_dashboard_widget']['show_help_links'];
+			}
+
+			if( $show_help_links ) {
+
+				// If they are below Platinum show the upgrade link.
+				if( 'Platinum' != get_option( $cs_opt_tier_name, 'Bronze' ) ) {
+					echo	"
+
+						<div class='cs_dashboard_widget_upgrade_img_wrapper'>
+						  <a href='admin.php?page=cs_plugin_product_config_direct' class='cs-dashboard-icon'>
+						    <div class='cs-dashboard-icon-image'><img src='".plugins_url( 'images/welcome-upgrade.png', __FILE__ ) ."'></div>
+						    <div class='cs-dashboard-icon-text'>Upgrade my Account</div>
+						  </a>
+						</div>
+
+						";
+				}
+
+				if( cs_is_hosted() ) { // Only display the welcome to wordpress if it's a ClickSold hosted wordpress install.
+					echo 	"
+						<div class='cs_dashboard_widget_help_links_msg_wrapper cs_dashboard_widget_help_links_msg_wrapper_with_bottom_border'>
+						  <p class='cs_dashboard_widget_help_links_msg_header'> Welcome to your new WordPress site: </p>
+
+						  <p>
+						    Wordpress is a leading open publishing platform used by thousands of
+						    sites on the Internet. Please take a moment to setup your new WordPress
+						    website:
+						  </p>
+
+						  <table class='cs_dashboard_widget_help_links_link_table'>
+						    <tbody>
+						      <tr>
+						        <td><a target='_blank' href='http://codex.wordpress.org/Themes'>Selecting A Theme</a></td>
+						        <td><a target='_blank' href='http://codex.wordpress.org/Pages'>Adding / Editing Pages</a></td>
+						      </tr>
+						      <tr>
+						        <td><a target='_blank' href='http://codex.wordpress.org/WordPress_Widgets'>Managing Widgets</a></td>
+						        <td><a target='_blank' href='http://codex.wordpress.org/Posts'>Posting blog entries</a></td>
+						      </tr>
+						    </tbody>
+						  </table>
+
+						  <p>
+						    Full documentation on using Wordpress is available directly from the <a href='http://codex.wordpress.org/Main_Page'>wordpress.org</a> site.
+						  </p>
+
+						</div>
+					";
+				}
+				
+				echo 	"
+						<div class='cs_dashboard_widget_help_links_msg_wrapper'>
+						  <p class='cs_dashboard_widget_help_links_msg_header'> Getting Started With ClickSold: </p>
+
+						  <p>
+						    The ClickSold plugin is now enabled on your wordpress site. Please review the
+						    following articles to help you get started using ClickSold quickly and effectively.
+						  </p>
+
+						  <table class='cs_dashboard_widget_help_links_link_table'>
+						    <tbody>
+						      <tr>
+						        <td><a target='_blank' href='http://www.clicksold.com/wiki/index.php/Main_Page#.C2.A0Getting_Started'>Getting Started</a></td>
+						        <td><a target='_blank' href='http://www.clicksold.com/wiki/index.php/Main_Page#.C2.A0The_ClickSold_Menu'>The ClickSold Menu</a></td>
+						      </tr>
+						      <tr>
+						        <td><a target='_blank' href='http://www.clicksold.com/wiki/index.php/Main_Page#.C2.A0Using_Your_Website_Effectively'>Using your Website Effectively</a></td>
+						        <td><a target='_blank' href='http://www.clicksold.com/wiki/index.php/How_to_Add_Profile_Photos'>Add your photo</a></td>
+						      </tr>
+						      <tr>
+						        <td><a target='_blank' href='http://www.clicksold.com/wiki/index.php/Add_a_Listing'>Add a listing</a></td>
+						        <td><a target='_blank' href='http://www.clicksold.com/wiki/index.php/Modify/Update_Contact_Info'>Edit your contact information</a></td>
+						      </tr>
+						      <tr>
+						        <td><a target='_blank' href='http://www.clicksold.com/wiki/index.php/Get_Listings_from_Your_MLS%C2%AE'>Get Listings from your MLS&reg;</a></td>
+						        <td><a target='_blank' href='http://www.clicksold.com/wiki/index.php/Main_Page#.C2.A0Troubleshooting'>Troubleshooting</a></td>
+						      </tr>
+						    </tbody>
+						  </table>
+
+						  <p>
+						    The main page of the ClickSold help documentation can be found at <a href='http://www.clicksold.com/wiki/index.php/Main_Page'>www.ClickSold.com/wiki/</a>
+						  </p>
+
+						</div>
+				";
+			}
+
+//			echo "<p>ClickSold Plugin is enabled. <a href='http://www.ClickSold.com'>Visit</a> for more details. </p>";
+		}
+		
+		/**
+		 * This handles the options (just the show help links toggle for now).
+		 */
+		function cs_custom_dashboard_widget_control_callback() {
+
+			$widget_id = 'cs_custom_dashboard_widget';
+			$form_id = 'cs_custom_dashboard_widget-control';
+    
+			// Checks whether there are already dashboard widget options in the database
+			if ( !$widget_options = get_option( 'dashboard_widget_options' ) ) {
+				$widget_options = array();
+			}
+
+			// Check whether we have information for this form
+			if ( !isset( $widget_options[$widget_id] ) ) {
+				$widget_options[$widget_id] = array();
+			}
+    
+			// Check whether our form was just submitted
+			if ( 'POST' == $_SERVER['REQUEST_METHOD'] ) {
+
+				// The value here does not matter, if the option is there it's checked otherwise it's not.
+				if( isset( $_POST[$form_id . '-show-help-links'] ) ) {
+					$widget_options[$widget_id]['show_help_links'] = 1;
+				} else {
+					$widget_options[$widget_id]['show_help_links'] = 0;
+				} 
+     
+				update_option( 'dashboard_widget_options', $widget_options ); // Update our dashboard widget options so we can access later
+			}
+
+			// Grab the previous value.
+			$show_help_links = isset( $widget_options[$widget_id]['show_help_links'] ) ? $widget_options[$widget_id]['show_help_links'] : '1';
+  
+			$checked = 'checked';
+			if( !$show_help_links ) {
+				$checked = '';
+			}
+
+			// Create our form fields. Pay very close attention to the name part of the input field.
+			echo '<p><label for="cs_custom_dashboard_widget-show-help-links">' . __('Show Help Links:') . '</label>';
+			echo '<input id="cs_custom_dashboard_widget-show-help-links" name="'.$form_id.'-show-help-links" type="checkbox" value="show-help-links" '.$checked.' /></p>';
+
+		}
+
+
+		/** Product Upgrade **/
+		
+		/**
+		 * Function used for displaying the upgrade notification page
+		 */
+		function cs_plugin_admin_upgrade_page() {
+			echo "";
+		}
+		
+		/**
+		 * General function used for outputting page content for pages generated by the ClickSold server
+		 */
+		function cs_generated_form(){
+
+			global $cs_opt_first_login;
+
+			/** If this is the first access to the ClickSold back office, show a welcome message. **/
+
+			// Display the message if we're hosted and it's the first login.
+			if ( cs_is_hosted() && get_option( $cs_opt_first_login, 1 ) ) {
+				echo '<div id="message" class="updated highlight" id="message"><p><strong>Congratulations! Welcome to ClickSold.</strong></p></div>';
+			}
+
+			// Record that any subsequent access is no longer the first login.
+			update_option( $cs_opt_first_login, 0 );
+
+			echo $this->response->get_body_contents();
+		}
+		
+		/**
+		* Function used to add/remove CS generated pages based on the old and new plugin tiers.
+		*
+		*/
+		function cs_plugin_toggle_product(){
+		
+			$wp_rewrite->flush_rules();
+		}
+	}
+?>
