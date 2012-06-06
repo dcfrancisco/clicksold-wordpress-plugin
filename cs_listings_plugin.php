@@ -761,15 +761,18 @@ if( cs_is_hosted() && is_admin() ) {
 
 	// If they have never logged into the back office.
 	if( $first_login ) {
-
 		// If we're not the cs plugin admin page make redirect to that page.
 		if( ! isset( $_REQUEST['page'] ) || $_REQUEST['page'] != 'cs_plugin_admin' ) {
-			wp_redirect(admin_url()."admin.php?page=cs_plugin_admin");
-			exit();
+			add_action('admin_init', 'first_login_redirect');
+			// NOTE: The cs_plugin_admin page will record that the page has been viewed.
 		}
-
-		// NOTE: The cs_plugin_admin page will record that the page has been viewed.
 	}
+}
+
+/** Forwards the page to the plugin activation page on first activation **/
+function first_login_redirect() {
+	wp_redirect(admin_url()."admin.php?page=cs_plugin_admin");
+	exit();
 }
 
 /** Add the fav icon for wp installs on ClickSold servers. **/

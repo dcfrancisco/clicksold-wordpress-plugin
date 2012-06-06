@@ -67,6 +67,7 @@ class CS_shortcodes {
 			$this->register_cs_shortcode( 'cs_admin_cs_signup_form','cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_admin_cs_account_info_retrieval_form','cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_admin_cs_affiliate_signup_form','cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_admin_cs_mls_integration','cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_admin_cs_generic','cs_response_shortcode_handler' );
 		}
 
@@ -134,6 +135,12 @@ class CS_shortcodes {
 										false						// Introspect on the query string
 									);
 
+			$this->shortcode_meta_data['cs_admin_cs_mls_integration'] = array(
+										array( 'pathway' => '615' ),	// Default parameters.
+										array( 'pathway' => ''  ),	// Params that can't be overriden.
+										false						// Introspect on the query string
+									);
+									
 			$this->shortcode_meta_data['cs_admin_cs_generic'] = array(
 										array(),			// Default parameters.
 										array(),			// Params that can't be overriden.
