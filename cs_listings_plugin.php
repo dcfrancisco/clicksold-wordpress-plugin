@@ -779,6 +779,7 @@ function first_login_redirect() {
 if( cs_is_hosted() && is_admin() ) {
 	add_action( 'admin_head', 'set_cs_favicon_admin' );
 }
+
 function set_cs_favicon_admin() {
 	echo '<link rel="Shortcut Icon" type="image/x-icon" href="' . plugins_url( "images/favicon.ico", __FILE__ ) . '" />';
 }

@@ -114,11 +114,18 @@ function cs_is_hosted(){
 	global $CS_VARIABLE_HOSTING_ID2;
 	$plugin_host = gethostbyname($_SERVER['SERVER_NAME']);
 
-	return  (
+	if(defined("CS_DEBUG") && CS_DEBUG) {
+		return(
 			($plugin_host == $CS_VARIABLE_HOSTING_ID) ||
 			($plugin_host == $CS_VARIABLE_HOSTING_ID2) ||
 			($plugin_host == "127.0.0.1")			// Dev envs are also considered to be "hosted".
 		);
+	} else {
+		return(
+			($plugin_host == $CS_VARIABLE_HOSTING_ID) ||
+			($plugin_host == $CS_VARIABLE_HOSTING_ID2)
+		);
+	}
 }
 
 /**

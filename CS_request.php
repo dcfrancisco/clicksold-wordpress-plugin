@@ -85,20 +85,18 @@ class CS_request {
 		global $CS_SECTION_CAPTCHA_IMG_PARAM_CONSTANT;
 		
 		// Detect which server is to be used.
-		// echo "Server Address is " . $_SERVER['SERVER_ADDR'] . "<br>";
-		//echo "Server Name    is " . $_SERVER['SERVER_NAME'] . "<br>";
-		if($_SERVER['SERVER_NAME'] == 'localhost' || preg_match("/127.0.0./", $_SERVER['SERVER_NAME']) || preg_match("/127.0.0./", $_SERVER['SERVER_ADDR']) || preg_match("/142.244.253./", $_SERVER['SERVER_NAME'])) { // We're on localhost or 127.0.0.* ==> DEV
-			//echo "DEV<br>";
-			$this->proxy_server = $this->test_proxy_server;
-	
-		} else if(preg_match("/stg-wp.office.realpagemaker.com/", $_SERVER['SERVER_NAME'])) {
-			//echo "DEV 2<br>";
-
+		if(defined("CS_DEBUG") && CS_DEBUG) {
+			if($_SERVER['SERVER_NAME'] == 'localhost' || preg_match("/127.0.0./", $_SERVER['SERVER_NAME']) || preg_match("/127.0.0./", $_SERVER['SERVER_ADDR']) || preg_match("/142.244.253./", $_SERVER['SERVER_NAME'])) { // We're on localhost or 127.0.0.* ==> DEV
+				//echo "DEV<br>";
+				$this->proxy_server = $this->test_proxy_server;
+			} else {
+				//echo "PRODUCTION<br>";
+				$this->proxy_server = $this->production_proxy_server;
+			}
 		} else {
-			//echo "PRODUCTION<br>";
 			$this->proxy_server = $this->production_proxy_server;
 		}
-
+		
 		// Now select the appropriate controller that will handle the request.
 		if($CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] == $pluginSection) {
 			$this->proxy_server .= $this->plugin_admin_controller;
