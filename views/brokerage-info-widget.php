@@ -1,4 +1,5 @@
 <?php 
+echo $before_widget;
 echo '<div class="'.$this->widget_options['classname'].'-container">';
 if(!empty($instance['name']))
 	echo '  <h4>'. $instance['name'] .'</h4>';
@@ -20,4 +21,5 @@ if(!empty($instance['web']))
 if(!empty($instance['text']))
 	echo '  <div style="word-wrap:break-word;">'. $instance['text'] .'</div>';
 echo '</div>';
+echo $after_widget;
 ?>

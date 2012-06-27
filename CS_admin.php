@@ -210,7 +210,6 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			global $wp_meta_boxes;
 
 			$core_dashboard = $wp_meta_boxes['dashboard']['normal']['core']; // Get the "core" wp-admin dashboard, normal priority.
-			$high_dashboard = $wp_meta_boxes['dashboard']['normal']['high']; // Get the "high" wp-admin dashboard, high priority.
 
 			// Grab the entry for our dashboard widget and get rid of it from the core_dashboard.
 			$cs_custom_dashboard_widget_entry = array( 'cs_custom_dashboard_widget' => $core_dashboard['cs_custom_dashboard_widget'] );

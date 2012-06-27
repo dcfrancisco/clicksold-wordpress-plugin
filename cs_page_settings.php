@@ -30,7 +30,15 @@
 	global $CS_SECTION_PARAM_CONSTANTS;
 
 	//error_log( $_POST["idx_post_title"] );
-
+	$listings_title_error = "";
+	$listings_url_error = "";
+	$idx_title_error = "";
+	$idx_url_error = "";
+	$communities_title_error = "";
+	$communities_url_error = "";
+	$associates_title_error = "";
+	$associates_url_error = "";
+	
 	//Get all the post ids of our generated pages
 	$wp_cs_posts = $wpdb->get_results("SELECT prefix, postid FROM " . $wpdb->prefix . "cs_posts", OBJECT_K);
 	
@@ -45,7 +53,7 @@
 	$cs_tabindex = $cs_available;
 	function get_tabindex(&$val,$key){$val=($val)?0:-1;};
 	array_walk($cs_tabindex,"get_tabindex");
-
+	
 	//Do basic validation on post names and titles - check for empty strings
 	if( isset( $_POST["post_success"] ) ) { // If we're doing a post.
 
@@ -215,7 +223,7 @@
 
 			if(isset( $_POST["listings_post_name"] ) && empty($_POST["listings_post_title"])){
 				$errorMsg .= "<li>Listings title is invalid</li>";
-				$listings_url_error = "error";
+				$listings_title_error = "error";
 			}
 			
 			if(isset( $_POST["listings_post_name"] ) && empty($_POST["listings_post_name"])){
@@ -225,7 +233,7 @@
 
 			if(isset( $_POST["idx_post_name"] ) && empty($_POST["idx_post_title"])){
 				$errorMsg .= "<li>IDX title is invalid</li>";
-				$idx_url_error = "error";
+				$idx_title_error = "error";
 			}
 			
 			if(isset( $_POST["idx_post_name"] ) && empty($_POST["idx_post_name"])){
@@ -235,7 +243,7 @@
 
 			if(isset( $_POST["communities_post_name"] ) && empty($_POST["communities_post_title"])){
 				$errorMsg .= "<li>Communities title is invalid</li>";
-				$communities_url_error = "error";
+				$communities_title_error = "error";
 			}
 			
 			if(isset( $_POST["communities_post_name"] ) && empty($_POST["communities_post_name"])){
@@ -245,7 +253,7 @@
 			
 			if(isset( $_POST["associates_post_name"] ) && $cs_brokerage && empty($_POST["associates_post_title"])){
 				$errorMsg .= "<li>Associates title is invalid</li>";
-				$associates_url_error = "error";
+				$associates_title_error = "error";
 			}
 			
 			if(isset( $_POST["associates_post_name"] ) && $cs_brokerage && empty($_POST["associates_post_name"])){
@@ -293,7 +301,7 @@
       <div id="ws_page_settings_form_comm" class="cs-form-section">
         <fieldset class="cs-page-settings">
           <div class="cs-form-section-title">Communities Page</div>
-          <div class="cs-label-container"><label for="communities_post_title">Title in Menu:</label></div><div class="cs-input-container"><div class="cs-adjust-for-box-model"><input tabindex="<?php echo($cs_tabindex["community"]); ?>" type="text" class="<?php echo( cs_encode_for_html( $communities_title_error ) ); ?>" name="communities_post_title" value="<?php echo cs_encode_for_html( $communities_post_title ); ?>"/></div></div><div class="cs-input-small"><div class="cs-label-container"><label for="communities_post_status">Show Page:<span class="cs-required-field">*</span>:</label></div><input tabindex="<?php echo($cs_tabindex["community"]); ?>" type="checkbox" name="communities_post_status" value="1" <?php if($communities_post_status == "publish"){ ?>checked="checked"<?php } ?> class="cs-checkbox"/></div><div class="cs-label-container"><label for="communities_post_name" style="text-align:right;">http://www.mydomain.com/</label></div><div class="cs-input-container cs-input-long"><div class="cs-adjust-for-box-model"><input tabindex="<?php echo($cs_tabindex["community"]); ?>" type="text" class="<?php echo( cs_encode_for_html( $communities_url_error ) ); ?>" name="communities_post_name" value="<?php echo cs_encode_for_html( $communities_post_name ); ?>"/></div></div>
+          <div class="cs-label-container"><label for="communities_post_title">Title in Menu:</label></div><div class="cs-input-container"><div class="cs-adjust-for-box-model"><input tabindex="<?php echo($cs_tabindex["communities"]); ?>" type="text" class="<?php echo( cs_encode_for_html( $communities_title_error ) ); ?>" name="communities_post_title" value="<?php echo cs_encode_for_html( $communities_post_title ); ?>"/></div></div><div class="cs-input-small"><div class="cs-label-container"><label for="communities_post_status">Show Page:<span class="cs-required-field">*</span>:</label></div><input tabindex="<?php echo($cs_tabindex["communities"]); ?>" type="checkbox" name="communities_post_status" value="1" <?php if($communities_post_status == "publish"){ ?>checked="checked"<?php } ?> class="cs-checkbox"/></div><div class="cs-label-container"><label for="communities_post_name" style="text-align:right;">http://www.mydomain.com/</label></div><div class="cs-input-container cs-input-long"><div class="cs-adjust-for-box-model"><input tabindex="<?php echo($cs_tabindex["communities"]); ?>" type="text" class="<?php echo( cs_encode_for_html( $communities_url_error ) ); ?>" name="communities_post_name" value="<?php echo cs_encode_for_html( $communities_post_name ); ?>"/></div></div>
         </fieldset>
       </div>
     </div>

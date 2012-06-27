@@ -19,7 +19,12 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+// We start and then clean the output buffer while running the wp load in between to make our ajax requests not include
+// any error text that the actual loading of wordpress may produce. This error text messes up json responses and image requests (captcha).
+ob_start();
 require_once('../../../wp-load.php');
+ob_end_clean();
+
 require_once('CS_request.php');
 require_once('CS_response.php');
 require_once('cs_constants.php');
@@ -28,8 +33,10 @@ class CS_ajax_request{
 	protected $request_vars;
 	protected $content_type;
 	
+	public $captcha;
+	
 	function __construct(){
-		$this->request_vars = $_SERVER[QUERY_STRING];
+		$this->request_vars = $_SERVER['QUERY_STRING'];
 		if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			/**
 			*  WARNING!!!
@@ -57,11 +64,11 @@ class CS_ajax_request{
 		global $CS_SECTION_VIP_PARAM_CONSTANT;
 		global $cs_change_products_request;
 		
+		if( $this->is_products_change_request() ) update_option($cs_change_products_request, "1");
 		
-		if( $this->is_products_change_request() ) {
-			update_option($cs_change_products_request, "1");
-		}
-		if( $this->is_captcha_request() ) { // A captcha request is setup differently.
+		$this->captcha = $this->is_captcha_request();
+		
+		if( $this->captcha == true ) { // A captcha request is setup differently.
 			//Remove the string "captcha&" from the query string
 			$this->request_vars = substr($this->request_vars , 8);
 			$cs_request = new CS_request( $this->request_vars, $CS_SECTION_CAPTCHA_IMG_PARAM_CONSTANT );
@@ -95,11 +102,8 @@ class CS_ajax_request{
 	 * Returns true if this request is for a captcha resource (img file).
 	 */
 	public function is_captcha_request() {
-		if(strpos($this->request_vars, 'captcha&t=') !== false) {
-			return true;
-		} else {
-			return false;
-		}
+		if(strpos($this->request_vars, 'captcha&t=') !== false) return true;
+		else return false;
 	}
 	
 	public function get_content_type(){
@@ -110,19 +114,13 @@ class CS_ajax_request{
 	 * Returns true if this is a request from the admin panel (ClickSold)
 	 */
 	private function is_admin_request() {
-		if(strpos($this->request_vars, 'wp_admin_pname') !== false){
-			return true;
-		}else{
-			return false;
-		}
+		if(strpos($this->request_vars, 'wp_admin_pname') !== false) return true;
+		else return false;
 	}
 	
 	private function is_vip_request() {
-		if(strpos($this->request_vars, 'wp_vip_pname') !== false){
-			return true;
-		}else{
-			return false;
-		}
+		if(strpos($this->request_vars, 'wp_vip_pname') !== false) return true;
+		else return false;
 	}
 	
 	private function is_products_change_request(){
@@ -130,24 +128,23 @@ class CS_ajax_request{
 	}
 
 	private function is_utils_request() {
-		if(strpos($this->request_vars, 'wp_utils_pname') !== false){
-			return true;
-		}else{
-			return false;
-		}
+		if(strpos($this->request_vars, 'wp_utils_pname') !== false) return true;
+		else return false;
 	}
 
 }
 
-	/* Main */
 	$ajax_request = new CS_ajax_request;
 	$response_body = $ajax_request->get_response();
-
-	if( $ajax_request->is_captcha_request() ) { // Make sure that it reports itself as an image if it's an image request.
+	$response_body = trim($response_body);
+	
+	if( $ajax_request->captcha == true ) { // Make sure that it reports itself as an image if it's an image request.
 		header('Content-Type: image/jpeg');
+		$img = imagecreatefromstring($response_body);
+		imagejpeg($img, null, 100);
+		imagedestroy($img);
 	} else {
 		header('Content-Type: ' . $ajax_request->get_content_type());
+		echo $response_body;
 	}
-	
-	echo $response_body;
 ?>

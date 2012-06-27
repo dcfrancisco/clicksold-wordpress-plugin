@@ -37,6 +37,8 @@ class CS_request {
 	protected $pluginNum = '';
 	protected $pluginVer = '';
 
+	protected $getAllSections = null;
+	
 	/** 
 	 * Multi-Request-Section support. Each request starts of with a single cs_org_req attribute
 	 * calling addReqSection with a new cs_org_req will send multiple original request parameters

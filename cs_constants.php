@@ -333,7 +333,7 @@
 		),
 		'Help' => array(
 			'level' => 'sub',
-//			'menu_slug' => 'cs_plugin_admin_help', // Unused for external links.
+			'menu_slug' => '', // Unused for external links.
 			'parent_slug' => 'cs_plugin_admin',
 //			'page_title' => '', // Unused for external links.
 //			'callback' => '', // Unused for external links.

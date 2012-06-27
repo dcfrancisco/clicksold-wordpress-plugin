@@ -182,12 +182,17 @@ function check_product_update(){
 	global $CS_SECTION_ADMIN_PARAM_CONSTANT;
 	global $cs_opt_brokerage;
 	global $cs_opt_tier_name;
-
-	if ( get_option( $cs_change_products_request ) == "1" ) {
+	global $cs_opt_plugin_key;
+	global $cs_opt_plugin_num;
+	
+	if ( get_option( $cs_change_products_request ) == "1" && !get_option( $cs_opt_plugin_key, "" ) == "" && !get_option( $cs_opt_plugin_num, "" ) == "" ) {
 		//make request to RPM server about allowed features
 		$cs_request = new CS_request( "tier_validate", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] );//error_log( "Response: " . print_r( $cs_request->request(), true ) );
 		$cs_response = new CS_response( $cs_request->request() );
 		$vars = $cs_response->cs_set_vars(); //error_log( "vars: " . print_r( $vars, true ) );
+		
+		if(empty($vars)) return;
+		
 		$page_on_front = get_option( 'page_on_front' );
 		$cs_posts_desired_statuses = get_option( "cs_posts_desired_statuses", array() ); // Note these are the desired statuses (if a feature is available a private here will override the publish that comes from the feature being available) the code treats missing entries as publish so this one gets a default empty array.
 
@@ -248,12 +253,10 @@ $meta_config = array();
 // Auto login processing
 add_action('login_head', 'attempt_autologin_auth');
 function attempt_autologin_auth(){
-	$name = $_GET['name'];
-	$pass = $_GET['pass'];
-	if( !empty($name) && !empty($pass) ){
+	if( !empty($_GET['name']) && !empty($_GET['pass']) ){
 		$creds = array(
-			'user_login' => $name,
-			'user_password' => $pass,
+			'user_login' => $_GET['name'],
+			'user_password' => $_GET['pass'],
 			'remember' => false
 		);
 		$user = wp_signon($creds, false);
@@ -282,19 +285,20 @@ if( !is_admin() ){
 	global $wp_rewrite;
 	if(get_option("page_on_front") > 0 && get_option("permalink_structure") !== NULL) remove_filter('template_redirect', 'redirect_canonical');
 	
-	if(!is_404() && !is_preview()){
+	//if(!is_404() && !is_preview()){
 		
 		// Check if we need to blog listing updates
 		add_action('pre_get_posts', 'cs_listing_auto_blog_update');
 				
 		// For handling mobile site stuff
-		if((stripos(basename($_SERVER['REQUEST_URI']), 'cs_mobile.php') === FALSE) && (!isset($_COOKIE["csFullSite"]) || $_COOKIE["csFullSite"] != "true") && (strpos($_SERVER['HTTP_USER_AGENT'], 'iPad') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPod') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE) ){
-			if(cs_mobile_site_disabled() == false) {
-				header('location:' . plugin_dir_url(__FILE__) . 'cs_mobile.php');
-				die();
+		if(isset($_SERVER['HTTP_USER_AGENT'])) {
+			if((stripos(basename($_SERVER['REQUEST_URI']), 'cs_mobile.php') === FALSE) && (!isset($_COOKIE["csFullSite"]) || $_COOKIE["csFullSite"] != "true") && (strpos($_SERVER['HTTP_USER_AGENT'], 'iPad') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPod') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'BlackBerry') !== FALSE) ){
+				if(cs_mobile_site_disabled() == false) {
+					header('location:' . plugin_dir_url(__FILE__) . 'cs_mobile.php');
+					die();
+				}
 			}
 		}
-		
 		// For handling VIP confirmation links
 		if(!empty($_GET["pathway"]) && !empty($_GET["email_addr"]) && !empty($_GET["confirmationCode"])){
 			add_action('parse_query', 'cs_process_vip_confirmation', 5);
@@ -310,7 +314,7 @@ if( !is_admin() ){
 			add_action('wp', 'cs_process_cs_shortcode_posts'); 	// ClickSold shortcodes are processed when we are processing the post itself.	
 			add_action('wp', 'cs_disable_domain_mask');			
 		}
-	}
+	//}
 	
 	/**
 	 * Outputs frame breaking javascript
@@ -492,8 +496,9 @@ if( !is_admin() ){
 		
 		// We fetch the post id differently depending on if permalinks are enabled or not.
 		if( $wp_rewrite->using_permalinks()) {
-			$post_id = $wp_query->queried_object_id;
-			
+
+			$post_id = $wp_query->get_queried_object_id();
+
 			//Check to see if this is one of our pages as the front page.
 			//Note that we can't use is_front_page() as it is too early in the loop
 			//to get the proper response.
@@ -513,7 +518,13 @@ if( !is_admin() ){
 				// process the request using the cs plugin server.
 				if($result['postid'] == $post_id){
 					$cs_org_req = "";
-					$param = $wp_query->query_vars[$result['parameter']];
+					
+					if(array_key_exists($result['parameter'], $wp_query->query_vars)) {
+						$param = $wp_query->query_vars[$result['parameter']];
+					} else {
+						$param = "";
+					}
+					
 					if(!empty($param)){
 						$post_param = $result['parameter'];
 						$cs_org_req = $param;
@@ -523,10 +534,10 @@ if( !is_admin() ){
 							$cs_org_req .= "?" . http_build_query($_GET);
 						}
 					// If no parameters were returned from the database, give cs_org_req the value of the GET query string if available
-					}else if(!empty($_GET)){
+					}else if(!empty($_GET)){ 
 						$cs_org_req = http_build_query($_GET);
 					// If this page was set as a front page, we need to feed in the request manually
-					}else if($post_id == get_option( "page_on_front" ) && !$wp_rewrite->using_permalinks()){
+					}else if($post_id == get_option( "page_on_front" ) && !$wp_rewrite->using_permalinks()){ 
 						$cs_org_req = "page_id=" . $post_id;
 					}
 					
@@ -657,9 +668,9 @@ if( !is_admin() ){
 		if(empty($page_vars) || empty($meta_config) || empty($post_param)) { return; }
 		
 		if(!key_exists($post_param, $wp_query->query_vars)) { return; }
-
+		
 		$char_limit = (int) $meta_config['header_desc_char_limit'];
-
+		
 		if($char_limit <= 0){  
 			return;
 		}else if($char_limit > 200){
@@ -684,19 +695,22 @@ if( !is_admin() ){
 				
 		//replace wild cards with content, if found
 		foreach($options as $key => $value){
+			$pv_val = "";
+			if(array_key_exists($key, $page_vars)) $pv_val = $page_vars[$key];
+		
 			$val_spaced = $value . " ";
 			if(strpos($content, $val_spaced) !== false){
-				$content = str_replace($val_spaced, $page_vars[$key] . " ", $content);
+				$content = str_replace($val_spaced, $pv_val . " ", $content);
 			}
 			
 			$offset = strlen($content) - strlen($value);
 			
 			if(($offset >= strlen($content) || $offset >= strlen($value)) && $offset < 1){
-				if($content == $value){ $content = $page_vars[$key]; }
+				if($content == $value){ $content = $pv_val; }
 			}else if(substr_compare($content, $value, $offset) === false){ 
 				//Do nothing, the check above should of fell through instead
 			}else if(substr_compare($content, $value, $offset) == 0){
-				$content = substr_replace($content, $page_vars[$key], $offset, strlen($value));
+				$content = substr_replace($content, $pv_val, $offset, strlen($value));
 			}
 		}
 		
@@ -715,35 +729,51 @@ register_activation_hook(__FILE__, array($cs_config, 'cs_activate'));
 register_deactivation_hook(__FILE__, array($cs_config, 'cs_deactivate'));
 
 /* Administration Section **********************************************************************/
+$load_widgets = true;
+
 if ( is_admin() ) {
 	$cs_admin = new CS_admin();
 
 	$cs_shortcodes = new CS_shortcodes( 'cs_listings' );
 	add_action('init', array( $cs_shortcodes, 'cs_add_tinymce_buttons' ) );
+	
+	//Do server check to see if creds are valid - for widgets page only
+	if( isset($pagenow) ) {
+		$is_wpmu = cs_is_multsite();
+		if( empty($is_wpmu) && 'widgets.php' == $pagenow ) {
+			$cs_request = new CS_request("pathway=20", "wp_admin");
+			$cs_response = new CS_response($cs_request->request());
+			$resp = $cs_response->get_body_contents();
+			$resp = trim($resp);
+			if( !empty($resp) ) $load_widgets = false;
+		}
+	}
 }
 
 /* Load the ClickSold widgets ******************************************************************/
-if( !class_exists('Personal_Profile_Widget') && !class_exists('Brokerage_Info_Widget') && 
-    !class_exists('Mobile_Site_Widget') && !class_exists('Buying_Info_Widget') && 
-    !class_exists('Selling_Info_Widget') && !class_exists('Listing_QS_Widget') &&
-	!class_exists('Feature_Listing_Widget')):
-include_once( plugin_dir_path(__FILE__) . 'widgets.php');
-endif;
+if ( $load_widgets == true && get_option("cs_db_version", FALSE) != FALSE ) {  //Option check is to make sure the next query doesn't get executed on first setup
+	if( !class_exists('Personal_Profile_Widget') && !class_exists('Brokerage_Info_Widget') && 
+		!class_exists('Mobile_Site_Widget') && !class_exists('Buying_Info_Widget') && 
+		!class_exists('Selling_Info_Widget') && !class_exists('Listing_QS_Widget') && 
+		!class_exists('Feature_Listing_Widget')):
+	include_once( plugin_dir_path(__FILE__) . 'widgets.php');
+	endif;
 
-/* Load the widgets on widgets_init ************************************************************/
-add_action('widgets_init', create_function('', 'register_widget("Personal_Profile_Widget");'));
-add_action('widgets_init', create_function('', 'register_widget("Brokerage_Info_Widget");'));
-add_action('widgets_init', create_function('', 'register_widget("Mobile_Site_Widget");'));
-add_action('widgets_init', create_function('', 'register_widget("Buying_Info_Widget");'));
-add_action('widgets_init', create_function('', 'register_widget("Selling_Info_Widget");'));
-add_action('widgets_init', create_function('', 'register_widget("Feature_Listing_Widget");'));
+	/* Load the widgets on widgets_init ************************************************************/
+	add_action('widgets_init', create_function('', 'register_widget("Personal_Profile_Widget");'));
+	add_action('widgets_init', create_function('', 'register_widget("Brokerage_Info_Widget");'));
+	add_action('widgets_init', create_function('', 'register_widget("Mobile_Site_Widget");'));
+	add_action('widgets_init', create_function('', 'register_widget("Buying_Info_Widget");'));
+	add_action('widgets_init', create_function('', 'register_widget("Selling_Info_Widget");'));
+	add_action('widgets_init', create_function('', 'register_widget("Feature_Listing_Widget");'));
 
-/* Add these widgets if the IDX search page is available */
-if(!is_null($wpdb->get_var('SELECT postid FROM ' . $wpdb->prefix . $cs_posts_table . ' WHERE prefix = "' . $CS_SECTION_PARAM_CONSTANTS['idx_pname'] . '" AND available = 1'))){
-	add_action('widgets_init', create_function('', 'register_widget("IDX_Search_Widget");'));
-	add_action('widgets_init', create_function('', 'register_widget("Listing_QS_Widget");'));
+	/* Add these widgets if the IDX search page is available */	
+	if(!is_null($wpdb->get_var('SELECT postid FROM ' . $wpdb->prefix . $cs_posts_table . ' WHERE prefix = "' . $CS_SECTION_PARAM_CONSTANTS['idx_pname'] . '" AND available = 1'))){
+		add_action('widgets_init', create_function('', 'register_widget("IDX_Search_Widget");'));
+		add_action('widgets_init', create_function('', 'register_widget("Listing_QS_Widget");'));
+	}
 }
-
+	
 /** Customize the footer on Genesis themes for Managed and Hosted packages */
 if(cs_is_hosted() && cs_is_multsite()){
 	remove_action( 'genesis_footer', 'genesis_do_footer' );

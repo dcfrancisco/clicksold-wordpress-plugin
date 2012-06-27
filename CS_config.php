@@ -145,9 +145,9 @@ require_once('cs_functions.php');
 
 				// WARNING: if the tables don't seem to reflect the script
 				// then ensure that $installed_ver != $cs_db_version
-				$sql = "DROP TABLE " . $table_name . ";";
+				$sql = "DROP TABLE IF EXISTS " . $table_name . ";";
 				$wpdb->query($sql);
-
+				
 				//postid:      the id of the post returned by wp
 				//defaultpage: the landing page for this particular post
 				//prefix:      the string we add to the beginning of parameter
@@ -165,12 +165,11 @@ require_once('cs_functions.php');
 					);";
 
 				$wpdb->query($sql);
-
+				
 				update_option("cs_db_version", $cs_db_version);
 			}
 		}
 
-		
 		/** Plugin Deactivation Routines **********************************************************************/
 		
 		//on plugin deactivation do some cleanup

@@ -437,12 +437,12 @@ class Brokerage_Info_Widget extends CS_Widget {
 		// Get list of brokerages and associated logos from server
 		$brok_logos = $PLUGIN_BROK_LOGOS;
 		
-		$PLUGIN_DEFAULTS['logo_src'] = $brok_logos[0]["src"];
-		$instance = wp_parse_args((array) $instance, $PLUGIN_DEFAULTS);
-
+		$this->PLUGIN_DEFAULTS['logo_src'] = $brok_logos[0]["src"];		
+		$instance = wp_parse_args((array) $instance, $this->PLUGIN_DEFAULTS);
+		
 		include( $this->getTemplateHierarchy( 'cs_template_brokerage-info-widget_', 'brokerage-info-widget-admin' ) );
 	}
-	
+		
 	/*--------------------------------------------------*/
 	/* Private Functions
 	/*--------------------------------------------------*/
@@ -689,7 +689,7 @@ class Mobile_Site_Widget extends CS_Widget {
 			$instance['imageurl'] = $new_instance['image'];
 		}
 		
-		if( $_SERVER["HTTPS"] == "on" ) $instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);		
+		if( isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on" ) $instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);		
 		
 		return $instance;
 	}

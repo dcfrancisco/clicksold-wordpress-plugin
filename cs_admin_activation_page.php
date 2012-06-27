@@ -100,11 +100,16 @@
               <td><div id="plugin-settings-status-autorized">Authorized</div><div id="plugin-settings-status-not-autorized">Not Authorized</div></td>
             </tr>
           </table>
+<?php if(empty($hosted)){ ?>   
+          <div class="cs-form-section-inline-help">
+	  	    NOTE: If you are working with a ClickSold Affiliate please use the signup link they have provided to get your plugin number and key.
+	      </div>
+<?php } ?>	  
 	    </fieldset>
-	  </div>
+ 	  </div>
 <?php if(empty($hosted)){ ?>   
       <div class="cs-form-submit-buttons-box">
-        <input type="submit" id="submit" name="Submit" class="cs-button" value="<?php esc_attr_e('Save Changes') ?>" />
+       <input type="submit" id="submit" name="Submit" class="cs-button" value="<?php esc_attr_e('Save Changes') ?>" />
       </div>
 <?php } ?>	  
 <?php if($updated == "true"){ ?>
@@ -118,6 +123,12 @@
 			$("#csAccountManager").CSAccountManager('initCSSettingsForm', {
 				csPluginSettingsFormTarget: '<?php echo plugins_url( "cs_admin_activation_page.php", __FILE__ ); ?>'
 			});
+			
+			// If the plugin number, key and reported url have not yet been plugged in -- hint at what the reported url should be.
+			if($('#cs_opt_plugin_key').val() == '' && $('#cs_opt_plugin_num').val() == '' && $('#cs_opt_plugin_hostname').val() == '') {
+			
+				$('#cs_opt_plugin_hostname').val(document.domain);
+			}
 		});
 	})(jQuery);
   </script>

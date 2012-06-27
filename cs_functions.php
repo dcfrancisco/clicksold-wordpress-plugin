@@ -236,9 +236,12 @@ function cs_restore_cs_post_state( $prefix ) {
  *       assumes ISO-8859-1 on php < 5.4.0 and UTF-8 on php >= 5.4.0.
  */
 function cs_encode_for_html( $str ) {
-
 	// Note: for this call the flags used are the defaults.
-	return htmlentities( $str, ENT_COMPAT | ENT_HTML401, get_option( 'blog_charset', 'UTF-8' ) );
+	if(defined('ENT_HTML401')) {  // ENT_HTML401 not available on php < 5.4.0
+		return htmlentities( $str, ENT_COMPAT | ENT_HTML401, get_option( 'blog_charset', 'UTF-8' ) );
+	} else {
+		return htmlentities( $str, ENT_COMPAT, get_option( 'blog_charset', 'UTF-8' ) );
+	}
 }
 
 ?>

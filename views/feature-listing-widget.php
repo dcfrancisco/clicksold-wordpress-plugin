@@ -1,3 +1,4 @@
+<?php echo $before_widget; ?>
 <div id="<?php echo $this->get_field_id("") ?>container" class="<?php echo $this->widget_options['classname'] ?>-container widget">
   <div class="csFeatureListingModule" class="widgetContent">
     <div class="csFeatureListingWidget">
@@ -24,3 +25,4 @@
 	});
 })(jQuery);
 </script>
+<?php echo $after_widget; ?>

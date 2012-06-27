@@ -5,7 +5,7 @@
   </p>
   <p>
     <label for="<?php echo $this->get_field_id('logo_src'); ?>">Logo</label><br/>
-    <select id="<?php echo $this->get_field_id('logo_src'); ?>" name="<?php echo $this->get_field_name('logo_src'); ?>">
+    <select id="<?php echo $this->get_field_id('logo_src'); ?>" name="<?php echo $this->get_field_name('logo_src'); ?>" onchange="this.parentNode.nextElementSibling.firstChild.setAttribute('src', this.value);">
 <?php foreach($brok_logos as $brok_logo) { 
         if($instance['logo_src'] == $brok_logo['src']) { ?>
       <option selected value="<?php echo $brok_logo['src']; ?>"><?php echo $brok_logo['name']; ?></option>
@@ -41,12 +41,3 @@
     <textarea id="<?php echo $this->get_field_id('text'); ?>" name="<?php echo $this->get_field_name('text'); ?>"><?php echo $instance['text']; ?></textarea>
   </p>
 </div>
-<script type="text/javascript">
-(function($){
-	$("document").ready(function(){
-		$("#<?php echo $this->get_field_id('logo_src'); ?>").unbind("change").bind("change", function(){
-			$(this).parent().siblings(".widget_brokerage_info_img").children("img").prop("src", $(this).val());
-		});
-	});
-})(jQuery);
-</script>

@@ -366,6 +366,8 @@ class CS_shortcodes {
 		$cs_request->del_req_sec(); // Deletes the current request section, the constructor creates the first one which we need to get rid of as we'll be adding them in the loop below shortly.
 		global $cs_response; // CS_response object available everywhere.
 
+		if(is_null(get_queried_object())) return;
+		
 		/** Check for and process any post that may have ClickSold shortcodes on it. **/
 		if($this->contains_cs_shortcodes( $wp_query->get_queried_object()->post_content )) {
 
