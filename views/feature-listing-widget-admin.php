@@ -1,4 +1,8 @@
 <div class="widget_brokerage_info">
+  <p>
+    <label for="<?php echo $this->get_field_id('title'); ?>">Title:</label>
+    <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr(strip_tags($instance['title'])); ?>" />
+  </p>
 <?php if($this->BROKERAGE === false){ ?>
   <p>
     <label for="<?php echo $this->get_field_id('listing_section'); ?>"><?php echo $listing_section_label; ?></label><br/>

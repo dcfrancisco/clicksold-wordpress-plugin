@@ -1094,6 +1094,8 @@ class Feature_Listing_Widget extends CS_Widget{
 	function update( $new_instance, $old_instance ){
 		global $BROKERAGE;
 	
+		$instance['title'] = $new_instance['title'];
+	
 		if($this->BROKERAGE === false) $instance['listing_section'] = $new_instance['listing_section'];
 		$instance['listing_type'] = $new_instance['listing_type'];
 		
@@ -1116,7 +1118,8 @@ class Feature_Listing_Widget extends CS_Widget{
 		
 		$instance_opts = array(
 			'listing_type' => $PLUGIN_FEAT_LIST_OPTS['listing_type']['values'][0]['opt_val'],
-			'freq' => '10000'
+			'freq' => '10000',
+			'title' => ''
 		);
 		
 		if($this->BROKERAGE === false) {
