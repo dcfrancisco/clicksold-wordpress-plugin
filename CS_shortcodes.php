@@ -289,7 +289,7 @@ class CS_shortcodes {
 
 		// Our processed results go here.
 		$result = array();
-
+				
 		// Add all of the data out from the execution of the above regex into our format.
 		foreach( $matches[2] as $index => $shortcode_name) {
 
@@ -300,9 +300,23 @@ class CS_shortcodes {
 			$params = array();
 			$pattern = '/(\w+)\s*=\s*"([^"]*)"(?:\s|$)|(\w+)\s*=\s*\'([^\']*)\'(?:\s|$)|(\w+)\s*=\s*([^\s\'"]+)(?:\s|$)|"([^"]*)"(?:\s|$)|(\S+)(?:\s|$)/';
 			if ( preg_match_all($pattern, $matches[3][$index], $match, PREG_SET_ORDER) ) {
+			
+				$temp = "";
 				foreach ($match as $m) {
-					if (!empty($m[1]))
-						$params[$m[1]] = stripcslashes($m[2]);
+					if (!empty($m[1])){
+						if(array_key_exists($m[1], $params)) {
+							if(is_array($params[$m[1]])) {  //Push to array
+								$params[$m[1]][count($params)] = stripcslashes($m[2]);
+							}else{  //Create array
+								$temp = $params[$m[1]];
+								$params[$m[1]] = array($temp, stripcslashes($m[2]));
+							}
+						} else {
+							$params[$m[1]] = stripcslashes($m[2]);
+						}
+					}
+					//Note: This block is commented out (deprecated?) for now as the first if check above always passes
+					/*
 					elseif (!empty($m[3]))
 						$params[$m[3]] = stripcslashes($m[4]);
 					elseif (!empty($m[5]))
@@ -311,12 +325,13 @@ class CS_shortcodes {
 						$params[] = stripcslashes($m[7]);
 					elseif (isset($m[8]))
 						$params[] = stripcslashes($m[8]);
+					*/
 				}
 			}
 
 			$result[ $index ] = array( $shortcode_name, $params, $this->shortcode_meta_data[ $shortcode_name ][ 2 ] );
 		}
-
+		
 		return $result;
 	}
 
@@ -344,7 +359,7 @@ class CS_shortcodes {
 
 		if($masked_param_names_list === NULL) { return FALSE; } // Short code does not have any masked params defined.
 	
-		if($masked_param_names_list[ $param_name ] === NULL) { return FALSE; } // The given param name for the given short code is NOT masked.
+		if(!isset($masked_param_names_list[ $param_name ])) { return FALSE; } // The given param name for the given short code is NOT masked.
 		
 		return TRUE;
 	}
@@ -410,8 +425,15 @@ class CS_shortcodes {
 				// Add all the params specified on the shortcode as long as they are not masked.
 				foreach($shortcode_param_arr as $name => $value) {
 					if( !$this->is_param_name_masked( $shortcode_name, $name ) ) {
-						$cs_org_req .= $delim . $name . '=' . $value;
-						$delim = '&';
+						if( is_array($value) ) {
+							foreach( $value as $v ) {
+								$cs_org_req .= $delim . $name . '=' . $v;
+								$delim = '&';
+							}
+						} else {
+							$cs_org_req .= $delim . $name . '=' . $value;
+							$delim = '&';
+						}
 					}
 				}
 

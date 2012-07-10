@@ -108,8 +108,8 @@
 	    </fieldset>
  	  </div>
 <?php if(empty($hosted)){ ?>   
-      <div class="cs-form-submit-buttons-box">
-       <input type="submit" id="submit" name="Submit" class="cs-button" value="<?php esc_attr_e('Save Changes') ?>" />
+      <div class="cs-plugin-config-form-submit-buttons-box">
+       <input type="submit" id="submit" name="Submit" class="" value="<?php esc_attr_e('Save Changes') ?>" />
       </div>
 <?php } ?>	  
 <?php if($updated == "true"){ ?>
@@ -117,13 +117,15 @@
 <?php } ?>
     </form>
   </div>
-  <script type="text/javascript">	
+  <script type="text/javascript">  
 	(function($){
 		$(document).ready(function(){
 			$("#csAccountManager").CSAccountManager('initCSSettingsForm', {
 				csPluginSettingsFormTarget: '<?php echo plugins_url( "cs_admin_activation_page.php", __FILE__ ); ?>'
 			});
-			
+<?php if(empty($hosted) && empty($opt_plugin_key_val) && empty($opt_plugin_num_val)){ ?>
+			$("#csAccountManager").CSAccountManager('initCSSignupForm');  //Testing - boolean (hosted) should be set via PHP
+<?php } ?>				
 			// If the plugin number, key and reported url have not yet been plugged in -- hint at what the reported url should be.
 			if($('#cs_opt_plugin_key').val() == '' && $('#cs_opt_plugin_num').val() == '' && $('#cs_opt_plugin_hostname').val() == '') {
 			
@@ -133,3 +135,6 @@
 	})(jQuery);
   </script>
 </div>
+<?php if(empty($hosted)){ ?>
+<div id="cs_admin_signup_form"></div>
+<?php } ?>

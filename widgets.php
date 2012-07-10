@@ -974,15 +974,30 @@ class Listing_QS_Widget extends CS_Widget{
 		
 		if(is_null($idx_id) || is_null($listings_id)) return;
 		
+		$using_permalinks = $wp_rewrite->using_permalinks();
+		
 		// Get the pathname or query string of those pages
-		if( $wp_rewrite->using_permalinks() ) {
+		if( $using_permalinks ) {
 			$idx_url = $wpdb->get_var("SELECT post_name FROM " . $wpdb->posts . " WHERE ID = " . $idx_id . " AND post_type = 'page' AND post_status != 'trash'");
 			$listings_url = $wpdb->get_var("SELECT post_name FROM " . $wpdb->posts . " WHERE ID = " . $listings_id . " AND post_type = 'page' AND post_status != 'trash'");
 		} else {
+			$using_permalinks = 0;
+		
 			$idx_url = $wpdb->get_var("SELECT guid FROM " . $wpdb->posts . " WHERE ID = " . $idx_id . " AND post_type = 'page' AND post_status != 'trash'");
 			$listings_url = $wpdb->get_var("SELECT guid FROM " . $wpdb->posts . " WHERE ID = " . $listings_id . " AND post_type = 'page' AND post_status != 'trash'");
+			
+			//Strip the root url
+			$patt = "/\/\?/";
+			$idx_url_parts = preg_split($patt, $idx_url);
+			$listings_url_parts = preg_split($patt, $listings_url);
+			
+			//Check if the guid is valid
+			if(count($idx_url_parts) < 2 || count($listings_url_parts) < 2) return;
+			
+			$idx_url = "?" . $idx_url_parts[1];
+			$listings_url = "?" . $listings_url_parts[1];
 		}
-		
+				
 		if(is_null($idx_url) || is_null($listings_url)) return;
 		
 		if($wp_rewrite->using_permalinks()) {

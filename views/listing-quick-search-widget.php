@@ -13,7 +13,8 @@
 		$("#<?php echo $this->get_field_id("") ?>container").ListingQuickSearchWidget({
 			ajaxTarget : "<?php echo plugins_url( 'CS_ajax_request.php', dirname(__FILE__) ) ?>",
 			idx_url : "<?php echo $idx_url ?>",
-			listings_url : "<?php echo $listings_url ?>"
+			listings_url : "<?php echo $listings_url ?>",
+			using_permalinks : <?php echo $using_permalinks ?>
 		});
 	});
 })(jQuery);

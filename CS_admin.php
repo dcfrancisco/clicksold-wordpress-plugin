@@ -47,6 +47,11 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			// add a dashboard widget for cs.
 			add_action('wp_dashboard_setup', array($this, 'cs_add_custom_dashboard_widget'));
 			
+			// Prevent CS pages from being deleted
+			add_action("wp_trash_post", array($this, "prevent_cs_trash_pages"), 1, 12);
+			add_action("wp_delete_post", array($this, "prevent_cs_trash_pages"), 1, 12);
+			
+			if(strpos($_SERVER["QUERY_STRING"], "cs_page_del_error=true")) add_action('admin_notices', array($this, 'display_cs_page_delete_error'));
 		}
 				
 		/**
@@ -144,10 +149,9 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			if(empty($csMenu)) return; //This will occur when the user is in the network admin section (WPMS)
 			
 			// Check if plugin is valid
-			$cs_request = new CS_request("pathway=20", "wp_admin");
+			$cs_request = new CS_request("pathway=620", "wp_admin");
 			$cs_response = new CS_response($cs_request->request());
-			$valid = $cs_response->get_body_contents();
-			$valid = trim($valid);
+			$valid = json_decode($cs_response->get_body_contents());
 			
 			//Register plugin admin menu items			
 			foreach($csMenu as $name => $config){
@@ -155,10 +159,12 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 					
 					add_menu_page($config['page_title'], $name, 'manage_options', $config['menu_slug'], array($this, $config['callback']), $cs_logo_path, '4.1');
 					$menu['4.15'] = array( '', 'manage_options', '', '', 'wp-menu-separator' );
-				} else if ( empty( $valid ) ) {  // Show the submenu if the plugin is valid
+				} else if ( !is_null( $valid ) ) {  // Show the submenu if the plugin is valid
 
 					if( isset($config['name']) ) { $name = $config['name']; }
 
+					if($config['request'] == 'domain_manager' && $valid->acct_info == "none") continue;
+					
 					if( !isset( $config['external_link'] ) || "" == $config['external_link'] ) { // Regular internal link.
 
 						add_submenu_page($config['parent_slug'], $config['page_title'], $name, 'manage_options', $config['menu_slug'], array($this, $config['callback']));
@@ -408,6 +414,34 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 		function cs_plugin_toggle_product(){
 		
 			$wp_rewrite->flush_rules();
+		}
+		
+		/**
+		 * Function that prevents ClickSold generated pages from being deleted via Pages/Edit Page
+		 */
+		function prevent_cs_trash_pages($post_id){
+		
+			global $wpdb;
+			global $cs_posts_table;
+			
+			if(!is_null($wpdb->get_var('SELECT postid FROM ' . $wpdb->prefix . $cs_posts_table . ' WHERE postid = ' . $post_id ))) {
+				wp_redirect(admin_url()."edit.php?post_type=page&cs_page_del_error=true");
+				exit();
+			}
+		}
+
+		/**
+		 * Function that displays an error message when a user attempted to delete a CS page
+		 */
+		function display_cs_page_delete_error(){
+		
+			echo '<div id="message" class="error">' .
+				 '  <p>' .
+				 '    <strong>' .
+				 'ClickSold generated pages cannot be removed.' .
+				 '    </strong>' .
+				 '  </p>' .
+				 '</div>';
 		}
 	}
 ?>
