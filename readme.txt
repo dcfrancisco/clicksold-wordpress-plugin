@@ -2,7 +2,7 @@
 Contributors: ClickSold
 Tags: idx, vow, rets, real estate, mls, realtor, listing, listings, craigslist, rental, google map, agent, broker, properties, trulia, zillow, dsidx
 Requires at least: 3.0.0
-Tested up to: 3.3.2
+Tested up to: 3.4.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -58,10 +58,20 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.2 =
+* Updates to make plugin work smoother when hosted outside the ClickSold hosting environment.
+* CS Shortcodes can now accept duplicate parameters.
+* MLS Quick Search widget bug fixes.
+* Provided widgets now correctly use the sidebar container values.
+* Mobile site now detects certain new blackberry devices.
+
 = 1.1 =
 * Initial public release. 
 
 == Upgrade Notice ==
+
+= 1.2 =
+* N/A
 
 = 1.1 =
 * N/A - Initial Release
