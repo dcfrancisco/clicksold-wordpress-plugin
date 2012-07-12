@@ -1160,4 +1160,77 @@ class Feature_Listing_Widget extends CS_Widget{
 		$PLUGIN_FEAT_LIST_OPTS = $json_response['featListWidgetOpts'];
 	}
 }
+
+/**
+ * Feature Listing Widget
+ * @author ClickSold
+ */
+class VIP_Widget extends CS_Widget{
+	
+	private $PLUGIN_NAME = 'ClickSold VIP Widget';
+	private $PLUGIN_SLUG = 'cs-vip-widget';
+	private $PLUGIN_CLASSNAME = 'widget-vip';
+	private $PLUGIN_FEAT_LIST_OPTS = array();
+	private $BROKERAGE = false;
+	
+	function VIP_Widget(){
+	
+		global $PLUGIN_NAME;
+		global $PLUGIN_SLUG;
+		global $PLUGIN_CLASSNAME;
+		global $BROKERAGE;
+		
+		$this->pluginDomain = 'vip_widget';
+		
+		$this->loadPluginTextDomain();
+		$widget_opts = array(
+			'classname' => $this->PLUGIN_CLASSNAME,
+			'description' => 'Adds the ClickSold VIP feature to any of your pages.'
+		);
+		
+		$this->WP_Widget( $this->PLUGIN_SLUG, $this->PLUGIN_NAME, $widget_opts );
+		
+		global $pagenow;
+		
+		$this->BROKERAGE = (bool) get_option("cs_opt_brokerage", "");
+		
+		if( defined( "WP_ADMIN" ) && WP_ADMIN && 'widgets.php' == $pagenow ) {
+			$this->get_widget_scripts(true);
+		}else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) && !wp_script_is($this->PLUGIN_SLUG . '-js') ) {
+			$this->get_widget_scripts(false);
+		}
+	}
+	
+	function widget( $args, $instance ){
+		global $CS_SECTION_VIP_PARAM_CONSTANT;
+	
+		$cs_request = new CS_request("pathway=168&vipLoginCheck=true", $CS_SECTION_VIP_PARAM_CONSTANT["wp_vip_pname"]);
+		$cs_response = new CS_response($cs_request->request());
+		$json_response = $cs_response->cs_get_json();
+		
+		$hideVIPOpts = "";
+		if( !empty($instance['hideOpts']) ) $hideVIPOpts = "display:none;";
+		
+		extract( $args );
+		extract( $instance );
+		include( $this->getTemplateHierarchy( 'cs_template_vip-widget_', 'vip-widget' ) );
+	}
+	
+	function update( $new_instance, $old_instance ){
+		$instance = $new_instance;
+		if(empty($instance['hideOpts'])) $instance['hideOpts'] = 0;
+		else $instance['hideOpts'] = 1;
+		return $instance;
+	}
+	
+	function form( $instance ){	
+		$instance_opts = array(
+			'title' => 'VIP Options',
+			'hideOpts' => 1
+		);
+		$instance = wp_parse_args((array) $instance, $instance_opts);
+		include( $this->getTemplateHierarchy( 'cs_template_vip-widget_', 'vip-widget-admin' ) );
+	}
+	
+}
 ?>

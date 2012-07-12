@@ -766,6 +766,7 @@ if ( $load_widgets == true && get_option("cs_db_version", FALSE) != FALSE ) {  /
 	add_action('widgets_init', create_function('', 'register_widget("Buying_Info_Widget");'));
 	add_action('widgets_init', create_function('', 'register_widget("Selling_Info_Widget");'));
 	add_action('widgets_init', create_function('', 'register_widget("Feature_Listing_Widget");'));
+	add_action('widgets_init', create_function('', 'register_widget("VIP_Widget");'));
 
 	/* Add these widgets if the IDX search page is available */	
 	if(!is_null($wpdb->get_var('SELECT postid FROM ' . $wpdb->prefix . $cs_posts_table . ' WHERE prefix = "' . $CS_SECTION_PARAM_CONSTANTS['idx_pname'] . '" AND available = 1'))){
