@@ -75,3 +75,8 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 = 1.1 =
 * N/A - Initial Release
+
+== Requirements ==
+* (optional) - php GD library for more reliable CAPTCHA display.
+* (theme) - The ClickSold plugin relies on jQuery. Your theme needs to include jQuery using the standard wordpress script procedures. [Details](http://www.clicksold.com/wiki/index.php/Custom_Theme_is_Broken)
+* (theme) - The ClickSold plugin relies on wp_head() and wp_footer() to be called in the appropriate places. [Details](http://www.clicksold.com/wiki/index.php/Custom_Theme_is_Broken)
