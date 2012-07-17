@@ -140,9 +140,14 @@ class CS_ajax_request{
 	
 	if( $ajax_request->captcha == true ) { // Make sure that it reports itself as an image if it's an image request.
 		header('Content-Type: image/jpeg');
-		$img = imagecreatefromstring($response_body);
-		imagejpeg($img, null, 100);
-		imagedestroy($img);
+		
+		if( function_exists( 'imagecreatefromstring' ) ) { // If we have the gd module installed (provides the imagecreatefromstring function) we use that and do things properly.
+			$img = imagecreatefromstring($response_body);
+			imagejpeg($img, null, 100); // Also outputs the image to the browser.
+			imagedestroy($img);
+		} else { // Otherwise just output the image content and hope that the browser is able to make sense of it.
+			echo $response_body;
+		}
 	} else {
 		header('Content-Type: ' . $ajax_request->get_content_type());
 		echo $response_body;
