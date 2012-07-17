@@ -47,8 +47,10 @@ function cs_add_plugin_pages( $page, $prefix ){
 	$wpdb->query("UPDATE $wpdb->posts SET guid = '$guid', post_type = '$post_type' WHERE ID = $post_id");
 	
 	/** For each (fixed / customised) menu on the account add our stuff. **/
-	cs_add_post_to_custom_menus( $post_id, $post_type );
-
+	if( get_option("cs_allow_manage_menus", 1) ) {
+		cs_add_post_to_custom_menus( $post_id, $post_type );
+	}
+	
 	return $post_id;
 }
 

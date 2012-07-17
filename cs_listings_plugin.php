@@ -230,7 +230,9 @@ function check_product_update(){
 				} else if( $vars[$tier_feature] === "true" && count( wp_get_associated_nav_menu_items( $feature_post_id ) ) == 0 ) { // If the feature of the page is available but has no associated menu items we have to add it to the custom menus.
 					
 					// Add the page to the menus.
-					cs_add_post_to_custom_menus( $feature_post_id, 'page', $postStatus ); // We know that these are pages as we don't have feature dependant posts.
+					if( get_option("cs_allow_manage_menus", 1) ) {
+						cs_add_post_to_custom_menus( $feature_post_id, 'page', $postStatus ); // We know that these are pages as we don't have feature dependant posts.
+					}
 				}
 			}
 		}
