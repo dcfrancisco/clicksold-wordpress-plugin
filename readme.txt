@@ -58,6 +58,12 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.3 =
+* Sessions now started earlier so as to not conflict with certain themes.
+* Fixed captcha support on hosts that do not have php-gd installed.
+* Added option to suppress menu manipulation.
+* Added VIP widget.
+
 = 1.2 =
 * Updates to make plugin work smoother when hosted outside the ClickSold hosting environment.
 * CS Shortcodes can now accept duplicate parameters.

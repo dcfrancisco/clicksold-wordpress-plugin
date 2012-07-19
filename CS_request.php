@@ -228,9 +228,8 @@ class CS_request {
 		/** Session support... we send the old session id (if we've got it) so the plugin server does not start another one each time. **/
 		$headers = array(); // Headers that will be sent as part of this request.
 		
-		if(!session_id()){
-			session_start();
-		}
+		// Moved to cs_listings_plugin.php and done via the init hook.
+//		if(!session_id()){ session_start(); }
 		
 		// If we've saved one then we have to add it to the request.
 		if( isset( $_SESSION['cs_session_id'] ) ) {
