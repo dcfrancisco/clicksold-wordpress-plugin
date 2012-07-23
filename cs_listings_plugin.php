@@ -203,7 +203,15 @@ function check_product_update(){
 		$cs_response = new CS_response( $cs_request->request() );
 		$vars = $cs_response->cs_set_vars(); //error_log( "vars: " . print_r( $vars, true ) );
 		
-		if(empty($vars)) return;
+		if(empty($vars)) {
+			//Invalidate / Hide plugin pages
+			$cs_pages = $wpdb->get_col("SELECT postid FROM " . $wpdb->prefix . "cs_posts");
+			if(!empty($cs_pages)) {
+				$wpdb->query('UPDATE ' . $wpdb->prefix . 'posts SET post_status = "private" WHERE ID IN(' . implode(", ", $cs_pages) . ')');
+				$wpdb->query('UPDATE ' . $wpdb->prefix . 'cs_posts SET available = 0 WHERE 1;');
+			}
+			return;
+		}
 		
 		$page_on_front = get_option( 'page_on_front' );
 		$cs_posts_desired_statuses = get_option( "cs_posts_desired_statuses", array() ); // Note these are the desired statuses (if a feature is available a private here will override the publish that comes from the feature being available) the code treats missing entries as publish so this one gets a default empty array.

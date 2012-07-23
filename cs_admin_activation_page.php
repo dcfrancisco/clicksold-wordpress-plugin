@@ -78,19 +78,19 @@
 	    <fieldset>
 	      <div class="cs-form-section-title">ClickSold Plugin Settings</div>
           <table class="form-table">
-            <tr valign="top">
-              <th scope="row"><label>Plugin Key</label></th>
+		    <tr valign="top">
+              <th scope="row"><label>Plugin Number</label></th>
               <td>
-                <input name="<?php echo $cs_opt_plugin_key; ?>"  <?php echo $readonly; ?>  id="<?php echo $cs_opt_plugin_key; ?>"type="text" value="<?php echo $opt_plugin_key_val; ?>" class="regular-text" /> 
+                <input name="<?php echo  $cs_opt_plugin_num; ?>"  <?php echo $readonly; ?>  id="<?php echo  $cs_opt_plugin_num; ?>" type="text" value="<?php echo  $opt_plugin_num_val; ?>" class="regular-text" /> 
                 <?php if(empty($hosted)){ ?>
                   (Missing your plugin number? Sign up below or click <a href="http://www.clicksold.com/sign-up/" target="_blank">here</a> to get one!)
                 <?php } ?>
               </td>
             </tr>
             <tr valign="top">
-              <th scope="row"><label>Plugin Number</label></th>
+              <th scope="row"><label>Plugin Key</label></th>
               <td>
-                <input name="<?php echo  $cs_opt_plugin_num; ?>"  <?php echo $readonly; ?>  id="<?php echo  $cs_opt_plugin_num; ?>" type="text" value="<?php echo  $opt_plugin_num_val; ?>" class="regular-text" /> 
+                <input name="<?php echo $cs_opt_plugin_key; ?>"  <?php echo $readonly; ?>  id="<?php echo $cs_opt_plugin_key; ?>"type="text" value="<?php echo $opt_plugin_key_val; ?>" class="regular-text" /> 
                 <?php if(empty($hosted)){ ?>
                   (Missing your plugin number? Sign up below or click <a href="http://www.clicksold.com/sign-up/" target="_blank">here</a> to get one!)
                 <?php } ?>

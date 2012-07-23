@@ -29,7 +29,7 @@ function cs_add_plugin_pages( $page, $prefix ){
 
 	$post_title = $page;
 	$post_name = strtolower($page);
-	$post_status = 'publish';
+	$post_status = 'private';
 	
 	$my_post = array(
 		'post_title' => $post_title,

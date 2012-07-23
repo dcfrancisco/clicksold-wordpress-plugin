@@ -64,7 +64,7 @@ class CS_ajax_request{
 		global $CS_SECTION_VIP_PARAM_CONSTANT;
 		global $cs_change_products_request;
 		
-		if( $this->is_products_change_request() ) update_option($cs_change_products_request, "1");
+		if( $this->is_products_change_request() || $this->is_plugin_activation_request() ) update_option($cs_change_products_request, "1");
 		
 		$this->captcha = $this->is_captcha_request();
 		
@@ -130,6 +130,10 @@ class CS_ajax_request{
 	private function is_utils_request() {
 		if(strpos($this->request_vars, 'wp_utils_pname') !== false) return true;
 		else return false;
+	}
+	
+	private function is_plugin_activation_request(){
+		return (strpos($this->request_vars, 'wp_plugin_activate') !== false);
 	}
 
 }

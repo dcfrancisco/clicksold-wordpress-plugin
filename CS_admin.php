@@ -44,6 +44,8 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			// build plugin admin menu item
 			add_action('admin_menu', array($this, 'cs_admin_menu'));
 			
+			add_action('parse_query', array($this, 'hide_unavailable_cs_pages'));
+			
 			// add a dashboard widget for cs.
 			add_action('wp_dashboard_setup', array($this, 'cs_add_custom_dashboard_widget'));
 			
@@ -442,6 +444,17 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 				 '    </strong>' .
 				 '  </p>' .
 				 '</div>';
+		}
+		
+		/**
+		 * Hides unavailable cs pages from the admin pages view
+		 */
+		function hide_unavailable_cs_pages($wp_query){
+			global $wpdb;
+			global $cs_posts_table;
+			
+			$cs_post_ids = $wpdb->get_col('SELECT postid FROM ' . $wpdb->prefix . $cs_posts_table . ' WHERE available = 0');
+			if(!empty($cs_post_ids)) $wp_query->query_vars['post__not_in'] = $cs_post_ids;
 		}
 	}
 ?>
