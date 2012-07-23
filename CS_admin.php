@@ -174,7 +174,9 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 
 						// We have to add it directly to the admin menu because there is no function to add arbitrary external links.
 						global $submenu; // Submenu here is a misnomer as it's actually the full menu.
-						array_push( $submenu[ $config['parent_slug'] ], array( $name, 'manage_options' , $config['external_link'] ) );
+						if( isset( $submenu[ $config['parent_slug'] ] ) ) { // This won't be present for non admin users.
+							array_push( $submenu[ $config['parent_slug'] ], array( $name, 'manage_options' , $config['external_link'] ) );
+						}
 					}
 				}
 			}

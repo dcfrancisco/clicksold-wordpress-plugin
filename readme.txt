@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.4 =
+* Fix warnings for lower priviledged logged in users.
+* Initial installation bugfixes.
+
 = 1.3 =
 * Sessions now started earlier so as to not conflict with certain themes.
 * Fixed captcha support on hosts that do not have php-gd installed.
