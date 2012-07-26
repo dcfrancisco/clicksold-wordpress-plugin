@@ -172,7 +172,7 @@ class CS_request {
 		global $wpdb;
 		$cs_posts_table = $wpdb->prefix . "cs_posts";
 		$posts_table = $wpdb->prefix . "posts";
-
+		
 		// Form an array with all of our static parameters (used to identify the plugin and provide information about the wp environment to the plugin server).
 		$parameters = array(
 			"pluginKey" => $this->pluginKey,
@@ -181,7 +181,7 @@ class CS_request {
 			"wp_permalink_format" => get_option('permalink_structure'),
 			"full_plugin_dir_url" => plugin_dir_url(__FILE__),
 			"client_ip_address" => getenv("REMOTE_ADDR"),
-			"wpHost" => $_SERVER['HTTP_HOST']
+			"wpHost" => home_url()
 		);
 
 		// Set section and page name variable, if section is available
