@@ -181,7 +181,7 @@ class CS_request {
 			"wp_permalink_format" => get_option('permalink_structure'),
 			"full_plugin_dir_url" => plugin_dir_url(__FILE__),
 			"client_ip_address" => getenv("REMOTE_ADDR"),
-			//"wpHost" => home_url()
+			"wpHomeUrl" => home_url(),
 			"wpHost" => $_SERVER['HTTP_HOST']
 		);
 

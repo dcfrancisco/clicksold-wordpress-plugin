@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.5 =
+* Support for subdirectory wp installs.
+
 = 1.4 =
 * Fix warnings for lower priviledged logged in users.
 * Initial installation bugfixes.
