@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.6 =
+* Disabled autoblogger if DateTime->diff method does not exist.
+
 = 1.5 =
 * Support for subdirectory wp installs.
 

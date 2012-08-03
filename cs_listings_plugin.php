@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.5
+Version: 1.6
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
 Author URI: http://www.ClickSold.com/
 */
@@ -68,7 +68,7 @@ $cs_plugin_options = array(
   $cs_autoblog_new_title => $cs_autoblog_default_post_title_active,
   $cs_autoblog_new_content => $cs_autoblog_default_post_content_active,
   $cs_autoblog_sold_title => $cs_autoblog_default_post_title_sold,
-  $cs_autoblog_sold_content => "hello" . $cs_autoblog_default_post_content_sold . "hello"
+  $cs_autoblog_sold_content => $cs_autoblog_default_post_content_sold
 );   
 
 global $cs_logo_path;
@@ -370,6 +370,9 @@ if( !is_admin() ){
 		global $cs_autoblog_sold;
 		global $cs_autoblog_last_update;
 		global $cs_autoblog_freq;
+		
+		// Check if the diff function exists so this process does not crash the whole site should they have php < 5.3.0
+		if( !method_exists(new DateTime(), 'diff') ) { return; }
 		
 		//DEBUG - could possibly just leave it here and prevent these options from being added on plugin init
 		if( get_option($cs_autoblog_new) === false ) { add_option($cs_autoblog_new, "0"); }
