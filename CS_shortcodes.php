@@ -157,9 +157,50 @@ class CS_shortcodes {
 	 * Very simple handler used by most ClickSold short codes that get their content from the plugin server.
 	 * basically grabs the value from the current section of the response and increments the section
 	 * counter so the next call gets the next value and so forth.
+	 * 
+	 * $atts - array of all of the shortcodes's attributes.
+	 * $content - the content of the shortcode if the shortcode is being used in the enclosing form.
+	 * $tag - the shortcode name.
 	 */
-	public function cs_response_shortcode_handler($atts) {
+	public function cs_response_shortcode_handler($atts, $content, $tag) {
 		global $cs_response;
+		
+		// If the $cs_response is null and the sc does not have the 'do_sc_direct' attribute this means that the shortcode is being called
+		// directly by a do_shortcode function but the caller did not specify the do_sc_direct parameter as required.
+		if( !isset( $cs_response ) && !isset( $atts['do_sc_direct'] ) ) {
+			return "<br>Error: Likely calling cs shortcode via do_shortcode() but you need to specify do_sc_direct in this case.<br>";
+		}
+		
+		// If the shortcode is marked as being called directly via the do_shortcode function we need to create and issue an independent request.
+		if( isset( $atts['do_sc_direct'] ) ) {
+			
+			/***
+			 * DISABLED! DISABLED! DISABLED! DISABLED! DISABLED! DISABLED! DISABLED! DISABLED! DISABLED!
+			 * Doing this in this way has two problems. First off by the time we get here it is too late to 
+			 * include the css / js. Also because these are independent cs plugin server requests the
+			 * modlet id's are non unique. To support do_shortcode() function calls directly we would have
+			 * to invent some way of registering the calls (in order) and then issuing the requests directly.
+			 */
+			return "ERROR: Calling cs shortcodes via do_shortcode directly is not currently supported.";
+			
+			$cs_shortcodes = new CS_shortcodes("cs_listings");
+			
+			$local_cs_request = new CS_request("", "");
+			$local_cs_request->del_req_sec(); // Deletes the current request section, the constructor creates the first one which we need to get rid of as we'll be adding them in the loop below shortly.
+
+			// Add a new section to the request for this shortcode.
+			$cs_org_req = $cs_shortcodes->cs_create_shortcode_request( $tag, $atts, false );
+			$local_cs_request->add_req_section( $cs_org_req );
+
+			$local_cs_response = new CS_response($local_cs_request->request());
+
+			add_action("wp_head", array($local_cs_response, "cs_get_header_contents_linked_only"), 0);
+			add_action("wp_head", array($local_cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the encueue stuff.
+			add_action("wp_footer", array($local_cs_response, "cs_get_footer_contents"), 0);
+			add_filter("the_content", "cs_styling_wrap", 2); //This line wraps all content around a div so our styles can take precedence over the template styles
+			
+			return $local_cs_response->get_body_contents();
+		}
 		
 		// The result is the current response sections value.
 		$return_value = $cs_response->get_body_contents();
@@ -168,6 +209,7 @@ class CS_shortcodes {
 		$cs_response->next_response_section();
 
 		return $return_value;
+		
 	}
 
 	/**------------------------------------------- TinyMCE Integration ------------------------------------------------**/
@@ -393,8 +435,12 @@ class CS_shortcodes {
 			 * For each CS shortcode on this page we...
 			 * 1 - fetch the shortcode's base params and base param mask.
 			 * 2 - serialize the base params.
-			 * 3 - serialize supplied params but respect the base param mask (aka, don't add the ones that are in the mask).
-			 * 4 - set a new request section.
+			 * 3 - serialize any get params but respect the base param mask (aka, don't add the ones that are in the mask).
+			 * 4 - serialize supplied params but respect the base param mask (aka, don't add the ones that are in the mask).
+			 * 5 - set a new request section.
+			 * 
+			 * 2 to 3 are done by the cs_create_shortcode_request function.
+			 * 
 			 */
 			foreach($shortcode_records as $index => $shortcode_record) {
 
@@ -404,42 +450,11 @@ class CS_shortcodes {
 				$shortcode_name = $shortcode_record[0];
 				$shortcode_param_arr = $shortcode_record[1];
 				$shortcode_introspect = $shortcode_record[2];
-				
-				// Add all the default params ( to the request )
-				$delim = "";
-				foreach($this->get_default_param_arr( $shortcode_name ) as $name => $value) {
-					$cs_org_req .= $delim . $name . '=' . $value;
-					$delim = '&';
-				}
 
-				// Introspect the GET superglobal if "introspect" flag is true				
-				if($shortcode_introspect === true && !empty($_GET)) {
-					foreach($_GET as $param_name => $param_value){
-						if( !$this->is_param_name_masked( $shortcode_name, $param_name ) ) {
-							$cs_org_req .= $delim . $param_name . '=' . $param_value;
-							$delim = '&';
-						}
-					}
-				}
+				$cs_org_req = $this->cs_create_shortcode_request( $shortcode_name, $shortcode_param_arr, $shortcode_introspect );
 				
-				// Add all the params specified on the shortcode as long as they are not masked.
-				foreach($shortcode_param_arr as $name => $value) {
-					if( !$this->is_param_name_masked( $shortcode_name, $name ) ) {
-						if( is_array($value) ) {
-							foreach( $value as $v ) {
-								$cs_org_req .= $delim . $name . '=' . $v;
-								$delim = '&';
-							}
-						} else {
-							$cs_org_req .= $delim . $name . '=' . $value;
-							$delim = '&';
-						}
-					}
-				}
-
 				// Add a new section to the request.
 				$cs_request->add_req_section( $cs_org_req );
-
 			}
 
 			/** Send it to the plugin server -- (Assuming we have at least one section (if not something is messed badly)). **/
@@ -454,11 +469,56 @@ class CS_shortcodes {
 			add_action("wp_footer", array($cs_response, "cs_get_footer_contents"), 0);
 			add_filter("the_content", "cs_styling_wrap", 2); //This line wraps all content around a div so our styles can take precedence over the template styles
 			
-			
 			// Make double sure that the response is set to it's initial section.
 			$cs_response->reset_response_section();
 		}
 
+	}
+
+	/**
+	 * Creates a cs_org_req query string for the given shortcode information.
+	 *
+	 * @param shortcode_name - the name of the shortcode.
+	 * @param shortcode_param_arr - the parameters of the shortcode itself.
+	 * @param shortcode_introspect - boolean indicating if we are to introspect the GET params too.
+	 */
+	function cs_create_shortcode_request( $shortcode_name, $shortcode_param_arr, $shortcode_introspect ) {
+
+		$cs_org_req = "";
+
+		// Add all the default params ( to the request )
+		$delim = "";
+		foreach($this->get_default_param_arr( $shortcode_name ) as $name => $value) {
+			$cs_org_req .= $delim . $name . '=' . $value;
+			$delim = '&';
+		}
+
+		// Introspect the GET superglobal if "introspect" flag is true
+		if($shortcode_introspect === true && !empty($_GET)) {
+			foreach($_GET as $param_name => $param_value){
+				if( !$this->is_param_name_masked( $shortcode_name, $param_name ) ) {
+					$cs_org_req .= $delim . $param_name . '=' . $param_value;
+					$delim = '&';
+				}
+			}
+		}
+				
+		// Add all the params specified on the shortcode as long as they are not masked.
+		foreach($shortcode_param_arr as $name => $value) {
+			if( !$this->is_param_name_masked( $shortcode_name, $name ) ) {
+				if( is_array($value) ) {
+					foreach( $value as $v ) {
+						$cs_org_req .= $delim . $name . '=' . $v;
+						$delim = '&';
+					}
+				} else {
+					$cs_org_req .= $delim . $name . '=' . $value;
+					$delim = '&';
+				}
+			}
+		}
+
+		return $cs_org_req;
 	}
 
 }

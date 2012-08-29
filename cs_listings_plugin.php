@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.6
+Version: 1.7
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
 Author URI: http://www.ClickSold.com/
 */
@@ -371,9 +371,6 @@ if( !is_admin() ){
 		global $cs_autoblog_last_update;
 		global $cs_autoblog_freq;
 		
-		// Check if the diff function exists so this process does not crash the whole site should they have php < 5.3.0
-		if( !method_exists(new DateTime(), 'diff') ) { return; }
-		
 		//DEBUG - could possibly just leave it here and prevent these options from being added on plugin init
 		if( get_option($cs_autoblog_new) === false ) { add_option($cs_autoblog_new, "0"); }
 		if( get_option($cs_autoblog_sold) === false ) { add_option($cs_autoblog_sold, "0"); }
@@ -382,15 +379,19 @@ if( !is_admin() ){
 			$last_update = get_option($cs_autoblog_last_update);
 			if(!empty($last_update)){
 				//Compare now with last update date
-				$now = new DateTime(date(DATE_ATOM));
-				$last_update = new DateTime(date(DATE_ATOM, $last_update));
+				$now = mktime(0, 0, 0);
+				$last_update = intval($last_update);
 				$freq = get_option($cs_autoblog_freq);
+				$days = 0;
+				
+				// Get number of days since last update
+				while($last_update < $now) {
+					$last_update = strtotime(date('Y-m-d', $last_update) . " +1 day"); 
+					$days++;
+				}
 				
 				//Skip update if number of days is not past the frequency (days before next update)
-				if( $now->diff($last_update)->days < $freq ) {
-					//error_log('Skipping Update');
-					return;
-				}
+				if( $days < $freq ) return;
 			}
 			//Run update
 			$cs_utils = new CS_utilities();
@@ -591,9 +592,11 @@ if( !is_admin() ){
 					add_action("wp_head", array($cs_response, "cs_get_header_contents_linked_only"), 0);
 					add_action("wp_head", array($cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the enqueue stuff.
 					add_action("wp_footer", array($cs_response, "cs_get_footer_contents"), 0);
-					remove_filter("the_content", "wpautop");  //This line prevents wordpress from replacing double line breaks with <br> tags i.e. messes up the pagination sections in listing results views
-					add_filter("the_content", array($cs_response, "get_body_contents"), 1);
-					add_filter("the_content", "cs_styling_wrap", 2); //This line wraps all content around a div so our styles can take precedence over the template styles
+					
+					// For CS page content we don't want it to get filtered by anything else. So we set the priority to a high number so our stuff gets ran LAST.
+					// 2012-08-29 EZ - no longer required now that we've set our the_content filters to 101 and 102 --- remove_filter("the_content", "wpautop");  //This line prevents wordpress from replacing double line breaks with <br> tags i.e. messes up the pagination sections in listing results views
+					add_filter("the_content", array($cs_response, "get_body_contents"), 101);
+					add_filter("the_content", "cs_styling_wrap", 102); //This line wraps all content around a div so our styles can take precedence over the template styles
 				}
 			}
 		}

@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.7 =
+* Fix autoblogger compatability with installs that don't support DateTime->diff.
+* Fix cs generated content being mangled by certain themes.
+
 = 1.6 =
 * Disabled autoblogger if DateTime->diff method does not exist.
 

@@ -28,8 +28,7 @@
 	global $wpdb;
 	global $wp_rewrite;
 	global $CS_SECTION_PARAM_CONSTANTS;
-
-	//error_log( $_POST["idx_post_title"] );
+	
 	$listings_title_error = "";
 	$listings_url_error = "";
 	$idx_title_error = "";
@@ -38,10 +37,14 @@
 	$communities_url_error = "";
 	$associates_title_error = "";
 	$associates_url_error = "";
-	
+	$duplicate_post_names = array();
+		
+	$idx_opts_reload = false;
+	$comm_opts_reload = false;
+		
 	//Get all the post ids of our generated pages
 	$wp_cs_posts = $wpdb->get_results("SELECT prefix, postid FROM " . $wpdb->prefix . "cs_posts", OBJECT_K);
-	
+		
 	$cs_brokerage = get_option("cs_opt_brokerage");
 	$cs_allow_manage_menus = get_option("cs_allow_manage_menus", 1);
 	$valid = true;
@@ -57,15 +60,49 @@
 	
 	//Do basic validation on post names and titles - check for empty strings
 	if( isset( $_POST["post_success"] ) ) { // If we're doing a post.
-
+		$post_names = array();
+		
 		// We check diff fields depending on what they submitted (which in turn depends on what's available on the page).
-		if( isset( $_POST["listings_post_name"] ) && ( empty( $_POST["listings_post_name"] ) || empty( $_POST["listings_post_title"] ) ) ) { $valid = false; }
-		if( isset( $_POST["communities_post_name"] ) && ( empty( $_POST["communities_post_name"] ) || empty( $_POST["communities_post_title"] ) ) ) { $valid = false; }
-		if( isset( $_POST["idx_post_name"] ) && ( empty( $_POST["idx_post_name"] ) || empty( $_POST["idx_post_title"] ) ) ) { $valid = false; }
-		if( isset( $_POST["associates_post_name"] ) && ( empty( $_POST["associates_post_name"] ) || empty( $_POST["associates_post_title"] ) ) ) { $valid = false; }
+		if( isset( $_POST["listings_post_name"] ) ) {
+			if( empty( $_POST["listings_post_name"] ) || empty( $_POST["listings_post_title"] ) ) $valid = false;
+			else {
+				$old_post_name = $wpdb->get_var("SELECT post_name FROM " . $wpdb->prefix . "posts WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["listings_pname"] ]->postid);
+				if( $_POST["listings_post_name"] != $old_post_name ) $post_names["listings_post_name"] = $_POST["listings_post_name"];
+			}
+		}
+		
+		if( isset( $_POST["communities_post_name"] ) ) {
+			if( empty( $_POST["communities_post_name"] ) || empty( $_POST["communities_post_title"] ) ) $valid = false;
+			else {
+				$old_post_name = $wpdb->get_var("SELECT post_name FROM " . $wpdb->prefix . "posts WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["community_pname"] ]->postid);
+				if( $_POST["communities_post_name"] != $old_post_name ) $post_names["communities_post_name"] = $_POST["communities_post_name"];
+			}
+		} else $comm_opts_reload = true;
+		
+		if( isset( $_POST["idx_post_name"] ) ) {
+			if( empty( $_POST["idx_post_name"] ) || empty( $_POST["idx_post_title"] ) ) $valid = false;
+			else {
+				$old_post_name = $wpdb->get_var("SELECT post_name FROM " . $wpdb->prefix . "posts WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["idx_pname"] ]->postid);
+				if( $_POST["idx_post_name"] != $old_post_name ) $post_names["idx_post_name"] = $_POST["idx_post_name"];
+			}
+		} else $idx_opts_reload = true;
+		
+		if( isset( $_POST["associates_post_name"] ) ) {
+			if( empty( $_POST["associates_post_name"] ) || empty( $_POST["associates_post_title"] ) ) $valid = false;
+			else {
+				$old_post_name = $wpdb->get_var("SELECT post_name FROM " . $wpdb->prefix . "posts WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["assoc_pname"] ]->postid);
+				if( $_POST["associates_post_name"] != $old_post_name ) $post_names["associates_post_name"] = $_POST["associates_post_name"];
+			}
+		}
+					
+		// Check if modified urls already exist in WP
+		if( count($post_names) > 0 ) {
+			$duplicate_post_names = $wpdb->get_col('SELECT post_name FROM ' . $wpdb->prefix . 'posts where post_name IN ("' . implode('", "', $post_names) . '") GROUP BY post_name HAVING COUNT(post_name) > 0');
+			if( count( $duplicate_post_names ) > 0 ) $valid = false;
+		}
 	}
 
-	if( isset($_POST["post_success"]) && $valid == true) {
+	if( isset($_POST["post_success"]) ) {
 
 		// This form works, updates and respects the post_status field of the actual posts but we must save the desired statuses also.
 		$cs_posts_desired_statuses = get_option( "cs_posts_desired_statuses", array('listings' => 'publish', 'idx' => 'publish', 'communities' => 'publish', 'associates' => 'publish' ) ); // By default all are desired to be shown.
@@ -137,62 +174,64 @@
 			}
 		}
 		
-		// Save the desired statuses for all of the posts. (This is so when the posts are hidden or shown in response to available features we know what the desired values were).
-		update_option( "cs_posts_desired_statuses", $cs_posts_desired_statuses );
+		if( $valid == true ) {
+			
+			// Save the desired statuses for all of the posts. (This is so when the posts are hidden or shown in response to available features we know what the desired values were).
+			update_option( "cs_posts_desired_statuses", $cs_posts_desired_statuses );
 
-		//read children menu items  
-		foreach ($wpdb->get_results('SELECT meta_value, post_id FROM '.$wpdb->postmeta.' WHERE meta_key = "_menu_item_object_id"') as $value)
-			$nav_menu_items[$value->meta_value][] = $value->post_id;
+			//read children menu items  
+			foreach ($wpdb->get_results('SELECT meta_value, post_id FROM '.$wpdb->postmeta.' WHERE meta_key = "_menu_item_object_id"') as $value)
+				$nav_menu_items[$value->meta_value][] = $value->post_id;
 
-		//Update values (But only if they were actually submitted)
-		if( isset( $_POST["listings_post_name"] ) ) {
-			$wpdb->update($wpdb->posts, array("post_title" => $listings_post_title, "post_name" => $listings_post_name, "post_status" => $listings_post_status), array("ID" => $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["listings_pname"] ]->postid), array("%s", "%s", "%s"), array("%d"));
-			$nav_menu_item_ids = $nav_menu_items[$wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["listings_pname"] ]->postid];
-			if (isset($nav_menu_item_ids))
-				foreach ($nav_menu_item_ids as $id)
-					$wpdb->update($wpdb->posts, array("post_status" => $listings_post_status), array("ID" => $id), array("%s"), array("%d"));
-		}
-		
-		if( isset( $_POST["idx_post_name"] ) ) {
-			$wpdb->update($wpdb->posts, array("post_title" => $idx_post_title, "post_name" => $idx_post_name, "post_status" => $idx_post_status), array("ID" => $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["idx_pname"] ]->postid), array("%s", "%s", "%s"), array("%d"));
-			$nav_menu_item_ids = $nav_menu_items[$wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["idx_pname"] ]->postid];
-			if (isset($nav_menu_item_ids))
-				foreach ($nav_menu_item_ids as $id)
-					$wpdb->update($wpdb->posts, array("post_status" => $idx_post_status), array("ID" => $id), array("%s"), array("%d"));
-		}
+			//Update values (But only if they were actually submitted)
+			if( isset( $_POST["listings_post_name"] ) ) {
+				$wpdb->update($wpdb->posts, array("post_title" => $listings_post_title, "post_name" => $listings_post_name, "post_status" => $listings_post_status), array("ID" => $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["listings_pname"] ]->postid), array("%s", "%s", "%s"), array("%d"));
+				$nav_menu_item_ids = $nav_menu_items[$wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["listings_pname"] ]->postid];
+				if (isset($nav_menu_item_ids))
+					foreach ($nav_menu_item_ids as $id)
+						$wpdb->update($wpdb->posts, array("post_status" => $listings_post_status), array("ID" => $id), array("%s"), array("%d"));
+			}
+			
+			if( isset( $_POST["idx_post_name"] ) ) {
+				$wpdb->update($wpdb->posts, array("post_title" => $idx_post_title, "post_name" => $idx_post_name, "post_status" => $idx_post_status), array("ID" => $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["idx_pname"] ]->postid), array("%s", "%s", "%s"), array("%d"));
+				$nav_menu_item_ids = $nav_menu_items[$wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["idx_pname"] ]->postid];
+				if (isset($nav_menu_item_ids))
+					foreach ($nav_menu_item_ids as $id)
+						$wpdb->update($wpdb->posts, array("post_status" => $idx_post_status), array("ID" => $id), array("%s"), array("%d"));
+			}
 
-		if( isset( $_POST["communities_post_name"] ) ) {
-			$wpdb->update($wpdb->posts, array("post_title" => $communities_post_title, "post_name" => $communities_post_name, "post_status" => $communities_post_status), array("ID" => $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["community_pname"] ]->postid), array("%s", "%s", "%s"), array("%d"));
-			$nav_menu_item_ids = $nav_menu_items[$wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["community_pname"] ]->postid];
-			if (isset($nav_menu_item_ids))
-				foreach ($nav_menu_item_ids as $id)
-					$wpdb->update($wpdb->posts, array("post_status" => $communities_post_status), array("ID" => $id), array("%s"), array("%d"));
-		}
+			if( isset( $_POST["communities_post_name"] ) ) {
+				$wpdb->update($wpdb->posts, array("post_title" => $communities_post_title, "post_name" => $communities_post_name, "post_status" => $communities_post_status), array("ID" => $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["community_pname"] ]->postid), array("%s", "%s", "%s"), array("%d"));
+				$nav_menu_item_ids = $nav_menu_items[$wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["community_pname"] ]->postid];
+				if (isset($nav_menu_item_ids))
+					foreach ($nav_menu_item_ids as $id)
+						$wpdb->update($wpdb->posts, array("post_status" => $communities_post_status), array("ID" => $id), array("%s"), array("%d"));
+			}
 
-		if( isset( $_POST["cs_allow_manage_menus"] ) ) {
-			update_option("cs_allow_manage_menus", 1);
-			$cs_allow_manage_menus = get_option("cs_allow_manage_menus");
-		} else {
-			update_option("cs_allow_manage_menus", 0);
-			$cs_allow_manage_menus = get_option("cs_allow_manage_menus");
-		}
+			if( isset( $_POST["cs_allow_manage_menus"] ) ) {
+				update_option("cs_allow_manage_menus", 1);
+				$cs_allow_manage_menus = get_option("cs_allow_manage_menus");
+			} else {
+				update_option("cs_allow_manage_menus", 0);
+				$cs_allow_manage_menus = get_option("cs_allow_manage_menus");
+			}
 
-		//Site front page has been set to private so it has to be set back to posts
-		if($reset_front_page === true){
-			update_option('page_on_front', '0');
-			update_option('show_on_front', 'posts');
-		}
-		
-		if($cs_brokerage && isset( $_POST["associates_post_name"] ) ) {
-			$wpdb->update($wpdb->posts, array("post_title" => $associates_post_title, "post_name" => $associates_post_name, "post_status" => $associates_post_status), array("ID" => $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["assoc_pname"] ]->postid), array("%s", "%s", "%s"), array("%d"));
-			$nav_menu_item_ids = $nav_menu_items[$wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["assoc_pname"] ]->postid];
-			if (isset($nav_menu_item_ids))
-				foreach ($nav_menu_item_ids as $id)
-					$wpdb->update($wpdb->posts, array("post_status" => $associates_post_status), array("ID" => $id), array("%s"), array("%d"));
-		}
-		
-		//We need to flush the rules after updating the post names or they will never work
-		$wp_rewrite->flush_rules();
+			//Site front page has been set to private so it has to be set back to posts
+			if($reset_front_page === true){
+				update_option('page_on_front', '0');
+				update_option('show_on_front', 'posts');
+			}
+			
+			if($cs_brokerage && isset( $_POST["associates_post_name"] ) ) {
+				$wpdb->update($wpdb->posts, array("post_title" => $associates_post_title, "post_name" => $associates_post_name, "post_status" => $associates_post_status), array("ID" => $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["assoc_pname"] ]->postid), array("%s", "%s", "%s"), array("%d"));
+				$nav_menu_item_ids = $nav_menu_items[$wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["assoc_pname"] ]->postid];
+				if (isset($nav_menu_item_ids))
+					foreach ($nav_menu_item_ids as $id)
+						$wpdb->update($wpdb->posts, array("post_status" => $associates_post_status), array("ID" => $id), array("%s"), array("%d"));
+			}
+			
+			//We need to flush the rules after updating the post names or they will never work
+			$wp_rewrite->flush_rules();
 
 		//Show updated message
 ?>
@@ -200,82 +239,109 @@
     <p><strong><?php _e('Settings saved.'); ?></strong></p>
   </div>-->
   <?php 
-	}else{	
-		//Retrieve values from wp_posts table
-		$listings_post = $wpdb->get_results("SELECT post_title, post_name, post_status FROM " . $wpdb->posts . " WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["listings_pname"] ]->postid);
-		$idx_post = $wpdb->get_results("SELECT post_title, post_name, post_status FROM " . $wpdb->posts . " WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["idx_pname"] ]->postid);
-		$communities_post = $wpdb->get_results("SELECT post_title, post_name, post_status FROM " . $wpdb->posts . " WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["community_pname"] ]->postid);
-		
-		$listings_post_title = $listings_post[0]->post_title;
-		$idx_post_title = $idx_post[0]->post_title;
-		$communities_post_title = $communities_post[0]->post_title;
-		
-		$listings_post_name = $listings_post[0]->post_name;
-		$idx_post_name = $idx_post[0]->post_name;
-		$communities_post_name = $communities_post[0]->post_name;
-
-		$listings_post_status = $listings_post[0]->post_status;
-		$idx_post_status = $idx_post[0]->post_status;
-		$communities_post_status = $communities_post[0]->post_status;
-
-		if($cs_brokerage){
-			$associates_post = $wpdb->get_results("SELECT post_title, post_name, post_status FROM " . $wpdb->posts . " WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["assoc_pname"] ]->postid);
-			$associates_post_title = $associates_post[0]->post_title;
-			$associates_post_name = $associates_post[0]->post_name;
-			$associates_post_status = $associates_post[0]->post_status;
-		}
-		
-		//Show error message(s), if any
-		if($valid == false){
+		} else {
+			
 			$errorMsg = "Please check the following errors below:<br/>";
 			$errorMsg .= "<ul>";
 
-			if(isset( $_POST["listings_post_name"] ) && empty($_POST["listings_post_title"])){
+			if(isset( $_POST["listings_post_title"] ) && empty($_POST["listings_post_title"])){
 				$errorMsg .= "<li>Listings title is invalid</li>";
 				$listings_title_error = "error";
 			}
 			
-			if(isset( $_POST["listings_post_name"] ) && empty($_POST["listings_post_name"])){
-				$errorMsg .= "<li>Listings URL is invalid</li>";
-				$listings_url_error = "error";
+			if(isset( $_POST["listings_post_name"] )){
+				if(empty($_POST["listings_post_name"])){
+					$errorMsg .= "<li>Listings URL is invalid</li>";
+					$listings_url_error = "error";
+				}else if(array_key_exists("listings_post_name", $post_names) && in_array($_POST["listings_post_name"], $duplicate_post_names)) {
+					$errorMsg .= "<li>Listings URL is already in use</li>";
+					$listings_url_error = "error";
+				}
 			}
 
-			if(isset( $_POST["idx_post_name"] ) && empty($_POST["idx_post_title"])){
+			if(isset( $_POST["idx_post_title"] ) && empty($_POST["idx_post_title"])){
 				$errorMsg .= "<li>IDX title is invalid</li>";
 				$idx_title_error = "error";
 			}
 			
-			if(isset( $_POST["idx_post_name"] ) && empty($_POST["idx_post_name"])){
-				$errorMsg .= "<li>IDX URL is invalid</li>";
-				$idx_url_error = "error";
+			if(isset( $_POST["idx_post_name"] )){ 
+				if(empty($_POST["idx_post_name"])){
+					$errorMsg .= "<li>IDX URL is invalid</li>";
+					$idx_url_error = "error";
+				}else if(array_key_exists("idx_post_name", $post_names) && in_array($_POST["idx_post_name"], $duplicate_post_names)){
+					$errorMsg .= "<li>IDX URL is already in use</li>";
+					$idx_url_error = "error";
+				}
 			}
 
-			if(isset( $_POST["communities_post_name"] ) && empty($_POST["communities_post_title"])){
+			if(isset( $_POST["communities_post_title"] ) && empty($_POST["communities_post_title"])){
 				$errorMsg .= "<li>Communities title is invalid</li>";
 				$communities_title_error = "error";
 			}
 			
-			if(isset( $_POST["communities_post_name"] ) && empty($_POST["communities_post_name"])){
-				$errorMsg .= "<li>Communities URL is invalid</li>";
-				$communities_url_error = "error";
+			if(isset( $_POST["communities_post_name"] )){ 
+				if(empty($_POST["communities_post_name"])){
+					$errorMsg .= "<li>Communities URL is invalid</li>";
+					$communities_url_error = "error";
+				}else if(array_key_exists("communities_post_name", $post_names) && in_array($_POST["communities_post_name"], $duplicate_post_names)){
+					$errorMsg .= "<li>Communities URL is already in use</li>";
+					$communities_url_error = "error";
+				}
 			}
 			
-			if(isset( $_POST["associates_post_name"] ) && $cs_brokerage && empty($_POST["associates_post_title"])){
+			if(isset( $_POST["associates_post_title"] ) && $cs_brokerage && empty($_POST["associates_post_title"])){
 				$errorMsg .= "<li>Associates title is invalid</li>";
 				$associates_title_error = "error";
 			}
 			
-			if(isset( $_POST["associates_post_name"] ) && $cs_brokerage && empty($_POST["associates_post_name"])){
-				$errorMsg .= "<li>Associates URL is invalid</li>";
-				$associates_url_error = "error";
+			if(isset( $_POST["associates_post_name"] ) && $cs_brokerage){
+				if(empty($_POST["associates_post_name"])){
+					$errorMsg .= "<li>Associates URL is invalid</li>";
+					$associates_url_error = "error";
+				}else if(array_key_exists("associates_post_name", $post_names) && in_array($_POST["associates_post_name"], $duplicate_post_names)){
+					$errorMsg .= "<li>Associates URL is already in use</li>";
+					$associates_url_error = "error";
+				}
 			}
-			
+						
 			$errorMsg .= "</ul>";
 ?>
 <!--  <div class="error">
     <p><strong><?php _e($errorMsg); ?></strong></p>
   </div>-->
-  <?php
+<?php
+		}
+	}
+	
+	if(!isset($_POST["post_success"]) || $comm_opts_reload == true || $idx_opts_reload == true){
+	
+		//Retrieve values from wp_posts table
+		if(!isset($_POST["post_success"]) || $idx_opts_reload == true) { 
+			$idx_post = $wpdb->get_results("SELECT post_title, post_name, post_status FROM " . $wpdb->posts . " WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["idx_pname"] ]->postid);
+			$idx_post_title = $idx_post[0]->post_title;
+			$idx_post_name = $idx_post[0]->post_name;
+			$idx_post_status = $idx_post[0]->post_status;
+		}
+		
+		if(!isset($_POST["post_success"]) || $comm_opts_reload == true) { 
+			$communities_post = $wpdb->get_results("SELECT post_title, post_name, post_status FROM " . $wpdb->posts . " WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["community_pname"] ]->postid);
+			$communities_post_title = $communities_post[0]->post_title;
+			$communities_post_name = $communities_post[0]->post_name;
+			$communities_post_status = $communities_post[0]->post_status;
+		}
+		
+		if(!isset($_POST["post_success"])) { 
+			$listings_post = $wpdb->get_results("SELECT post_title, post_name, post_status FROM " . $wpdb->posts . " WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["listings_pname"] ]->postid);
+			$listings_post_title = $listings_post[0]->post_title;
+			$listings_post_name = $listings_post[0]->post_name;
+			$listings_post_status = $listings_post[0]->post_status;
+			
+			if($cs_brokerage){
+				$associates_post = $wpdb->get_results("SELECT post_title, post_name, post_status FROM " . $wpdb->posts . " WHERE ID = " . $wp_cs_posts[ $CS_SECTION_PARAM_CONSTANTS["assoc_pname"] ]->postid);
+				$associates_post_title = $associates_post[0]->post_title;
+				$associates_post_name = $associates_post[0]->post_name;
+				$associates_post_status = $associates_post[0]->post_status;
+			}
 		}
 	}
 ?>

@@ -12,8 +12,8 @@ if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
 <script>
 (function($){
 	$(document).ready(function(){
-		var w_height = $("#<?php echo $this->get_field_id("") ?>container").children(".csFeatureListingModule").width();
-		$("#<?php echo $this->get_field_id("") ?>container").children(".csFeatureListingModule").css("min-height", (w_height * 1.036) + "px");
+		var w_width = $("#<?php echo $this->get_field_id("") ?>container").children(".csFeatureListingModule").width();
+		$("#<?php echo $this->get_field_id("") ?>container").children(".csFeatureListingModule").css("min-height", (w_width * 1.036) + "px");
 	
 		$("#<?php echo $this->get_field_id("") ?>container").FeatureListingWidget({
 			plugin : true,
