@@ -370,6 +370,7 @@ class Brokerage_Info_Widget extends CS_Widget {
 	private $PLUGIN_DEFAULTS = array (
 		'name' => '',
 		'logo_src' => '',
+		'upload_logo_src' => '',
 		'addr' => '',
 		'phone' => '',
 		'fax' => '',
@@ -394,14 +395,21 @@ class Brokerage_Info_Widget extends CS_Widget {
 		// Load JavaScript and Stylesheets
 		
 		global $pagenow;
-		if( defined( "WP_ADMIN" ) && WP_ADMIN && 'widgets.php' == $pagenow ) { // Only do this work when in the back office and loading the widgets section.
-			//Load array of brokerage logos from server
-			$this->get_brokerage_logos();
-			$this->get_widget_scripts(true);
-			
+		if( defined( "WP_ADMIN" ) && WP_ADMIN) { // Only do this work when in the back office and loading the widgets section.
+			if( 'widgets.php' == $pagenow ) {
+				//Load array of brokerage logos from server
+				$this->get_brokerage_logos();
+				wp_enqueue_style( 'thickbox' );
+				wp_enqueue_script( 'thickbox' );
+				$this->get_widget_scripts(true);
+			} else if( 'media-upload.php' == $pagenow || 'async-upload.php' == $pagenow ) {
+				add_filter( 'image_send_to_editor', array( $this,'image_send_to_editor'), 1, 8 );
+				add_filter( 'gettext', array( $this, 'replace_text_in_thickbox' ), 1, 3 );
+				add_filter( 'media_upload_tabs', array( $this, 'media_upload_tabs' ) );
+			}
 		}else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ){
 			$this->get_widget_scripts(false);
-		}
+		}		
 	}
 	
 	function widget($args, $instance) {
@@ -418,6 +426,7 @@ class Brokerage_Info_Widget extends CS_Widget {
 		
 		$instance['name'] = $new_instance['name'];
 		$instance['logo_src'] = $new_instance['logo_src'];
+		$instance['upload_logo_src'] = $new_instance['upload_logo_src'];
 		$instance['addr'] = $new_instance['addr'];
 		$instance['phone'] = $new_instance['phone'];
 		$instance['fax'] = $new_instance['fax'];
@@ -437,10 +446,11 @@ class Brokerage_Info_Widget extends CS_Widget {
 		// Get list of brokerages and associated logos from server
 		$brok_logos = $PLUGIN_BROK_LOGOS;
 		
-		$this->PLUGIN_DEFAULTS['logo_src'] = $brok_logos[0]["src"];		
+		$this->PLUGIN_DEFAULTS['logo_src'] = $brok_logos[1]["src"];		
 		$instance = wp_parse_args((array) $instance, $this->PLUGIN_DEFAULTS);
 		
 		include( $this->getTemplateHierarchy( 'cs_template_brokerage-info-widget_', 'brokerage-info-widget-admin' ) );
+		
 	}
 		
 	/*--------------------------------------------------*/

@@ -15,6 +15,9 @@ if(!empty($instance['email'])){
 }
 if(!empty($instance['web']))
 	echo '  <a href="'. $instance['web'] .'" target="_blank">';
+if($instance['logo_src'] == "upload_custom" && !empty($instance['upload_logo_src']))
+	echo '    <img src="'. $instance['upload_logo_src'] .'" />';
+else
 	echo '    <img src="'. $instance['logo_src'] .'" />';
 if(!empty($instance['web']))
 	echo '  </a>';
