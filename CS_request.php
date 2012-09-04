@@ -60,7 +60,7 @@ class CS_request {
 	const plugin_num_opt = "cs_opt_plugin_num";
 	const plugin_ver_opt = "cs_opt_plugin_version";
 
-	protected $production_proxy_server = 'http://wp-plugin-rpm.realpagemaker.com/';
+	protected $production_proxy_server = 'http://wp-plugin.clicksold.com/';
 	protected $test_proxy_server = 'http://127.0.0.201/';
 	protected $test_proxy_server2 = 'http://stg-wp-plugin.office.realpagemaker.com/';	// In office staging server.
 	protected $plugin_controller = 'WPPluginRpm';
