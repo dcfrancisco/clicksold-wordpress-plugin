@@ -972,17 +972,19 @@ class Listing_QS_Widget extends CS_Widget{
 		$table_name = $wpdb->prefix . "cs_posts";
 		
 		//Get the ids of the idx and listings pages
-		$pages = $wpdb->get_results("SELECT postid, parameter FROM " . $table_name . " WHERE parameter IN('" . $CS_GENERATED_PAGE_PARAM_CONSTANTS["listings"] . "', '" . $CS_GENERATED_PAGE_PARAM_CONSTANTS["idx"] . "')");
+		$pages = $wpdb->get_results("SELECT postid, parameter FROM " . $table_name . " WHERE parameter IN('" . $CS_GENERATED_PAGE_PARAM_CONSTANTS["listings"] . "', '" . $CS_GENERATED_PAGE_PARAM_CONSTANTS["idx"] . "', '" . $CS_GENERATED_PAGE_PARAM_CONSTANTS["community"] . "')");
 		
 		$idx_id = null;
 		$listings_id = null;
+		$comm_id = null;
 		
 		foreach($pages as $page) {
 			if($page->parameter == $CS_GENERATED_PAGE_PARAM_CONSTANTS["idx"] ) $idx_id = $page->postid;
 			else if($page->parameter == $CS_GENERATED_PAGE_PARAM_CONSTANTS["listings"]) $listings_id = $page->postid;
+			else if($page->parameter == $CS_GENERATED_PAGE_PARAM_CONSTANTS["community"]) $comm_id = $page->postid;
 		}
 		
-		if(is_null($idx_id) || is_null($listings_id)) return;
+		if(is_null($idx_id) || is_null($listings_id) || is_null($comm_id)) return;
 		
 		$using_permalinks = $wp_rewrite->using_permalinks();
 		
@@ -990,32 +992,38 @@ class Listing_QS_Widget extends CS_Widget{
 		if( $using_permalinks ) {
 			$idx_url = $wpdb->get_var("SELECT post_name FROM " . $wpdb->posts . " WHERE ID = " . $idx_id . " AND post_type = 'page' AND post_status != 'trash'");
 			$listings_url = $wpdb->get_var("SELECT post_name FROM " . $wpdb->posts . " WHERE ID = " . $listings_id . " AND post_type = 'page' AND post_status != 'trash'");
+			$comm_url = $wpdb->get_var("SELECT post_name FROM " . $wpdb->posts . " WHERE ID = " . $comm_id . " AND post_type = 'page' AND post_status != 'trash'");
 		} else {
 			$using_permalinks = 0;
-		
+			
 			$idx_url = $wpdb->get_var("SELECT guid FROM " . $wpdb->posts . " WHERE ID = " . $idx_id . " AND post_type = 'page' AND post_status != 'trash'");
 			$listings_url = $wpdb->get_var("SELECT guid FROM " . $wpdb->posts . " WHERE ID = " . $listings_id . " AND post_type = 'page' AND post_status != 'trash'");
+			$comm_url = $wpdb->get_var("SELECT guid FROM " . $wpdb->posts . " WHERE ID = " . $comm_id . " AND post_type = 'page' AND post_status != 'trash'");
 			
 			//Strip the root url
 			$patt = "/\/\?/";
 			$idx_url_parts = preg_split($patt, $idx_url);
 			$listings_url_parts = preg_split($patt, $listings_url);
+			$comm_url_parts = preg_split($patt, $comm_url);
 			
 			//Check if the guid is valid
-			if(count($idx_url_parts) < 2 || count($listings_url_parts) < 2) return;
+			if(count($idx_url_parts) < 2 || count($listings_url_parts) < 2 || count($comm_url_parts) < 2) return;
 			
 			$idx_url = "?" . $idx_url_parts[1];
 			$listings_url = "?" . $listings_url_parts[1];
+			$comm_url = "?" . $comm_url_parts[1];
 		}
 				
-		if(is_null($idx_url) || is_null($listings_url)) return;
+		if(is_null($idx_url) || is_null($listings_url) || is_null($comm_url)) return;
 		
 		if($wp_rewrite->using_permalinks()) {
 			$idx_url .= '/?term=';
 			$listings_url .= '/';
+			$comm_url .= '/';
 		} else {
 			$idx_url .= '&term=';
 			$listings_url .= '&mlsNum='; 
+			$comm_url .= '&city=#&neigh=#'; //Note: the js will fill in the "neigh" query param
 		}
 		
 		extract( $args );

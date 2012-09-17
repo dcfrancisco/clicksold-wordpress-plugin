@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.9 =
+* CS - Quick Search Widget now utilizes communities page for applicable searches.
+
 = 1.8 =
 * Added custom brokerage logo upload functionality.
 

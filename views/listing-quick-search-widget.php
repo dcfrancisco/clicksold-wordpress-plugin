@@ -14,6 +14,7 @@
 			ajaxTarget : "<?php echo plugins_url( 'CS_ajax_request.php', dirname(__FILE__) ) ?>",
 			idx_url : "<?php echo $idx_url ?>",
 			listings_url : "<?php echo $listings_url ?>",
+			comm_url : "<?php echo $comm_url ?>",
 			using_permalinks : <?php echo $using_permalinks ?>
 		});
 	});

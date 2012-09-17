@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.8
+Version: 1.9
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
 Author URI: http://www.ClickSold.com/
 */
@@ -342,11 +342,11 @@ if( !is_admin() ){
 	 * Outputs frame breaking javascript
 	 */
 	function disable_domain_masking(){
-		print '<script type="text/javascript">/*<![CDATA[*/' . 
-		'  if(window.top !== window) { ' .
-		'    top.location = window.location.href; ' .
-		'  } ' .
-		'/*]]>*/</script>';
+		//print '<script type="text/javascript">/*<![CDATA[*/' . 
+		//'  if(window.top !== window) { ' .
+		//'    top.location = window.location.href; ' .
+		//'  } ' .
+		//'/*]]>*/</script>';
 	}
 	
 	/**
