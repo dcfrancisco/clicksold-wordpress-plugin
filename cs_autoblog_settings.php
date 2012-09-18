@@ -19,6 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+// Note: These have to be included before any output is sent to the browser so that servers with buffering disabled don't break when we try to start our session.
 require_once('../../../wp-load.php');
 require_once('cs_constants.php');
 

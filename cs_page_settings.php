@@ -19,12 +19,14 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+
+// Note: These have to be included before any output is sent to the browser so that servers with buffering disabled don't break when we try to start our session.
+require_once('../../../wp-load.php');
+require_once('cs_constants.php');
+
 ?>
 <div id="ws_page_settings" class="cs-module">
   <?php 
-	require_once('../../../wp-load.php');
-	require_once('cs_constants.php');
-
 	global $wpdb;
 	global $wp_rewrite;
 	global $CS_SECTION_PARAM_CONSTANTS;
