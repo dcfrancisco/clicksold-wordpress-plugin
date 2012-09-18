@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.10 =
+* Cleanly support servers where phps output buffering is disabled.
+
 = 1.9 =
 * CS - Quick Search Widget now utilizes communities page for applicable searches.
 
