@@ -54,8 +54,29 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			add_action("wp_delete_post", array($this, "prevent_cs_trash_pages"), 1, 12);
 			
 			if(strpos($_SERVER["QUERY_STRING"], "cs_page_del_error=true")) add_action('admin_notices', array($this, 'display_cs_page_delete_error'));
+			
+			// CS Notifications
+			add_action('admin_notices', array($this, 'display_cs_notices'));	
 		}
 				
+		/**
+		 * Queries the server to notify the user of any account misconfigurations 
+		 */
+		function display_cs_notices() {
+			global $CS_SECTION_ADMIN_PARAM_CONSTANT;
+			
+			if(get_option("cs_opt_notify", "1") == "1") {
+				$cs_request = new CS_request( "pathway=623", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] );
+				$cs_response = new CS_response( $cs_request->request() );
+				$notices = $cs_response->get_body_contents();
+				update_option("cs_opt_notify_msgs", $notices);
+				update_option("cs_opt_notify", "0");
+			} else $notices = get_option("cs_opt_notify_msgs", "");
+			
+			$notices = trim($notices);
+			if(!empty($notices)) echo "<div class=\"updated\">" . $notices . "</div>";
+		}
+		
 		/**
 		 * Splices the menu items array const based on whether or not this is a brokerage product
 		 */
@@ -96,6 +117,9 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 		 * Checks page slug (if available) and retrieves data from ClickSold server if necessary
 		 */
 		function get_admin_section(){
+		
+			global $CS_VARIABLE_META_ADMIN_NOTIFICATIONS;
+		
 			$menu = $this->get_menu_items();
 			$this->response = null;
 			
@@ -122,9 +146,14 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 							$cs_request = new CS_request($org_req, "wp_admin");
 							$this->response = new CS_response($cs_request->request());
 							
+							$page_vars = $this->response->cs_set_vars();
+							if(!empty($page_vars)) {
+								// Admin Notifications
+								if(array_key_exists($CS_VARIABLE_META_ADMIN_NOTIFICATIONS, $page_vars)) update_option("cs_opt_notify", "1");
+							}
+							
 							/* DEPRECATED
 							//Get page var for plugin config and configure as necessary
-							$page_vars = $this->response->cs_set_vars();
 							$cs_config = new CS_config();
 							$cs_config->cs_plugin_check_brokerage($page_vars);
 							*/

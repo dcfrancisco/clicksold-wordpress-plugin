@@ -170,6 +170,7 @@ class CS_request {
 		global $CS_SECTION_VIP_PARAM_CONSTANT;
 		
 		global $wpdb;
+		global $blog_id;
 		$cs_posts_table = $wpdb->prefix . "cs_posts";
 		$posts_table = $wpdb->prefix . "posts";
 		
@@ -191,6 +192,7 @@ class CS_request {
 		// If calling from administration section, set admin param
 		if($this->pluginSection == $CS_SECTION_ADMIN_PARAM_CONSTANT['wp_admin_pname']) {
 			$parameters['wp_admin_pname'] = $CS_SECTION_ADMIN_PARAM_CONSTANT['wp_admin_pname'];
+			$parameters['wpAdminUrl'] = get_admin_url($blog_id);
 		}
 		
 		if($this->pluginSection == $CS_SECTION_VIP_PARAM_CONSTANT['wp_vip_pname']) {

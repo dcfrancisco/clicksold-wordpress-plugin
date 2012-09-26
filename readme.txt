@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.11 =
+* Admin notifications to make sure that accounts are properly configured.
+
 = 1.10 =
 * Cleanly support servers where phps output buffering is disabled.
 

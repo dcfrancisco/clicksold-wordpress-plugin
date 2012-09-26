@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.10
+Version: 1.11
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
 Author URI: http://www.ClickSold.com/
 */
@@ -199,7 +199,7 @@ function check_product_update(){
 	
 	if ( get_option( $cs_change_products_request ) == "1" && !get_option( $cs_opt_plugin_key, "" ) == "" && !get_option( $cs_opt_plugin_num, "" ) == "" ) {
 		//make request to RPM server about allowed features
-		$cs_request = new CS_request( "tier_validate", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] );//error_log( "Response: " . print_r( $cs_request->request(), true ) );
+		$cs_request = new CS_request( "tier_validate", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); //error_log( "Response: " . print_r( $cs_request->request(), true ) );
 		$cs_response = new CS_response( $cs_request->request() );
 		$vars = $cs_response->cs_set_vars(); //error_log( "vars: " . print_r( $vars, true ) );
 		
@@ -211,6 +211,15 @@ function check_product_update(){
 				$wpdb->query('UPDATE ' . $wpdb->prefix . 'cs_posts SET available = 0 WHERE 1;');
 			}
 			return;
+		} else {
+			// Compare Tier Name & Brokerage Flag with WordPress db values - if they match, exit without unsetting the cs_change_products_request flag.
+			// Note that this is to prevent the plugin from being given old configuration data when the site is hit during the upgrade process. 
+			$brokerage = (bool) get_option("cs_opt_brokerage", 0);
+			if( $vars['tierName'] == get_option("cs_opt_tier_name") && 
+			  ($brokerage && $vars['brokerage'] == "true" ||
+			  !$brokerage && $vars['brokerage'] == "false") ) {
+				return false;
+			}
 		}
 		
 		$page_on_front = get_option( 'page_on_front' );
@@ -219,14 +228,14 @@ function check_product_update(){
 		// Toggling the brokerage needs to be done before the tier checks because when it saves / restores the state of the associates page which needs to happen before the feature availability calculations.
 		$cs_config = new CS_config();
 		$cs_config->cs_plugin_check_brokerage($vars["brokerage"]);
-
+		
 		// For each section (tier_feature ie: idx, associates), update the status / diaplay of the associated pages.
 		foreach( $CS_SECTION_PARAM_CONSTANTS as $tier_feature ) {
-
+			
 			$feature_post_id = $wpdb->get_var('SELECT postid FROM ' . $wpdb->prefix . "cs_posts" . ' WHERE PREFIX = "' . $tier_feature . '"');
 
 			if ( $feature_post_id > 0 && $vars[$tier_feature] != "" ) { // If this tier_feature has an associated post AND it's one of the tier_features reported by the cs server.
-
+				
 				$postStatus = ( $vars[$tier_feature] === "true" && ( !isset( $cs_posts_desired_statuses[$tier_feature] ) || $cs_posts_desired_statuses[$tier_feature] == "publish" ) )?"publish":"private";	// All posts associated with available features are set to publish, if not available set to private (this keeps them in or out of dynamically created menus) -- unless of course an available feature marked as do not show.
 				$wpdb->update( $wpdb->posts, array( "post_status" => $postStatus ), array( "ID" => $feature_post_id ), array( "%s" ), array( "%d" ) );
 				$wpdb->update( $wpdb->prefix . "cs_posts", array( "available" => ( $vars[$tier_feature] === "true" )?"1":"0" ), array( "postid" => $feature_post_id ), array( "%s" ), array( "%d" ) ); // The available field on the cs_posts table controls which sections of the cs back office are disabled.

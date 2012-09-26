@@ -120,6 +120,11 @@
 	);
 	
 	/**
+	 * Variable constant for displaying plugin notifications in admin area
+	 */
+	$CS_VARIABLE_META_ADMIN_NOTIFICATIONS = "_cs_admin_notify";
+	
+	/**
 	 * Array of constants used for displaying possible field options for the generated 
 	 * listing details page header title
 	 */
