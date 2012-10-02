@@ -64,8 +64,6 @@ class CS_ajax_request{
 		global $CS_SECTION_VIP_PARAM_CONSTANT;
 		global $cs_change_products_request;
 		
-		if( $this->is_products_change_request() || $this->is_plugin_activation_request() ) update_option($cs_change_products_request, "1");
-		
 		$this->captcha = $this->is_captcha_request();
 		
 		if( $this->captcha == true ) { // A captcha request is setup differently.
@@ -92,6 +90,12 @@ class CS_ajax_request{
 		} else {
 			$cs_request = new CS_request( $this->request_vars, null);
 			$cs_response = new CS_response($cs_request->request());
+		}
+
+		// If this request was one that could have changed the configuration ask the plugin to check for new settings.
+		if( $this->is_products_change_request() || $this->is_plugin_activation_request() ) {
+			
+			update_option($cs_change_products_request, "1");
 		}
 	
 		$this->content_type = $cs_response->cs_get_response_content_type();

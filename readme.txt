@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.12 =
+* Fix plugin re-configuration on product tier change.
+* Fix canonical link references for CS generated pages.
+
 = 1.11 =
 * Admin notifications to make sure that accounts are properly configured.
 

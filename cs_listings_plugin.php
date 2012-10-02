@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.11
+Version: 1.12
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
 Author URI: http://www.ClickSold.com/
 */
@@ -198,6 +198,7 @@ function check_product_update(){
 	global $cs_opt_plugin_num;
 	
 	if ( get_option( $cs_change_products_request ) == "1" && !get_option( $cs_opt_plugin_key, "" ) == "" && !get_option( $cs_opt_plugin_num, "" ) == "" ) {
+		
 		//make request to RPM server about allowed features
 		$cs_request = new CS_request( "tier_validate", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); //error_log( "Response: " . print_r( $cs_request->request(), true ) );
 		$cs_response = new CS_response( $cs_request->request() );
@@ -212,16 +213,21 @@ function check_product_update(){
 			}
 			return;
 		} else {
-			// Compare Tier Name & Brokerage Flag with WordPress db values - if they match, exit without unsetting the cs_change_products_request flag.
-			// Note that this is to prevent the plugin from being given old configuration data when the site is hit during the upgrade process. 
-			$brokerage = (bool) get_option("cs_opt_brokerage", 0);
-			if( $vars['tierName'] == get_option("cs_opt_tier_name") && 
-			  ($brokerage && $vars['brokerage'] == "true" ||
-			  !$brokerage && $vars['brokerage'] == "false") ) {
-				return false;
-			}
+			
+			// 2012-10-02 EZ - This has been replaced by a change in CS_ajax_request.php. If we are processing a call that could have changed the configuration
+			// we set the $cs_change_products_request AFTER the call has completed. The next plugin request (and we don't care if it's back or front office) will
+			// re-configure the plugin and clear the $cs_change_products_request flag.
+			
+			//// Compare Tier Name & Brokerage Flag with WordPress db values - if they match, exit without unsetting the cs_change_products_request flag.
+			//// Note that this is to prevent the plugin from being given old configuration data when the site is hit during the upgrade process. 
+			//$brokerage = (bool) get_option("cs_opt_brokerage", 0);
+			//if( $vars['tierName'] == get_option("cs_opt_tier_name") && 
+			//  ($brokerage && $vars['brokerage'] == "true" ||
+			//  !$brokerage && $vars['brokerage'] == "false") ) {
+			//	return false;
+			//}
 		}
-		
+
 		$page_on_front = get_option( 'page_on_front' );
 		$cs_posts_desired_statuses = get_option( "cs_posts_desired_statuses", array() ); // Note these are the desired statuses (if a feature is available a private here will override the publish that comes from the feature being available) the code treats missing entries as publish so this one gets a default empty array.
 
@@ -314,7 +320,9 @@ function cs_mobile_site_disabled() {
 if( !is_admin() ){
 	
 	global $wp_rewrite;
-	if(get_option("page_on_front") > 0 && get_option("permalink_structure") !== NULL) remove_filter('template_redirect', 'redirect_canonical');
+	
+	// Canonical redirects need to be turned off or some of our custom urls will not work
+	if(get_option("permalink_structure")) remove_filter('template_redirect', 'redirect_canonical');
 	
 	//if(!is_404() && !is_preview()){
 		
@@ -343,32 +351,8 @@ if( !is_admin() ){
 			// Adds inline javascript that changes masked domains to their original urls
 			add_action('parse_query', 'cs_process_cs_section_posts', 5); 	// ClickSold section posts are processed in parse_query because they need to be able to set the title.
 			add_action('wp', 'cs_process_cs_shortcode_posts'); 	// ClickSold shortcodes are processed when we are processing the post itself.	
-			add_action('wp', 'cs_disable_domain_mask');			
 		}
 	//}
-	
-	/**
-	 * Outputs frame breaking javascript
-	 */
-	function disable_domain_masking(){
-		//print '<script type="text/javascript">/*<![CDATA[*/' . 
-		//'  if(window.top !== window) { ' .
-		//'    top.location = window.location.href; ' .
-		//'  } ' .
-		//'/*]]>*/</script>';
-	}
-	
-	/**
-	 * Call to set frame breaking code in the header.  Needed to be called via the wp action as is_admin() would always return false otherwise.
-	 */
-	function cs_disable_domain_mask(){
-		global $cs_opt_tier_name;
-		global $cs_opt_brokerage;
-				
-		if( get_option( $cs_opt_tier_name, 'Bronze' ) === "Bronze" && get_option( $cs_opt_brokerage ) != "1" && !is_admin() ) {
-			add_action("wp_print_scripts", "disable_domain_masking");  // Unmask domains for Bronze tier
-		}
-	}
 	
 	/**
 	 * Checks options to see if we should run the listing auto blogger
@@ -759,6 +743,30 @@ if( !is_admin() ){
 		echo "<meta name='description' content='$content' />";
 	}
 	
+	// Canonical Header - Override for CS generated pages e.g. site.com/communities/city/neigh
+	// Note: this section may need to be modified to accomodate other SEO-related plugins
+	$theme = wp_get_theme();
+	if($theme->template === 'genesis') {
+		// Genesis Framework - SEO
+		add_action('pre_get_posts', 'debug_param_output');
+		function debug_param_output($wp_query) {
+			$id = $wp_query->get_queried_object_id();
+			if(is_main_query() && !empty($id)) update_post_meta( (Int)$id, '_genesis_canonical_uri', $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] );
+		}
+	} else {
+		// Normal (No other SEO Plugins used)
+		add_action('template_redirect', 'cs_update_canonical_link');
+		function cs_update_canonical_link() {
+			remove_action('wp_head', 'rel_canonical');
+			add_action('wp_head', 'cs_fix_canonical_link', 5);
+		}
+		
+		function cs_fix_canonical_link() {
+			$http_prefix = "";
+			if(strpos($_SERVER["HTTP_HOST"], "http://") === false) $http_prefix = "http://";
+			echo '<link rel="canonical" href="' . $http_prefix . $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] . '" />';
+		}
+	}
 }
 /* Hooks for plugin activation/deactivation ****************************************************/
 $cs_config = new CS_config();
