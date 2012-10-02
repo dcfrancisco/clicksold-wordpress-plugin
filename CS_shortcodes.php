@@ -348,7 +348,7 @@ class CS_shortcodes {
 					if (!empty($m[1])){
 						if(array_key_exists($m[1], $params)) {
 							if(is_array($params[$m[1]])) {  //Push to array
-								$params[$m[1]][count($params)] = stripcslashes($m[2]);
+								$params[$m[1]][count($params[$m[1]])] = stripcslashes($m[2]);
 							}else{  //Create array
 								$temp = $params[$m[1]];
 								$params[$m[1]] = array($temp, stripcslashes($m[2]));
@@ -427,7 +427,7 @@ class CS_shortcodes {
 		
 		/** Check for and process any post that may have ClickSold shortcodes on it. **/
 		if($this->contains_cs_shortcodes( $wp_query->get_queried_object()->post_content )) {
-
+		
 			// Fetch an array with all the cs short codes extracted and parsed. format is [[name, [param1 => value1...], ...] - in the order that they appear on the page.
 			$shortcode_records = $this->extract_cs_shortcodes( $wp_query->queried_object->post_content );
 			
@@ -452,6 +452,9 @@ class CS_shortcodes {
 				$shortcode_introspect = $shortcode_record[2];
 
 				$cs_org_req = $this->cs_create_shortcode_request( $shortcode_name, $shortcode_param_arr, $shortcode_introspect );
+				
+				//DEBUG
+				//error_log("\n" . $shortcode_name . "\n" . print_r($shortcode_param_arr, true) . "\n" . $shortcode_introspect . "\n" . $cs_org_req);
 				
 				// Add a new section to the request.
 				$cs_request->add_req_section( $cs_org_req );

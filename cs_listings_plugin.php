@@ -649,9 +649,8 @@ if( !is_admin() ){
 
 		//replace wild cards with content, if found
 		foreach($options as $key => $value){
-			$val_spaced = $value . " ";  //check for values that aren't prepended to any other text e.g. %a is valid, %addr is invalid
-			if(strpos($cs_title, $val_spaced) !== false){
-				$cs_title = str_replace($val_spaced, $page_vars[$key] . " ", $cs_title);
+			if(strpos($cs_title, $value) !== false){
+				$cs_title = str_replace($value, $page_vars[$key], $cs_title);
 			}
 			
 			$offset = strlen($cs_title) - strlen($value);
@@ -718,10 +717,9 @@ if( !is_admin() ){
 		foreach($options as $key => $value){
 			$pv_val = "";
 			if(array_key_exists($key, $page_vars)) $pv_val = $page_vars[$key];
-		
-			$val_spaced = $value . " ";
-			if(strpos($content, $val_spaced) !== false){
-				$content = str_replace($val_spaced, $pv_val . " ", $content);
+			
+			if(strpos($content, $value) !== false){
+				$content = str_replace($value, $pv_val, $content);
 			}
 			
 			$offset = strlen($content) - strlen($value);
