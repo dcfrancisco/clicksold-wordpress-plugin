@@ -743,29 +743,32 @@ if( !is_admin() ){
 	
 	// Canonical Header - Override for CS generated pages e.g. site.com/communities/city/neigh
 	// Note: this section may need to be modified to accomodate other SEO-related plugins
-	if( function_exists("wp_get_theme") ) { // Temp change until we can replace wp_get_theme with something that was added before wp 3.4.0.
-	
-		$theme = wp_get_theme();
-		if($theme->template === 'genesis') {
-			// Genesis Framework - SEO
-			add_action('pre_get_posts', 'debug_param_output');
-			function debug_param_output($wp_query) {
-				$id = $wp_query->get_queried_object_id();
-				if(is_main_query() && !empty($id)) update_post_meta( (Int)$id, '_genesis_canonical_uri', $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] );
-			}
-		} else {
-			// Normal (No other SEO Plugins used)
-			add_action('template_redirect', 'cs_update_canonical_link');
-			function cs_update_canonical_link() {
-				remove_action('wp_head', 'rel_canonical');
-				add_action('wp_head', 'cs_fix_canonical_link', 5);
-			}
-		
-			function cs_fix_canonical_link() {
+	// We fetch the post id differently depending on if permalinks are enabled or not.
+	if(get_template() === 'genesis') {
+		// Genesis Framework - SEO
+		add_action('pre_get_posts', 'debug_param_output');
+		function debug_param_output($wp_query) {
+			$page_id = $wp_query->get_queried_object_id();
+			if(empty($page_id)) $page_id = $wp_query->query_vars["page_id"];
+			
+			if(is_main_query() && !empty($page_id)) {
 				$http_prefix = "";
 				if(strpos($_SERVER["HTTP_HOST"], "http://") === false) $http_prefix = "http://";
-				echo '<link rel="canonical" href="' . $http_prefix . $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] . '" />';
+				update_post_meta( (Int)$page_id, '_genesis_canonical_uri', $http_prefix . $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] );
 			}
+		}
+	} else {
+		// Normal (No other SEO Plugins used)
+		add_action('template_redirect', 'cs_update_canonical_link');
+		function cs_update_canonical_link() {
+			remove_action('wp_head', 'rel_canonical');
+			add_action('wp_head', 'cs_fix_canonical_link', 5);
+		}
+		
+		function cs_fix_canonical_link() {
+			$http_prefix = "";
+			if(strpos($_SERVER["HTTP_HOST"], "http://") === false) $http_prefix = "http://";
+			echo '<link rel="canonical" href="' . $http_prefix . $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] . '" />';
 		}
 	}
 }
