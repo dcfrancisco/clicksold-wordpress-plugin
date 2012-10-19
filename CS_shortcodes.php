@@ -168,7 +168,8 @@ class CS_shortcodes {
 		// If the $cs_response is null and the sc does not have the 'do_sc_direct' attribute this means that the shortcode is being called
 		// directly by a do_shortcode function but the caller did not specify the do_sc_direct parameter as required.
 		if( !isset( $cs_response ) && !isset( $atts['do_sc_direct'] ) ) {
-			return "<br>Error: Likely calling cs shortcode via do_shortcode() but you need to specify do_sc_direct in this case.<br>";
+//			return "<br>Error: Likely calling cs shortcode via do_shortcode() but you need to specify do_sc_direct in this case.<br>";
+			return "<br>Error: Likely calling cs shortcode via do_shortcode() this is not currently supported.<br>";
 		}
 		
 		// If the shortcode is marked as being called directly via the do_shortcode function we need to create and issue an independent request.
@@ -427,6 +428,13 @@ class CS_shortcodes {
 		
 		/** Check for and process any post that may have ClickSold shortcodes on it. **/
 		if($this->contains_cs_shortcodes( $wp_query->get_queried_object()->post_content )) {
+		
+			// NOTE: Here we have to disable the filters because we can't control the priority of when our content gets inserted as we can with the special pages.
+			// Disable WordPress native formatters
+			remove_filter( 'the_content', 'wpautop' );
+			remove_filter( 'the_content', 'wptexturize' );
+			// Disable other known formatters that cause issues with ClickSold.
+			remove_filter( 'the_content', 'su_custom_formatter', 99 ); // this one belongs to the Shortcodes Ultimate plugin.
 		
 			// Fetch an array with all the cs short codes extracted and parsed. format is [[name, [param1 => value1...], ...] - in the order that they appear on the page.
 			$shortcode_records = $this->extract_cs_shortcodes( $wp_query->queried_object->post_content );

@@ -34,6 +34,7 @@ require_once("cs_functions.php");
 			global $cs_opt_plugin_key;
 			global $cs_opt_plugin_num;
 			global $cs_opt_plugin_hostname;
+			global $cs_change_products_request;
 			
 			//must check that the user has the required capability 
 			if (!current_user_can('manage_options'))
@@ -69,6 +70,9 @@ require_once("cs_functions.php");
 					$opt_plugin_hostname_val = $_POST[ $cs_opt_plugin_hostname ];
 					update_option($cs_opt_plugin_hostname, $opt_plugin_hostname_val);
 				}
+
+				// Plugin should check and re-synch it's capabilities.
+				update_option($cs_change_products_request, "1");
 
 				// Put an settings updated message on the screen
 				$updated = "true";
