@@ -429,12 +429,14 @@ class CS_shortcodes {
 		/** Check for and process any post that may have ClickSold shortcodes on it. **/
 		if($this->contains_cs_shortcodes( $wp_query->get_queried_object()->post_content )) {
 		
-			// NOTE: Here we have to disable the filters because we can't control the priority of when our content gets inserted as we can with the special pages.
-			// Disable WordPress native formatters
-			remove_filter( 'the_content', 'wpautop' );
-			remove_filter( 'the_content', 'wptexturize' );
-			// Disable other known formatters that cause issues with ClickSold.
-			remove_filter( 'the_content', 'su_custom_formatter', 99 ); // this one belongs to the Shortcodes Ultimate plugin.
+			// WARNING: Can't remove these filters as they are needed to format any surrounding html correctly, futher the filter for the Shortcodes Ultimate plugin
+			//          can't be removed in this manner because it Shortcodes Ultimate removes the wpautop and wptexturize ones itself. If using Shortcodes Ultimate use [raw] shortcode around cs ones to get them to work correctly.
+//			// NOTE: Here we have to disable the filters because we can't control the priority of when our content gets inserted as we can with the special pages.
+//			// Disable WordPress native formatters
+//			remove_filter( 'the_content', 'wpautop' );
+//			remove_filter( 'the_content', 'wptexturize' );
+//			// Disable other known formatters that cause issues with ClickSold.
+//			remove_filter( 'the_content', 'su_custom_formatter', 99 ); // this one belongs to the Shortcodes Ultimate plugin.
 		
 			// Fetch an array with all the cs short codes extracted and parsed. format is [[name, [param1 => value1...], ...] - in the order that they appear on the page.
 			$shortcode_records = $this->extract_cs_shortcodes( $wp_query->queried_object->post_content );
