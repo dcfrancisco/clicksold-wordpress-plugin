@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.13
+Version: 1.14
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
 Author URI: http://www.ClickSold.com/
 */
@@ -202,8 +202,8 @@ function check_product_update(){
 		//make request to RPM server about allowed features
 		$cs_request = new CS_request( "tier_validate", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); //error_log( "Response: " . print_r( $cs_request->request(), true ) );
 		$cs_response = new CS_response( $cs_request->request() );
-		$vars = $cs_response->cs_set_vars(); //error_log( "vars: " . print_r( $vars, true ) );
-		
+		$vars = $cs_response->cs_set_vars(); // error_log( "vars: " . print_r( $vars, true ) );
+
 		if(empty($vars)) {
 			//Invalidate / Hide plugin pages
 			$cs_pages = $wpdb->get_col("SELECT postid FROM " . $wpdb->prefix . "cs_posts");
@@ -234,7 +234,7 @@ function check_product_update(){
 		// Toggling the brokerage needs to be done before the tier checks because when it saves / restores the state of the associates page which needs to happen before the feature availability calculations.
 		$cs_config = new CS_config();
 		$cs_config->cs_plugin_check_brokerage($vars["brokerage"]);
-		
+
 		// For each section (tier_feature ie: idx, associates), update the status / diaplay of the associated pages.
 		foreach( $CS_SECTION_PARAM_CONSTANTS as $tier_feature ) {
 			

@@ -58,13 +58,17 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.14 =
+* Added remote re-synch ability.
+* Added debug features.
+* Remove incorrectly implemented compatability with Shortcodes Ultimate plugin.
+
 = 1.13 =
 * Shortcode compatability with Shortcodes Ultimate plugin.
 * Auth update now re-synchs capabilities automatically.
 * Canonical link references fix now works with pre 3.4 wp versions.
 * Shortcode fixes for shorcodes with multiple parameters
 * Page settings wildcards now work w/o trailing space.
-
 
 = 1.12 =
 * Fix plugin re-configuration on product tier change.

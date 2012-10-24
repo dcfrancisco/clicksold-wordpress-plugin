@@ -99,6 +99,16 @@ class CS_request {
 			$this->proxy_server = $this->production_proxy_server;
 		}
 		
+		// Debug marker, if present we just do a proxyied request to google's (fast) or godaddy's (slow) main page which isolates our servers from the equation.
+		if( preg_match("/cs_debug_alt_server_marker1/", $cs_org_req) || preg_match("/cs_debug_alt_server_marker2/", $cs_org_req) ) {
+
+			if( preg_match("/cs_debug_alt_server_marker1/", $cs_org_req) ) { $this->proxy_server = "http://www.google.com/"; }
+			if( preg_match("/cs_debug_alt_server_marker2/", $cs_org_req) ) { $this->proxy_server = "http://www.godaddy.com/"; }
+
+			// Clear the original request.
+			$cs_org_req = "";
+		}
+		
 		// Now select the appropriate controller that will handle the request.
 		if($CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] == $pluginSection) {
 			$this->proxy_server .= $this->plugin_admin_controller;

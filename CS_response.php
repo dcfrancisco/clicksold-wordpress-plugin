@@ -46,6 +46,7 @@ class CS_response
 		$this->response_content_type = $data['headers']['content-type'];
 		$this->cs_parse_response($data);
 		$this->set_resource_includes();
+		$this->check_vars_for_requests(); // Checks the variables sent by the server to see if the server wants us to do something.
 	}
 			
 	/**
@@ -116,6 +117,26 @@ class CS_response
 			//$this->resource_includes = json_decode(trim($this->response_contents['header_footer']), true);  //See note above function my_json_decode
 		}
 	}
+	
+	/**
+	 * Checks the variables sent by the server to see if the server is requesting us to do something.
+	 */
+	private function check_vars_for_requests() {
+		
+		$srv_response_vars = $this->cs_set_vars();
+		
+		// Process the capabilities re-synch request by setting the $cs_change_products_request flag so that the next hit on the plugin will get it to re-synchronize.
+		if( !empty( $srv_response_vars['_cs_req_plugin_capabilities_resynch'] ) ) {
+			global $cs_change_products_request;
+			update_option( $cs_change_products_request, 1 );
+
+			// Also flush the rules so that the pages get re-hooked up.
+			global $wp_rewrite;
+			$wp_rewrite->flush_rules();
+		}
+
+	}
+	
 	
 	/**
 	 * Function that registers scripts/styles as well as output any block javascript/css
