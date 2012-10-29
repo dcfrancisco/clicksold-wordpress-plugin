@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.14
+Version: 1.15
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
 Author URI: http://www.ClickSold.com/
 */
@@ -723,16 +723,9 @@ if( !is_admin() ){
 			}
 			
 			$offset = strlen($content) - strlen($value);
-			
-			if(($offset >= strlen($content) || $offset >= strlen($value)) && $offset < 1){
-				if($content == $value){ $content = $pv_val; }
-			}else if(substr_compare($content, $value, $offset) === false){ 
-				//Do nothing, the check above should of fell through instead
-			}else if(substr_compare($content, $value, $offset) == 0){
-				$content = substr_replace($content, $pv_val, $offset, strlen($value));
-			}
 		}
 		
+		// Cut it off to the desired maximum length.
 		if(strlen($content) > $char_limit){
 			$content = substr($content, 0, $char_limit - 3);
 			$content .= "...";
@@ -751,7 +744,14 @@ if( !is_admin() ){
 			$page_id = $wp_query->get_queried_object_id();
 			if(empty($page_id)) $page_id = $wp_query->query_vars["page_id"];
 			
-			if(is_main_query() && !empty($page_id)) {
+			$main_query = false;
+			if(method_exists($wp_query, 'is_main_query')) $main_query = is_main_query();
+			else { //For WP < 3.3
+				global $wp_the_query;
+				if($wp_query === $wp_the_query) $main_query = true;
+			}
+			
+			if($main_query && !empty($page_id)) {
 				$http_prefix = "";
 				if(strpos($_SERVER["HTTP_HOST"], "http://") === false) $http_prefix = "http://";
 				update_post_meta( (Int)$page_id, '_genesis_canonical_uri', $http_prefix . $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] );

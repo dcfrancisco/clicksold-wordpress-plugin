@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.15 =
+* Fix metatag wildcard replacement causing string index errors in certain edge cases.
+* Replaced is_main_query call for compatability with WP earlier than 3.3
+
 = 1.14 =
 * Added remote re-synch ability.
 * Added debug features.
