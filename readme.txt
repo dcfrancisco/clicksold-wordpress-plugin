@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.16 =
+* Fix featured listings widget when used on subpages.
+
 = 1.15 =
 * Fix metatag wildcard replacement causing string index errors in certain edge cases.
 * Replaced is_main_query call for compatability with WP earlier than 3.3

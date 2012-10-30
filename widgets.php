@@ -1092,6 +1092,7 @@ class Feature_Listing_Widget extends CS_Widget{
 		global $wp_rewrite;
 		global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
 		global $BROKERAGE;
+		global $blog_id;
 				
 		$table_name = $wpdb->prefix . "cs_posts";
 		
@@ -1117,6 +1118,15 @@ class Feature_Listing_Widget extends CS_Widget{
 		} else { 
 			$listings_url .= '&mlsNum='; 
 			$listings_excl_url .= '&listNum=';
+		}
+		
+		// Turn urls absolute
+		if(method_exists($this, 'is_multisite') && is_multisite()) {
+			$listings_url = network_home_url($listings_url);
+			$listings_excl_url = network_home_url($listings_excl_url);
+		} else {
+			$listings_url = home_url($listings_url);
+			$listings_excl_url = home_url($listings_excl_url);
 		}
 		
 		extract( $args );
