@@ -74,6 +74,15 @@ require_once("cs_functions.php");
 				// Plugin should check and re-synch it's capabilities.
 				update_option($cs_change_products_request, "1");
 
+				// Set notifications flag
+				$cs_request = new CS_request("pathway=620", "wp_admin");
+				$cs_response = new CS_response($cs_request->request());
+				$valid = json_decode($cs_response->get_body_contents());
+				
+				update_option('cs_opt_notify_msgs', "");  // Clear notifications cache
+				if(!is_null($valid)) update_option('cs_opt_notify', "1");
+				else update_option('cs_opt_notify', "0");  // Prevent notification check from running if invalid
+				
 				// Put an settings updated message on the screen
 				$updated = "true";
 			}

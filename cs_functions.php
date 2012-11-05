@@ -116,6 +116,11 @@ function cs_is_hosted(){
 	global $CS_VARIABLE_HOSTING_ID2;
 	$plugin_host = gethostbyname($_SERVER['SERVER_NAME']);
 
+	// Special var in the config to make the plugin think that it's on a 3rd party wp host.
+	if(defined("CS_FORCE_3RD_PARTYHOST") && CS_FORCE_3RD_PARTYHOST) {
+		return false;
+	}
+
 	if(defined("CS_DEBUG") && CS_DEBUG) {
 		return(
 			($plugin_host == $CS_VARIABLE_HOSTING_ID) ||
