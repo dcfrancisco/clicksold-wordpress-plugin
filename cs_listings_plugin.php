@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.16
+Version: 1.17
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
 Author URI: http://www.ClickSold.com/
 */
@@ -516,7 +516,7 @@ if( !is_admin() ){
 		// We fetch the post id differently depending on if permalinks are enabled or not.
 		if( $wp_rewrite->using_permalinks()) {
 
-			$post_id = $wp_query->get_queried_object_id();
+			$post_id = $wp_query->queried_object_id; // Note using get_queried_object_id sets the queried object if not set and this confuses some other plugins.
 
 			//Check to see if this is one of our pages as the front page.
 			//Note that we can't use is_front_page() as it is too early in the loop
@@ -741,7 +741,7 @@ if( !is_admin() ){
 		// Genesis Framework - SEO
 		add_action('pre_get_posts', 'debug_param_output');
 		function debug_param_output($wp_query) {
-			$page_id = $wp_query->get_queried_object_id();
+			$post_id = $wp_query->queried_object_id; // Note using get_queried_object_id sets the queried object if not set and this confuses some other plugins.
 			if(empty($page_id)) $page_id = $wp_query->query_vars["page_id"];
 			
 			$main_query = false;

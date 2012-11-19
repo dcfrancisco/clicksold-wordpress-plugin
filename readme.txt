@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.17 =
+* Interplugin - Compatibility fix.
+
 = 1.16 =
 * Fix featured listings widget when used on subpages.
 
