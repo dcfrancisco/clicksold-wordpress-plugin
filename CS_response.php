@@ -25,8 +25,8 @@ class CS_response
 	private $response_contents = array();
 	private $resource_includes; //JSON object converted to associative array
 	private $response_content_type = "text/plain";
-	
 	private $plugin_section = '';
+	private $error_state = false; //True when passed in an array with "cs_req_err_msg" as one of the keys
 
 	private $current_response_section = 0; // In a multiple request <-> response scenario this holds the index of the body section that we are currently processing.
 
@@ -40,13 +40,12 @@ class CS_response
 	*/
 	function __construct($data, $plugin_section = ''){
 		$this->plugin_section = $plugin_section;
-
-		//error_log(print_r($data, true));
-		
-		$this->response_content_type = $data['headers']['content-type'];
 		$this->cs_parse_response($data);
-		$this->set_resource_includes();
-		$this->check_vars_for_requests(); // Checks the variables sent by the server to see if the server wants us to do something.
+		if(!$this->error_state) {
+			$this->response_content_type = $data['headers']['content-type'];
+			$this->set_resource_includes();
+			$this->check_vars_for_requests(); // Checks the variables sent by the server to see if the server wants us to do something.
+		}
 	}
 			
 	/**
@@ -54,19 +53,24 @@ class CS_response
 	*/
 	private function cs_parse_response($response_data){
 		
+		// Check if the data passed in is a error message
+		if(isset( $response_data[ 'cs_req_err_msg' ] )) {
+			$this->response_contents[ 'body_0' ] = $response_data[ 'cs_req_err_msg' ];
+			$this->error_state = true;
+			return;
+		}
+		
 		$response_body = $response_data['body'];
 
 		// Check for any separators if there are none we assume it's an ajax call or a stack trace and just set the body from the input as is.
 		if(strpos($response_body, self::header_separator) === FALSE &&
 		   strpos($response_body, self::body_separator) === FALSE) {
-
+		   
 			// No tags found, just set the body.
 			$this->response_contents[ 'body_0' ] = $response_body;
-
 			return; // Ok, we have no tags, just quit right here.
 		} // else - we go on to extract the segmented information.
-
-
+		
 		// First handle the Header and Footer section (Assuming it exists).
 		if(strpos($response_body, self::header_separator) !== FALSE) {
 			
@@ -222,6 +226,10 @@ class CS_response
 	public function next_response_section() {
 		$this->current_response_section++;
 	}
+
+	public function get_response_section_num() {
+		return $this->current_response_section;
+	}
 	
 	public function cs_get_response_content_type(){
 		return $this->response_content_type;
@@ -281,6 +289,13 @@ class CS_response
 	public function cs_get_json(){
 		return $this->my_json_decode(trim($this->get_body_contents()));
 	}
+	
+	/**
+	 * Flag that is true when the object was instantiated with an array with a CS-specific error key (from CS_request)
+	 */
+	public function is_error(){
+		return $this->error_state;
+	}	
 	
 /*** Utility Functions *******************************************************************/
 	

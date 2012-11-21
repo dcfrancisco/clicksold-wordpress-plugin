@@ -69,12 +69,19 @@ class CS_request {
 	protected $plugin_utils_controller = 'WPPluginUtilsRpm';
 	protected $plugin_mobile_controller = 'WPPluginMobile';
 	protected $plugin_captcha_controller = 'jcaptcha';
-
+	
 	protected $proxy_server = '';	// Will be selected from $production_proxy_server or $test_proxy_server in the constructor.
-
-	// NOTE: This timeout has to be the same as the tomcat response timeout in the workers.properties file.
-	protected $req_timeout = 60;	// Request timeout in seconds.
-
+	
+	// The max timeout should be as close to the tomcat response timeout in the workers.properties file but also not
+	// the same or over the max_execution_time in php.ini.
+	protected $req_timeout_max = 60;	// Request timeout in seconds.
+	protected $req_timeout_min = 4;
+	protected $req_timeout_attempt_threshold = 7; // Number of failed requests before the timeout is reset back to the minimum
+	protected $req_timeout_failed_attempts;
+	protected $req_timeout;
+	
+	protected $req_timeout_err_msg = "Could not retrieve response from CS server which is likely undergoing maintenance at this time, please try again later.";
+	
 	/**
 	* construct the CS_request obj.
 	*/
@@ -144,6 +151,25 @@ class CS_request {
 
 		// Flag used for getting all 
 		if(!is_null($getAllSections)) $this->getAllSections = $getAllSections;
+		 
+		// Configure the maximum timeout for this account.
+		// The max timeout must be at most one second 
+		// less than the max_execution_time set in php.ini
+		// or it will throw a fatal error and break the site.
+		$max_exec = (int) ini_get('max_execution_time');
+		if($this->req_timeout_max >= $max_exec) { 
+			// Set as (max_execution_time / 2) so there's less risk of a fatal error thrown.
+			// On usual setups the max execution time is default (30s)
+			$this->req_timeout_max = floor($max_exec / 2); 
+		}
+		
+		// Get and store the number of failed server attempts since the last failure to connect
+		$this->req_timeout_failed_attempts = get_option('cs_req_timeout_failed_attempts', false);
+		if(!$this->req_timeout_failed_attempts) update_option('cs_req_timeout_failed_attempts', 0);
+		
+		// Get and store the current request timeout value
+		$this->req_timeout = get_option('cs_req_timeout', false);
+		if(!$this->req_timeout) update_option('cs_req_timeout', $this->req_timeout_max);
 		
 		$this->requestObj = new WP_Http; // initialize the WP_Http request so we can communicate with ClickSold plugin server
 	}
@@ -242,7 +268,7 @@ class CS_request {
 		$headers = array(); // Headers that will be sent as part of this request.
 		
 		// Moved to cs_listings_plugin.php and done via the init hook.
-//		if(!session_id()){ session_start(); }
+		// if(!session_id()){ session_start(); }
 		
 		// If we've saved one then we have to add it to the request.
 		if( isset( $_SESSION['cs_session_id'] ) ) {
@@ -255,6 +281,8 @@ class CS_request {
 		// We need to send the original user-agent string for headers that have behaviors of "conditional comments" not handled by the WordPress API
 		$user_agent = $_SERVER['HTTP_USER_AGENT'];
 		
+		//error_log('Calling request - timeout in ' . $this->req_timeout . ' seconds.');
+		
 		// Make the request.
 		if( $method == 'POST' ) {
 			$response = $this->requestObj->post( $this->proxy_server, array( 'method' => $method, 'headers' => $headers, 'body' => $parameters, 'user-agent' => $user_agent, 'timeout' => $this->req_timeout ) );
@@ -264,16 +292,45 @@ class CS_request {
 
 		// Check for errors.
 		if( is_wp_error( $response ) ) {
-			print_r($response);
-			$response = array();
+			
+			//error_log(print_r($response));
+			
+			if($this->req_timeout_failed_attempts == 0) {  //First failure
+				$this->req_timeout_failed_attempts = 1;
+				
+				// Set timeout to minimum
+				$this->req_timeout = $this->req_timeout_min;
+				update_option('cs_req_timeout', $this->req_timeout);
+				
+			} else if($this->req_timeout_failed_attempts == $this->req_timeout_attempt_threshold) { // Failure threshold
+				// Reset the number of timeout attempts
+				$this->req_timeout_failed_attempts = 0;
+				
+				// Set timeout to maximum
+				$this->req_timeout = $this->req_timeout_max;
+				update_option('cs_req_timeout', $this->req_timeout);
+				
+			} else { // Sequential failure
+				$this->req_timeout_failed_attempts += 1;
+			}
+			
+			update_option('cs_req_timeout_failed_attempts', $this->req_timeout_failed_attempts);
+			$response = array( "cs_req_err_msg" => $this->req_timeout_err_msg );
+		} else {
+			// Reset stored timeout values
+			if($this->req_timeout != $this->req_timeout_max) {
+				update_option('cs_req_timeout', $this->req_timeout_max);
+				update_option('cs_req_timeout_failed_attempts', 0);
+			}
 		}
-
+		
 		// We need to save the cookie information that we got back from the server.
 		if( isset( $response['headers']['set-cookie'] ) ) {
 			$_SESSION['cs_session_id'] = $response['headers']['set-cookie'];
 		}
-
+		
 		return $response;
 	}
+	
 }
 ?>

@@ -50,6 +50,9 @@ class CS_utilities{
 		$cs_request = new CS_request($req, $CS_SECTION_UTILS_PARAM_CONSTANTS['listing_autoblog_pname']);
 		$cs_response = new CS_response($cs_request->request());
 		
+		// Skip processing if connection to server failed
+		if($cs_response->is_error()) return;
+		
 		$response = $cs_response->cs_get_json();
 		
 		$post_queue = array();

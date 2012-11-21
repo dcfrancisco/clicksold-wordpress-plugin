@@ -164,6 +164,7 @@ class CS_shortcodes {
 	 */
 	public function cs_response_shortcode_handler($atts, $content, $tag) {
 		global $cs_response;
+		global $cs_delayed_shortcodes_captured_values; // Will capture our shortcode output if the cs_delayed_shortcodes option is set.
 		
 		// If the $cs_response is null and the sc does not have the 'do_sc_direct' attribute this means that the shortcode is being called
 		// directly by a do_shortcode function but the caller did not specify the do_sc_direct parameter as required.
@@ -194,7 +195,8 @@ class CS_shortcodes {
 			$local_cs_request->add_req_section( $cs_org_req );
 
 			$local_cs_response = new CS_response($local_cs_request->request());
-
+			if($local_cs_response->is_error()) return "";
+			
 			add_action("wp_head", array($local_cs_response, "cs_get_header_contents_linked_only"), 0);
 			add_action("wp_head", array($local_cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the encueue stuff.
 			add_action("wp_footer", array($local_cs_response, "cs_get_footer_contents"), 0);
@@ -205,11 +207,25 @@ class CS_shortcodes {
 		
 		// The result is the current response sections value.
 		$return_value = $cs_response->get_body_contents();
+		$return_value_section_num = $cs_response->get_response_section_num();
 		
 		// Advance to the next response section.
 		$cs_response->next_response_section();
 
-		return $return_value;
+		// If we are NOT delaying the insertion of the cs shortcode output just return it as per the normal shortcode processing.
+		if( !get_option('cs_delayed_shortcodes', 0) ) {
+			return $return_value;
+		} else { // If we're delaying the insertion of cs shortcode output we capture the shortcode output and replace the shortcode with a marker. The marker will be replaced by the captured output in a very late running filter on "the_content", this allows us to get around formatting filters that screw up our inline js.
+			
+			// Generate the marker.
+			$marker = "~~cs-sc-delay-" . time() . "~~" . $return_value_section_num . "~~";
+			
+			// Save the output under the marker.
+			$cs_delayed_shortcodes_captured_values[$marker] = $return_value;
+			
+			// Return the marker instead of the actual shortcode output.
+			return $marker;
+		}
 		
 	}
 
@@ -260,7 +276,7 @@ class CS_shortcodes {
 
 		/** Register the shortcode with wordpress **/
 
-		// Note: the array for the handler, this specifys the containing class of the function (in this case CS_shortcodes).
+		// Note: the array for the handler, this specifies the containing class of the function (in this case CS_shortcodes).
 		add_shortcode( $shortcode_name , array( 'CS_shortcodes', $handler_func ) );
 
 		/** Also register the shortcode with the current class. **/
@@ -474,6 +490,7 @@ class CS_shortcodes {
 			if($cs_request->get_req_section_size() >= 1) {
 
 				$cs_response = new CS_response($cs_request->request()); // Response var is global remember.
+				if($cs_response->is_error()) return; // Stop processing if we couldn't access the server
 			}
 
 			/** While the results are going to be set for each shortcode when it's handler is called these need to be set here so we have our proper included js and css. **/

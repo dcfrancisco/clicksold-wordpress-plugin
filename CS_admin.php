@@ -68,6 +68,7 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			if(get_option("cs_opt_notify", "1") == "1") {
 				$cs_request = new CS_request( "pathway=623", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] );
 				$cs_response = new CS_response( $cs_request->request() );
+				if($cs_response->is_error()) return;
 				$notices = $cs_response->get_body_contents();
 				update_option("cs_opt_notify_msgs", $notices);
 				update_option("cs_opt_notify", "0");
@@ -143,8 +144,14 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 									}
 								}
 							}
+							
 							$cs_request = new CS_request($org_req, "wp_admin");
 							$this->response = new CS_response($cs_request->request());
+							
+							if($this->response->is_error()) {
+								wp_redirect(get_option('siteurl') . '/wp-admin/index.php');
+								exit;
+							}
 							
 							$page_vars = $this->response->cs_set_vars();
 							if(!empty($page_vars)) {

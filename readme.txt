@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.18 =
+* Server connection issues workaround.
+* CS Shortcode compatability option with themes that try to format the_content after shortcode output.
+
 = 1.17 =
 * Interplugin - Compatibility fix.
 

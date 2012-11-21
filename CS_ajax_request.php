@@ -92,13 +92,16 @@ class CS_ajax_request{
 			$cs_response = new CS_response($cs_request->request());
 		}
 
+		// If timeout error, show nothing instead of the timeout error message
+		if($cs_response->is_error()) return "";
+		
 		// If this request was one that could have changed the configuration ask the plugin to check for new settings.
 		if( $this->is_products_change_request() || $this->is_plugin_activation_request() ) {
-			
 			update_option($cs_change_products_request, "1");
 		}
 	
 		$this->content_type = $cs_response->cs_get_response_content_type();
+		
 		return $cs_response->get_body_contents();
 	}
 

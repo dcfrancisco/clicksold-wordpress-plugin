@@ -2,8 +2,8 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.17
-Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key number.
+Version: 1.18
+Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 require_once('cs_constants.php');
@@ -50,6 +50,9 @@ $cs_autoblog_new_title = 'cs_autoblog_new_title';
 $cs_autoblog_new_content = 'cs_autoblog_new_content';
 $cs_autoblog_sold_title = 'cs_autoblog_sold_title';
 $cs_autoblog_sold_content = 'cs_autoblog_sold_content';
+
+// CS delayed shortcode insertion system - this holds the captured output of cs_shortcodes if this option is being used.
+global $cs_delayed_shortcodes_captured_values;
 
 // initial values for this plugin. By default the plugin key 
 // and plugin number are empty. These values can be updated
@@ -202,6 +205,8 @@ function check_product_update(){
 		//make request to RPM server about allowed features
 		$cs_request = new CS_request( "tier_validate", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); //error_log( "Response: " . print_r( $cs_request->request(), true ) );
 		$cs_response = new CS_response( $cs_request->request() );
+		if( $cs_response->is_error() ) return;
+		
 		$vars = $cs_response->cs_set_vars(); // error_log( "vars: " . print_r( $vars, true ) );
 
 		if(empty($vars)) {
@@ -459,7 +464,30 @@ if( !is_admin() ){
 		
 		if(is_page($cs_page_ids)) $wp_admin_bar->remove_menu('edit');
 	}
-		
+
+	/**
+	 * CS Shortcode delayed insert system. If enabled the cs shortcode handler just captures the output of the shortcodes
+	 * but returns markers. This routine is then registered very late in the the_content filter so that no content formatting
+	 * functions are ran on our shortcode output.
+	 */
+	if( get_option('cs_delayed_shortcodes', 0) ) {
+
+		add_action('the_content', 'cs_delayed_shortcodes_insert_captured_values', 200); // At this priority we're all but sure that we'll run after the shortcodes filter.
+		function cs_delayed_shortcodes_insert_captured_values ( $the_content ){
+			global $cs_delayed_shortcodes_captured_values;
+
+			// If the delayed shortcodes captured values is not set that means that this page does not have shortcodes.
+			if( !isset( $cs_delayed_shortcodes_captured_values ) ) { return $the_content; }
+
+			// Replace each captured shortcode with it's corresponding value.
+			foreach($cs_delayed_shortcodes_captured_values as $shortcode_marker => $shortcode_value) {
+				$the_content = str_replace($shortcode_marker, $shortcode_value, $the_content);
+			}
+
+			return $the_content;
+		}
+	}
+	
 	/**
 	 * Surrounds the contents of the page with a div wrapper for use with our styles. 
 	 * Used in conjunction with add_filter - the_content
@@ -479,8 +507,10 @@ if( !is_admin() ){
 	
 		remove_action('parse_query', 'cs_process_vip_confirmation', 5);
 		$cs_request = new CS_request(http_build_query($_GET), $CS_SECTION_PARAM_CONSTANTS["listings_pname"]);
-		
 		$cs_response = new CS_response($cs_request->request());
+		
+		// Stop processing if connection was lost
+		if( $cs_response->is_error() ) return;
 		
 		// make sure the_content hook calls our functions to load the response in the appropriate spot
 		add_action("wp_head", array($cs_response, "cs_get_header_contents_linked_only"), 0);
@@ -568,28 +598,34 @@ if( !is_admin() ){
 					$cs_request = new CS_request($cs_org_req, $result['prefix']);
 					$cs_response = new CS_response($cs_request->request());
 					
-					$page_vars = $cs_response->cs_set_vars();
-					$meta_config = array('header_title' => $result['header_title'], 'header_desc' => $result['header_desc'], 'header_desc_char_limit' => $result['header_desc_char_limit']);
-					
-					// Configure the account type based on the account config value given
-					/*
-					if(!empty($page_vars)) {
-						$cs_config = new CS_config();
-						$cs_config->cs_plugin_check_brokerage($page_vars);
+					if(!$cs_response->is_error()) {
+						
+						$page_vars = $cs_response->cs_set_vars();
+						$meta_config = array('header_title' => $result['header_title'], 'header_desc' => $result['header_desc'], 'header_desc_char_limit' => $result['header_desc_char_limit']);
+						
+						// Configure the account type based on the account config value given
+						/*
+						if(!empty($page_vars)) {
+							$cs_config = new CS_config();
+							$cs_config->cs_plugin_check_brokerage($page_vars);
+						}
+						*/
+						
+						// make sure the_content hook calls our functions to load the response in the appropriate spot
+						add_filter("wp_title", "cs_set_head_title", 0);
+						add_action("wp_head", "cs_set_meta_desc", 1);
+						add_action("wp_head", array($cs_response, "cs_get_header_contents_linked_only"), 0);
+						add_action("wp_head", array($cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the enqueue stuff.
+						add_action("wp_footer", array($cs_response, "cs_get_footer_contents"), 0);
+						
+						// For CS page content we don't want it to get filtered by anything else. So we set the priority to a high number so our stuff gets ran LAST.
+						// 2012-08-29 EZ - no longer required now that we've set our the_content filters to 101 and 102 --- remove_filter("the_content", "wpautop");  //This line prevents wordpress from replacing double line breaks with <br> tags i.e. messes up the pagination sections in listing results views
+						add_filter("the_content", array($cs_response, "get_body_contents"), 101);
+						add_filter("the_content", "cs_styling_wrap", 102); //This line wraps all content around a div so our styles can take precedence over the template styles
+					} else { 
+						// Show connection timeout error message
+						add_filter("the_content", array($cs_response, "get_body_contents"), 101);
 					}
-					*/
-					
-					// make sure the_content hook calls our functions to load the response in the appropriate spot
-					add_filter("wp_title", "cs_set_head_title", 0);
-					add_action("wp_head", "cs_set_meta_desc", 1);
-					add_action("wp_head", array($cs_response, "cs_get_header_contents_linked_only"), 0);
-					add_action("wp_head", array($cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the enqueue stuff.
-					add_action("wp_footer", array($cs_response, "cs_get_footer_contents"), 0);
-					
-					// For CS page content we don't want it to get filtered by anything else. So we set the priority to a high number so our stuff gets ran LAST.
-					// 2012-08-29 EZ - no longer required now that we've set our the_content filters to 101 and 102 --- remove_filter("the_content", "wpautop");  //This line prevents wordpress from replacing double line breaks with <br> tags i.e. messes up the pagination sections in listing results views
-					add_filter("the_content", array($cs_response, "get_body_contents"), 101);
-					add_filter("the_content", "cs_styling_wrap", 102); //This line wraps all content around a div so our styles can take precedence over the template styles
 				}
 			}
 		}
@@ -792,9 +828,15 @@ if ( is_admin() ) {
 		if( empty($is_wpmu) && 'widgets.php' == $pagenow ) {
 			$cs_request = new CS_request("pathway=20", "wp_admin");
 			$cs_response = new CS_response($cs_request->request());
-			$resp = $cs_response->get_body_contents();
-			$resp = trim($resp);
-			if( !empty($resp) ) $load_widgets = false;
+			
+			if(!$cs_response->is_error()) {
+				$resp = $cs_response->get_body_contents();
+				$resp = trim($resp);
+				if( !empty($resp) ) $load_widgets = false;
+			} else {
+				// No connection was made so skip this section
+				$load_widgets = false;
+			}
 		}
 	}
 }

@@ -48,6 +48,7 @@ class cs_mobile {
 		
 		$cs_request = new CS_request( $this->request_vars, $CS_SECTION_MOBILE_PARAM_CONSTANT );
 		$cs_response = new CS_response($cs_request->request());
+		if($cs_response->is_error()) return "";
 		
 		$this->content_type = $cs_response->cs_get_response_content_type();
 		return $cs_response->get_body_contents();

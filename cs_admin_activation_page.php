@@ -79,6 +79,9 @@ require_once("cs_functions.php");
 				$cs_response = new CS_response($cs_request->request());
 				$valid = json_decode($cs_response->get_body_contents());
 				
+				// Exit immediately if there was a timeout failure
+				if($cs_response->is_error()) return;
+				
 				update_option('cs_opt_notify_msgs', "");  // Clear notifications cache
 				if(!is_null($valid)) update_option('cs_opt_notify', "1");
 				else update_option('cs_opt_notify', "0");  // Prevent notification check from running if invalid

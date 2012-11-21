@@ -49,6 +49,8 @@ require_once('cs_constants.php');
 		
 	$cs_brokerage = get_option("cs_opt_brokerage");
 	$cs_allow_manage_menus = get_option("cs_allow_manage_menus", 1);
+	$cs_delay_shortcode_insert = get_option("cs_delayed_shortcodes", 0);
+
 	$valid = true;
 	
 	$cs_db_data = $wpdb->get_results('SELECT prefix, available FROM ' . $wpdb->prefix . 'cs_posts WHERE PREFIX IN("'. implode('", "', $CS_SECTION_PARAM_CONSTANTS) .' ")', ARRAY_A);
@@ -216,6 +218,14 @@ require_once('cs_constants.php');
 			} else {
 				update_option("cs_allow_manage_menus", 0);
 				$cs_allow_manage_menus = get_option("cs_allow_manage_menus");
+			}
+
+			if( isset( $_POST["cs_delay_shortcode_insert"] ) ) {
+				update_option("cs_delayed_shortcodes", 1);
+				$cs_delay_shortcode_insert = get_option("cs_delayed_shortcodes");
+			} else {
+				update_option("cs_delayed_shortcodes", 0);
+				$cs_delay_shortcode_insert = get_option("cs_delayed_shortcodes");
 			}
 
 			//Site front page has been set to private so it has to be set back to posts
@@ -404,6 +414,12 @@ require_once('cs_constants.php');
               <label for="cs_allow_manage_menus">Allow ClickSold Plugin to update menus:<span class="cs-required-field">*</span>:</label>
             </div>
             <input type="checkbox" name="cs_allow_manage_menus" value="1" <?php if($cs_allow_manage_menus){ ?>checked="checked"<?php } ?> class="cs-checkbox"/>
+          </div>
+          <div class="cs-input-small">
+            <div class="cs-label-container">
+              <label for="cs_delay_shortcode_insert">Delay CS ShortCode Insertion:<span class="cs-required-field">*</span>:</label>
+            </div>
+            <input type="checkbox" name="cs_delay_shortcode_insert" value="1" <?php if($cs_delay_shortcode_insert){ ?>checked="checked"<?php } ?> class="cs-checkbox"/>
           </div>
         </fieldset>
       </div>

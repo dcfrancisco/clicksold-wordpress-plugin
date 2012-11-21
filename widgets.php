@@ -225,7 +225,7 @@ class CS_Widget extends WP_Widget {
 	public function get_front_widget_scripts() {
 		$cs_request = new CS_request("pathway=590", null);
 		$cs_response = new CS_response($cs_request->request());
-		$cs_response->cs_get_header_contents_linked_only();
+		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_linked_only();
 		//error_log("running get_front_widget_scripts:".$cs_response->get_body_contents());
 	}
 	
@@ -236,7 +236,7 @@ class CS_Widget extends WP_Widget {
 		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
 		$cs_request = new CS_request("pathway=591", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
 		$cs_response = new CS_response($cs_request->request());
-		$cs_response->cs_get_header_contents_linked_only();
+		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_linked_only();
 	}
 	
 }
@@ -466,6 +466,7 @@ class Brokerage_Info_Widget extends CS_Widget {
 		
 		$cs_request = new CS_request("pathway=562", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
 		$cs_response = new CS_response($cs_request->request());
+		if($cs_response->is_error()) return;
 		$json_response = $cs_response->cs_get_json();
 		
 		$PLUGIN_BROK_LOGOS = $json_response['brok_images'];
@@ -1183,6 +1184,7 @@ class Feature_Listing_Widget extends CS_Widget{
 		
 		$cs_request = new CS_request("pathway=604", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
 		$cs_response = new CS_response($cs_request->request());
+		if($cs_response->is_error()) return; 
 		
 		$json_response = $cs_response->cs_get_json();
 		$PLUGIN_FEAT_LIST_OPTS = $json_response['featListWidgetOpts'];
@@ -1234,6 +1236,8 @@ class VIP_Widget extends CS_Widget{
 	
 		$cs_request = new CS_request("pathway=168&vipLoginCheck=true", $CS_SECTION_VIP_PARAM_CONSTANT["wp_vip_pname"]);
 		$cs_response = new CS_response($cs_request->request());
+		if($cs_response->is_error()) return;
+		
 		$json_response = $cs_response->cs_get_json();
 		
 		$hideVIPOpts = "";
