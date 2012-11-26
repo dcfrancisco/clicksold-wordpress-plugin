@@ -48,8 +48,11 @@ require_once('cs_constants.php');
 	$wp_cs_posts = $wpdb->get_results("SELECT prefix, postid FROM " . $wpdb->prefix . "cs_posts", OBJECT_K);
 		
 	$cs_brokerage = get_option("cs_opt_brokerage");
+	
+	// Other plugin options.
 	$cs_allow_manage_menus = get_option("cs_allow_manage_menus", 1);
 	$cs_delay_shortcode_insert = get_option("cs_delayed_shortcodes", 0);
+	$cs_opt_use_cookies_instead_of_sessions = get_option("cs_opt_use_cookies_instead_of_sessions", 0);
 
 	$valid = true;
 	
@@ -226,6 +229,14 @@ require_once('cs_constants.php');
 			} else {
 				update_option("cs_delayed_shortcodes", 0);
 				$cs_delay_shortcode_insert = get_option("cs_delayed_shortcodes");
+			}
+			
+			if( isset( $_POST["cs_opt_use_cookies_instead_of_sessions"] ) ) {
+				update_option("cs_opt_use_cookies_instead_of_sessions", 1);
+				$cs_opt_use_cookies_instead_of_sessions = get_option("cs_opt_use_cookies_instead_of_sessions");
+			} else {
+				update_option("cs_opt_use_cookies_instead_of_sessions", 0);
+				$cs_opt_use_cookies_instead_of_sessions = get_option("cs_opt_use_cookies_instead_of_sessions");
 			}
 
 			//Site front page has been set to private so it has to be set back to posts
@@ -420,6 +431,12 @@ require_once('cs_constants.php');
               <label for="cs_delay_shortcode_insert">Delay CS ShortCode Insertion:<span class="cs-required-field">*</span>:</label>
             </div>
             <input type="checkbox" name="cs_delay_shortcode_insert" value="1" <?php if($cs_delay_shortcode_insert){ ?>checked="checked"<?php } ?> class="cs-checkbox"/>
+          </div>
+          <div class="cs-input-small">
+            <div class="cs-label-container">
+              <label for="cs_opt_use_cookies_instead_of_sessions">Use Cookies instead of PHP Sessions:<span class="cs-required-field">*</span>:</label>
+            </div>
+            <input type="checkbox" name="cs_opt_use_cookies_instead_of_sessions" value="1" <?php if($cs_opt_use_cookies_instead_of_sessions){ ?>checked="checked"<?php } ?> class="cs-checkbox"/>
           </div>
         </fieldset>
       </div>

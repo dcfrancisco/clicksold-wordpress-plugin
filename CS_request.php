@@ -270,9 +270,26 @@ class CS_request {
 		// Moved to cs_listings_plugin.php and done via the init hook.
 		// if(!session_id()){ session_start(); }
 		
-		// If we've saved one then we have to add it to the request.
-		if( isset( $_SESSION['cs_session_id'] ) ) {
-			$headers[ 'Cookie' ] = $_SESSION['cs_session_id'];
+		// If we've saved a session id then we have to add it to the request.
+		if( !get_option( 'cs_opt_use_cookies_instead_of_sessions', 0 ) ) { // Use regular sessions.
+			
+			if( isset( $_SESSION['cs_session_id'] ) ) {
+				$headers[ 'Cookie' ] = $_SESSION['cs_session_id'];
+			}
+		} else { // Using the cs_login cookie to emulate sessions.
+			
+			// Grab our sessions array.
+			$cs_sessions = get_option( 'cs_login_sessions_arr' );
+			if(! isset( $cs_sessions ) ) { $cs_sessions = array(); }
+			
+			// Grab the session id corresponding to our 'cs_login' cookie value. NOTE: Even on the first request the cs_login cookie will always be set as in the first call case it's generated, sent to the browser and re-saved.
+			$cs_plugin_srv_session_id = $cs_sessions[ $_COOKIE['cs_login'] ];
+			
+			// If we have one we will send it to the cs plugin server.
+			if( isset( $cs_plugin_srv_session_id ) ) {
+
+				$headers[ 'Cookie' ] = $cs_plugin_srv_session_id;
+			}
 		}
 		
 		//error_log(print_r($parameters, true));
@@ -324,9 +341,47 @@ class CS_request {
 			}
 		}
 		
-		// We need to save the cookie information that we got back from the server.
+		// If the cs plugin server asks us to then we need to save the cookie information that we got back.
 		if( isset( $response['headers']['set-cookie'] ) ) {
-			$_SESSION['cs_session_id'] = $response['headers']['set-cookie'];
+			
+			if( !get_option( 'cs_opt_use_cookies_instead_of_sessions', 0 ) ) { // Use regular sessions.
+				$_SESSION['cs_session_id'] = $response['headers']['set-cookie'];
+			} else { // Emulating sessions via cookies.
+			
+				// Grab our sessions array.
+				$cs_sessions = get_option( 'cs_login_sessions_arr' );
+				if(! isset( $cs_sessions ) ) { $cs_sessions = array(); }
+			
+				// Grab the session id corresponding to our 'cs_login' cookie value. NOTE: Even on the first request the cs_login cookie will always be set as in the first call case it's generated, sent to the browser and re-saved.
+				$cs_plugin_srv_session_id = $cs_sessions[ $_COOKIE['cs_login'] ];
+			
+				// If we did not get one to start with or the one sent by the cs_plugin server is different we update our cs_login_sessions_arr and save it back to the db.
+				if( !isset( $cs_plugin_srv_session_id ) || $cs_plugin_srv_session_id != $response['headers']['set-cookie'] ) {
+				
+					$cs_sessions[ $_COOKIE['cs_login'] ] = $response['headers']['set-cookie'];
+
+					// In this if we're updating the cs_login_sessions_arr (aka the cookie jar). This should be relatively rare so while we're at it we trim the array here.
+					$now = time(); // We'll need to know our current time shortly.
+					foreach($cs_sessions as $cookie_value => $session_id) {
+						
+						$cookie_value_parts = array(); // Will contain the parsed out values.
+						
+						// Each cookie_value is in the format of cs_login_<timestamp>
+						if( preg_match( '/cs_login_(\d+)/', $cookie_value, $cookie_value_parts ) ) {
+							
+							// If the timestamp is more than 1 day behind now we remove the record.
+							if( $cookie_value_parts[1] < ( $now - 24 * 60 * 60 ) ) {
+								unset( $cs_sessions[ $cookie_value ] );
+							}
+						} else { // The cookie value does not match our format, get rid of this one.
+							unset( $cs_sessions[ $cookie_value ] );
+						}
+					}
+
+					// Now that it's been updated (and possibly trimmed) we save it back.
+					update_option( 'cs_login_sessions_arr', $cs_sessions );
+				}
+			}
 		}
 		
 		return $response;

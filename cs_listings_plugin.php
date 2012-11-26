@@ -2,7 +2,7 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.18
+Version: 1.19
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
@@ -174,11 +174,45 @@ function cs_add_rewrite_rules($aRules) {
 
 /**
  * Init the session early (needed so the cs plugin server does not need to generate a new session for each request).
+ * 
+ * If the cs_opt_use_cookies_instead_of_sessions option is set this will set a cookie as opposed to initializing the session.
  */
 if(! function_exists('cs_init_session') ) {
 	function cs_init_session() {
-		if(!session_id()){
-			session_start();
+		
+		if( !get_option( 'cs_opt_use_cookies_instead_of_sessions', 0 ) ) { // Use regular sessions.
+			if(!session_id()){
+				session_start();
+			}
+		} else { // Use cookie based user tracking (for hosts that don't support php sessions).
+			
+			if(! isset($_COOKIE['cs_login'] ) ) {
+				
+				// Grab a new cookie value.
+				$cs_login_cookie_val = "cs_login_" . time();
+				
+				// Set the cookie.
+				setcookie( 'cs_login', $cs_login_cookie_val);
+				
+				// Store it in the COOKIE global so we don't have to worry about passing it along.
+				$_COOKIE['cs_login'] = $cs_login_cookie_val;
+			} else { // Else we already have a cookie, re-set it if it's too old.
+
+				// Each cookie_value is in the format of cs_login_<timestamp>
+				if( preg_match( '/cs_login_(\d+)/', $_COOKIE['cs_login'], $cookie_value_parts ) ) {
+
+					// If the timestamp is more than 1 day behind now we remove the record.
+					if( $cookie_value_parts[1] < ( $now - 24 * 60 * 60 ) ) {
+						$cs_login_cookie_val = "cs_login_" . time();
+						setcookie( 'cs_login', $cs_login_cookie_val);
+						$_COOKIE['cs_login'] = $cs_login_cookie_val;
+					}
+				} else { // The cookie value does not match our format, re-set it.
+					$cs_login_cookie_val = "cs_login_" . time();
+					setcookie( 'cs_login', $cs_login_cookie_val);
+					$_COOKIE['cs_login'] = $cs_login_cookie_val;
+				}
+			}
 		}
 	}
 	add_action('init', 'cs_init_session', 1);
