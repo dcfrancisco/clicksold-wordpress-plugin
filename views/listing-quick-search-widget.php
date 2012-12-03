@@ -18,6 +18,6 @@
 			using_permalinks : <?php echo $using_permalinks ?>
 		});
 	});
-})(jQuery);
+})(csJQ);
 </script>
 <?php echo $after_widget; ?>

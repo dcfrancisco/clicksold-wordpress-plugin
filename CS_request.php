@@ -32,6 +32,7 @@ endif;
  */
 class CS_request {
 
+
 	/** Standard request vars used to identify ourselves and give info about our environment. */
 	protected $pluginKey = '';
 	protected $pluginNum = '';
@@ -58,7 +59,6 @@ class CS_request {
 	
 	const plugin_key_opt = "cs_opt_plugin_key";
 	const plugin_num_opt = "cs_opt_plugin_num";
-	const plugin_ver_opt = "cs_opt_plugin_version";
 
 	protected $production_proxy_server = 'http://wp-plugin.clicksold.com/';
 	protected $test_proxy_server = 'http://127.0.0.201/';
@@ -80,7 +80,7 @@ class CS_request {
 	protected $req_timeout_failed_attempts;
 	protected $req_timeout;
 	
-	protected $req_timeout_err_msg = "Could not retrieve response from CS server which is likely undergoing maintenance at this time, please try again later.";
+	protected $req_timeout_err_msg = "Could not retrieve response from CS server which is likely undergoing maintenance at this time, please try again shortly.";
 	
 	/**
 	* construct the CS_request obj.
@@ -92,7 +92,8 @@ class CS_request {
 		global $CS_SECTION_VIP_PARAM_CONSTANT;
 		global $CS_SECTION_MOBILE_PARAM_CONSTANT;
 		global $CS_SECTION_CAPTCHA_IMG_PARAM_CONSTANT;
-		
+		global $cs_plugin_version;
+
 		// Detect which server is to be used.
 		if(defined("CS_DEBUG") && CS_DEBUG) {
 			if($_SERVER['SERVER_NAME'] == 'localhost' || preg_match("/127.0.0./", $_SERVER['SERVER_NAME']) || preg_match("/127.0.0./", $_SERVER['SERVER_ADDR']) || preg_match("/142.244.253./", $_SERVER['SERVER_NAME'])) { // We're on localhost or 127.0.0.* ==> DEV
@@ -136,7 +137,7 @@ class CS_request {
 		// Set our identification parameters.
 		$this->pluginKey = get_option(self::plugin_key_opt); 
 		$this->pluginNum = get_option(self::plugin_num_opt);
-		$this->pluginVer = get_option(self::plugin_ver_opt);
+		$this->pluginVer = $cs_plugin_version;
 		
 		//Remove the array stuff (brackets w/numbers) from the parameters
 		//error_log("Request - VARS (Before): " . $cs_org_req);

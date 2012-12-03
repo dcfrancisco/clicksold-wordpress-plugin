@@ -160,7 +160,7 @@ require_once("cs_functions.php");
 				$('#cs_opt_plugin_hostname').val(document.domain);
 			}
 		});
-	})(jQuery);
+	})(csJQ);
   </script>
 </div>
 <?php if(empty($hosted)){ ?>

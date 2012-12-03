@@ -228,6 +228,7 @@ foreach( $cs_pages_settings as $cs_page_settings ) {
 		// Bind the form for each form rendered.
 ?>
 		<script type="text/javascript">
+		(function($){
 			$(document).ready(function(){
 
 				// Hide all of the "Updated" messages on a page for that nice visual queue
@@ -245,7 +246,8 @@ foreach( $cs_pages_settings as $cs_page_settings ) {
 					"beforeSubmit" : clearUpdatedMessages,
 					"plugin" : true
 				});
-			});	
+			});
+		})(csJQ);
 		</script>
 <?php
 

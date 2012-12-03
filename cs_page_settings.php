@@ -460,6 +460,7 @@ require_once('cs_constants.php');
   </form>
 </div>
 <script type="text/javascript">
+(function($){
 	$(document).ready(function(){
 		$("#ws_page_settings_form").clickSoldUtils("csBindToForm", {
 			"updateDivId" : "ws_page_settings",
@@ -500,4 +501,5 @@ require_once('cs_constants.php');
 		});
 <?php } ?>
 	});
+})(csJQ);
 </script>

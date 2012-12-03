@@ -37,6 +37,6 @@
 <?php } ?>
 		});
 	});
-})(jQuery);
+})(csJQ);
 </script>
 <?php echo $after_widget; ?>

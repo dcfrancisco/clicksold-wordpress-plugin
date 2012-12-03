@@ -26,6 +26,6 @@ if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
 			listingExclUrl : "<?php echo $listings_excl_url; ?>"
 		});
 	});
-})(jQuery);
+})(csJQ);
 </script>
 <?php echo $after_widget; ?>

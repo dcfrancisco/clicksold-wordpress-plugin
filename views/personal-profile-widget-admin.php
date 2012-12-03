@@ -10,7 +10,7 @@
 ?>  <br /><?php
 // we add the next line with an onclick event to ensure that this widget is loaded in the JS object. Widgets that are already 
 ?>    
-    <a href="<?php echo $image_upload_iframe_src; ?>&TB_iframe=true" id="add_image-<?php echo $this->get_field_id('image'); ?>" onclick="jQuery('.<?php echo $this->id; ?>').csPersonalProfileWidget('checkInit', null, function(){jQuery('#add_image-<?php echo $this->get_field_id('image'); ?>').click();});return false;" class="thickbox-personal-profile-widget" title='<?php echo $image_title; ?>' style="text-decoration:none"><img src='images/media-button-image.gif' alt='<?php echo $image_title; ?>' align="absmiddle" /> <?php echo $image_title; ?></a>
+    <a href="<?php echo $image_upload_iframe_src; ?>&TB_iframe=true" id="add_image-<?php echo $this->get_field_id('image'); ?>" onclick="csJQ('.<?php echo $this->id; ?>').csPersonalProfileWidget('checkInit', null, function(){csJQ('#add_image-<?php echo $this->get_field_id('image'); ?>').click();});return false;" class="thickbox-personal-profile-widget" title='<?php echo $image_title; ?>' style="text-decoration:none"><img src='images/media-button-image.gif' alt='<?php echo $image_title; ?>' align="absmiddle" /> <?php echo $image_title; ?></a>
     <div id="display-<?php echo $this->get_field_id('image'); ?>" style="text-align:center;"><?php 
 if ($instance['imageurl']) {
 	echo "<img src=\"{$instance['imageurl']}\" alt=\"{$instance['title']}\" style=\"border:1px solid black;";
@@ -57,6 +57,6 @@ if ($instance['imageurl']) {
 		$(document).ready(function() {
 			$('.<?php echo $this->id; ?>:not(div[class$="__i__"])').csPersonalProfileWidget();
 		});
-	})(jQuery);
+	})(csJQ);
   </script>
 </div>

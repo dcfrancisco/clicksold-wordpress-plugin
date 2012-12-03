@@ -155,7 +155,7 @@ class CS_response
 		if(!is_array($this->resource_includes)){ return; }
 		if(!is_array($this->resource_includes[$block])){ return; }
 		
-		//error_log("cs_set_includes($block)");
+		//error_log("cs_set_includes($block)skipLinked(".$skip_linked.")skipInline(".$skip_inline.")");
 		//error_log(print_r($this->resource_includes[$block], true));
 				
 		foreach($this->resource_includes[$block] as $include_item){
@@ -174,7 +174,10 @@ class CS_response
 				wp_enqueue_style($include_item["name"]);
 					
 			}elseif($include_item["type"] == "JS_IN" && !$skip_inline){
+				
+				
 				$out = $this->sanitize_output( $include_item["content"] );
+				error_log("Printing .... inline script (".$out.")");
 				echo '<script type="text/javascript">/*<![CDATA[*/',$out,'/*]]>*/</script>';
 				
 			}elseif($include_item["type"] == "CSS_IN" && !$skip_inline){   //Page CSS

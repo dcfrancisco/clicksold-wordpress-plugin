@@ -2,10 +2,14 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.19
+Version: 1.20
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
+/** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
+global $cs_plugin_version;
+$cs_plugin_version = '1.20';
+
 require_once('cs_constants.php');
 
 global $cs_db_version; 
@@ -22,8 +26,6 @@ global $cs_opt_plugin_num;
 $cs_opt_plugin_num     = "cs_opt_plugin_num";
 global $cs_opt_plugin_hostname;
 $cs_opt_plugin_hostname = "cs_opt_plugin_hostname";
-global $cs_opt_plugin_version;
-$cs_opt_plugin_version  = "cs_opt_plugin_version";
 global $cs_opt_brokerage;
 $cs_opt_brokerage = "cs_opt_brokerage";
 global $cs_change_products_request;
@@ -61,7 +63,6 @@ global $cs_plugin_options;
 $cs_plugin_options = array(
   $cs_opt_plugin_key     => "", 
   $cs_opt_plugin_num     => "", 
-  $cs_opt_plugin_version => "1.0",
   $cs_opt_brokerage => "0",
   $cs_change_products_request => "0",
   $cs_autoblog_new => "0",
@@ -564,7 +565,7 @@ if( !is_admin() ){
 		global $wp_rewrite;
 		global $cs_response;
 		global $cs_posts_table;
-		global $cs_opt_plugin_key, $cs_opt_plugin_num, $cs_opt_plugin_version;
+		global $cs_opt_plugin_key, $cs_opt_plugin_num;
 		global $cs_opt_tier_name;
 		global $cs_opt_brokerage;
 		

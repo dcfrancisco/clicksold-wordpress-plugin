@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.20 =
+* JQuery isolation ... Optional jQuery sharing to come in next version.
+
 = 1.19 =
 * Optionally track sessions with cs plugin server using a cookie if php sessions are not available on the host.
 

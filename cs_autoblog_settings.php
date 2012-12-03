@@ -283,6 +283,7 @@ if($re_load_gen_set == true) {
 
 ?>
 <script type="text/javascript">
+(function($){
 	$(document).ready(function(){
 
 		// Routine checks any of the new(title / content) and sold(title / content) for blank values
@@ -343,4 +344,5 @@ if($re_load_gen_set == true) {
 			"plugin" : true
 		});
 	});
+})(csJQ);
 </script>

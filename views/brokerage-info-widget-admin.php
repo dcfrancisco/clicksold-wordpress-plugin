@@ -61,7 +61,7 @@ else echo "<img src=\"{$instance['logo_src']}\" style=\"border:1px solid black;m
 		$(document).ready(function() {
 			$('.<?php echo $this->id; ?>:not(div[class$="__i__"])').csBrokerageInfoWidget(opts);
 		});
-	})(jQuery);
+	})(csJQ);
 	
 	function initUnsavedBrokInfoWidget(self){
 		(function($){ 
@@ -83,7 +83,7 @@ else echo "<img src=\"{$instance['logo_src']}\" style=\"border:1px solid black;m
 					$("#" + opts.logo_src_id, "." + bi_w).change();
 				}); 
 			}
-		})(jQuery);
+		})(csJQ);
 	}
   </script>
 </div>
