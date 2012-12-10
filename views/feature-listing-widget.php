@@ -1,6 +1,9 @@
 <?php 
 echo $before_widget; 
 if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
+
+error_log("ez ez ez (".print_r($instance, true).")");
+
 ?>
 <div id="<?php echo $this->get_field_id("") ?>container" class="<?php echo $this->widget_options['classname'] ?>-container widget">
   <div class="csFeatureListingModule" class="widgetContent">
@@ -23,7 +26,8 @@ if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
 <?php } ?>			
 			listingType : <?php echo $instance['listing_type']; ?>,
 			listingUrl : "<?php echo $listings_url; ?>",
-			listingExclUrl : "<?php echo $listings_excl_url; ?>"
+			listingExclUrl : "<?php echo $listings_excl_url; ?>",
+			cycleFrequency : "<?php echo $instance['freq']; ?>"
 		});
 	});
 })(csJQ);
