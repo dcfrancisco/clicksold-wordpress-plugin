@@ -1,9 +1,6 @@
 <?php 
 echo $before_widget; 
 if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
-
-error_log("ez ez ez (".print_r($instance, true).")");
-
 ?>
 <div id="<?php echo $this->get_field_id("") ?>container" class="<?php echo $this->widget_options['classname'] ?>-container widget">
   <div class="csFeatureListingModule" class="widgetContent">

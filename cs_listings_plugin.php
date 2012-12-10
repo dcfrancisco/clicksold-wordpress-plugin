@@ -809,15 +809,20 @@ if( !is_admin() ){
 	// Note: this section may need to be modified to accomodate other SEO-related plugins
 	// We fetch the post id differently depending on if permalinks are enabled or not.
 	if(get_template() === 'genesis') {
+		
 		// Genesis Framework - SEO
 		add_action('pre_get_posts', 'debug_param_output');
 		function debug_param_output($wp_query) {
-			$post_id = $wp_query->queried_object_id; // Note using get_queried_object_id sets the queried object if not set and this confuses some other plugins.
+			$page_id = $wp_query->queried_object_id; // Note using get_queried_object_id() sets the queried object if not set and this confuses some other plugins.
+			
 			if(empty($page_id)) $page_id = $wp_query->query_vars["page_id"];
 			
+			// 2012-12-10 EZ - I really don't think that this main query detection is working correctly it seems to always be 1, not a big deal as the corresponding page_id is blank for the other ones.
+			
 			$main_query = false;
-			if(method_exists($wp_query, 'is_main_query')) $main_query = is_main_query();
-			else { //For WP < 3.3
+			if(method_exists($wp_query, 'is_main_query')) {
+				 $main_query = is_main_query();
+			} else { // For WP < 3.3
 				global $wp_the_query;
 				if($wp_query === $wp_the_query) $main_query = true;
 			}
@@ -829,6 +834,7 @@ if( !is_admin() ){
 			}
 		}
 	} else {
+		
 		// Normal (No other SEO Plugins used)
 		add_action('template_redirect', 'cs_update_canonical_link');
 		function cs_update_canonical_link() {
