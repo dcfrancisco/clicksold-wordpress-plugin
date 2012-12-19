@@ -1142,6 +1142,7 @@ class Feature_Listing_Widget extends CS_Widget{
 	
 		if($this->BROKERAGE === false) $instance['listing_section'] = $new_instance['listing_section'];
 		$instance['listing_type'] = $new_instance['listing_type'];
+		$instance['listing_status'] = $new_instance['listing_status'];
 		
 		if(empty($new_instance['freq']) || (int) $new_instance['freq'] < 1000){
 			$instance['freq'] = "1000";
@@ -1159,9 +1160,11 @@ class Feature_Listing_Widget extends CS_Widget{
 		if(empty($PLUGIN_FEAT_LIST_OPTS)) $this->get_feature_listing_options();
 		
 		$listing_type_label = $PLUGIN_FEAT_LIST_OPTS['listing_type']['label'];
+		$listing_status_label = $PLUGIN_FEAT_LIST_OPTS['listing_status']['label'];
 		
 		$instance_opts = array(
 			'listing_type' => $PLUGIN_FEAT_LIST_OPTS['listing_type']['values'][0]['opt_val'],
+			'listing_status' => $PLUGIN_FEAT_LIST_OPTS['listing_status']['values'][0]['opt_val'],
 			'freq' => '10000',
 			'title' => ''
 		);

@@ -29,6 +29,21 @@
       } ?>
     </select>
   </p>
+
+  <p>
+    <label for="<?php echo $this->get_field_id('listing_status'); ?>"><?php echo $listing_status_label; ?></label><br/>
+	<select id="<?php echo $this->get_field_id('listing_status'); ?>" name="<?php echo $this->get_field_name('listing_status'); ?>">
+<?php foreach($PLUGIN_FEAT_LIST_OPTS['listing_status']['values'] as $value) { 
+        if($instance['listing_status'] == $value['opt_val']) { ?>
+      <option selected value="<?php echo $value['opt_val']; ?>"><?php echo $value['opt_name']; ?></option>
+ <?php  } else { ?>
+      <option value="<?php echo $value['opt_val']; ?>"><?php echo $value['opt_name']; ?></option>
+<?php   }
+      } ?>
+    </select>
+  </p>
+
+
   <p>
     <label for="<?php echo $this->get_field_id('freq'); ?>">Cycle Frequency (min 1000 ms)</label><br/>
     <input type="text" id="<?php echo $this->get_field_id('freq'); ?>" name="<?php echo $this->get_field_name('freq'); ?>" value="<?php echo $instance['freq']; ?>">

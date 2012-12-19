@@ -58,6 +58,13 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.22 =
+* Added listing status options for Featured Listings Widget
+
+= 1.21 =
+* Fix canonical links.
+* Fix featured listings widget not respecting cycle frequency.
+
 = 1.20 =
 * JQuery isolation ... Optional jQuery sharing to come in next version.
 

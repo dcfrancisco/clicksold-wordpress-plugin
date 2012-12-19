@@ -22,6 +22,7 @@ if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
 			listingSection : <?php echo $instance['listing_section']; ?>,
 <?php } ?>			
 			listingType : <?php echo $instance['listing_type']; ?>,
+			listingStatus : "<?php echo $instance['listing_status']; ?>",
 			listingUrl : "<?php echo $listings_url; ?>",
 			listingExclUrl : "<?php echo $listings_excl_url; ?>",
 			cycleFrequency : "<?php echo $instance['freq']; ?>"
