@@ -1164,7 +1164,7 @@ class Feature_Listing_Widget extends CS_Widget{
 		
 		$instance_opts = array(
 			'listing_type' => $PLUGIN_FEAT_LIST_OPTS['listing_type']['values'][0]['opt_val'],
-			'listing_status' => $PLUGIN_FEAT_LIST_OPTS['listing_status']['values'][0]['opt_val'],
+			'listing_status' => $PLUGIN_FEAT_LIST_OPTS['listing_status']['values'][1]['opt_val'],
 			'freq' => '10000',
 			'title' => ''
 		);
