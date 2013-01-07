@@ -38,12 +38,15 @@ require_once('cs_constants.php');
 function get_options_legend( $prefix, $for_content_section = false ) {
 
 	global $CS_VARIABLE_LISTING_META_TITLE_VARS_LEGEND;
+	global $CS_VARIABLE_LISTING_DETAILS_URL_VARS_LEGEND;
 	global $CS_VARIABLE_COMMUNITY_META_TITLE_VARS_LEGEND;
 	global $CS_VARIABLE_ASSOCIATE_META_TITLE_VARS_LEGEND;
-
+	
 	//Get proper array for outputting legend information
 	if( $prefix == "listings" ) {
 		$legend = $CS_VARIABLE_LISTING_META_TITLE_VARS_LEGEND;
+	} else if( $prefix == "listings_url" ) {
+		$legend = $CS_VARIABLE_LISTING_DETAILS_URL_VARS_LEGEND;
 	} else if( $prefix == "communities" ) {
 		$legend = $CS_VARIABLE_COMMUNITY_META_TITLE_VARS_LEGEND;
 	} else if( $prefix == "associates" ) {
@@ -100,10 +103,14 @@ function render_format_options_table( $format_options, $indent = '' ) {
 function render_cs_page_settings_form( $cs_page_settings, $is_update ) {
 
 	global $CS_VARIABLE_PREFIX_META_HEADERS;
-
+	global $CS_SECTION_PARAM_CONSTANTS;
+	
 	$title_options_legend = get_options_legend( $cs_page_settings['prefix'] ); // Get the availalbe options based on which page this is (For the title)
 	$content_options_legend = get_options_legend( $cs_page_settings['prefix'], true /* for content */ );
-
+	
+	$url_options_legend = "";
+	if( $cs_page_settings['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname'] ) $url_options_legend = get_options_legend( $cs_page_settings['prefix'] . '_url' );
+	
 	$tabindex=($cs_page_settings['available'])?0:-1;
 
 ?>
@@ -138,6 +145,31 @@ function render_cs_page_settings_form( $cs_page_settings, $is_update ) {
               </td>
               <td><textarea tabindex="<?php echo($tabindex); ?>" name="header_desc" class="regular-text" cols=40 rows=4><?php echo cs_encode_for_html( $cs_page_settings['header_desc'] ); ?></textarea></td>
             </tr>
+<?php if( $cs_page_settings['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname'] ) { ?>
+<?php
+	$cs_cust_list_url = get_option("cs_cust_list_url", "");
+	$cs_cust_list_url_sep = get_option("cs_cust_list_url_sep", "_");
+?>
+			<tr valign="top">
+              <th scope="row"><label>Custom URL - Fields</label></th>
+              <td>
+			  Note: MLS number is always prepended to the custom url.  Custom URLS work for permalink-activated sites only.<br/><br/>
+			  Options:
+<?php   render_format_options_table( $url_options_legend ); ?>
+              </td>
+              <td><input tabindex="<?php echo($tabindex); ?>" name="cs_cust_list_url"  type="text" value="<?php echo cs_encode_for_html( $cs_cust_list_url ); ?>" class="regular-text" /></td>
+            </tr>
+			<tr valign="top">
+              <th scope="row"><label>Custom URL - Field Separator</label></th>
+              <td></td>
+              <td>
+			    <select tabindex="<?php echo($tabindex); ?>" name="cs_cust_list_url_sep"  type="text" class="regular-text" >
+			      <option value="_" <?php if( $cs_cust_list_url_sep == "_" ) { ?>selected="selected"<?php } ?>>Underscore (_)</option>
+				  <option value="-" <?php if( $cs_cust_list_url_sep == "-" ) { ?>selected="selected"<?php } ?>>Dash (-)</option>
+                </select>				  
+			  </td>
+            </tr>
+<?php } ?>	
           </table>
         </fieldset>
         <div class="cs-form-submit-buttons-box">
@@ -179,6 +211,8 @@ $cs_pages_settings = $wpdb->get_results($header_settings_query, ARRAY_A);
  */
 $section_to_reload = ''; // Blank for now as we don't know which one we need to re-load quite yet. (if we are re-loading this will hold the page's prefix).
 
+global $CS_CUST_LIST_URL_SEARCH_PATTERN;
+
 // Find which page they are updating.
 foreach( $cs_pages_settings as & $cs_page_settings ) { // NOTE: the & here causes foreach to work give us a reference NEEDED cause we'll be updating the $cs_page_settings
 
@@ -213,6 +247,17 @@ foreach( $cs_pages_settings as & $cs_page_settings ) { // NOTE: the & here cause
 		$where_vars_format = array('%d');
 	
 		$wpdb->update($table_name, $update_vars, $where_vars, $update_vars_format, $where_vars_format);
+		
+		//Update the custom listing details url and field separator if available
+		if(isset($_POST['cs_cust_list_url'])) {
+			$found = preg_match_all($CS_CUST_LIST_URL_SEARCH_PATTERN, $_POST['cs_cust_list_url'], $matches);
+			if($found !== false && $found > 0) $cs_cust_list_url = implode('', $matches[0]);
+			else $cs_cust_list_url = '';
+			
+			update_option('cs_cust_list_url', $cs_cust_list_url);
+		}
+		
+		if(isset($_POST['cs_cust_list_url_sep'])) update_option('cs_cust_list_url_sep', $_POST['cs_cust_list_url_sep']);
 	}
 }
 unset( $cs_page_settings ); // Best practice, unset the foreach var as it hangs around (in this case it was conflicting with the next foreach cause the second one does not go by reference).

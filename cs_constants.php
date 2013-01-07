@@ -118,7 +118,7 @@
 		"_cs_associate_last_name" => "%l",
 		"_cs_associate_desc" => "%d"
 	);
-	
+		
 	/**
 	 * Variable constant for displaying plugin notifications in admin area
 	 */
@@ -135,6 +135,17 @@
 		"Province/State" => $CS_VARIABLE_LISTING_META_TITLE_VARS["_cs_listing_prov_st"],
 		"City/Town" => $CS_VARIABLE_LISTING_META_TITLE_VARS["_cs_listing_town_city"],
 		"Neigh" => $CS_VARIABLE_LISTING_META_TITLE_VARS["_cs_listing_neigh"]
+	);
+		
+	/**
+	 * Array constant for displaying listing detail url configuration options
+	 */
+	$CS_VARIABLE_LISTING_DETAILS_URL_VARS_LEGEND = array(
+		"Address" => "%a",
+		"List Price" => "%p",
+		"Province/State" => "%z",
+		"City/Town" => "%c",
+		"Neigh" => "%n"
 	);
 	
 	/**
@@ -202,6 +213,11 @@
 		"Listing City" => $CS_VARIABLE_AUTO_BLOG_TITLE_CONTENT_VARS['_cs_autoblog_city'],
 		"Listing Neigh." => $CS_VARIABLE_AUTO_BLOG_TITLE_CONTENT_VARS['_cs_autoblog_neigh'],
 	);
+	
+	/**
+	 * Regex pattern used in conjunction with preg_match_all for finding parts of $CS_VARIABLE_LISTING_DETAILS_URL_VAR in a string
+	 */
+	$CS_CUST_LIST_URL_SEARCH_PATTERN = '/%[azpcn]/';
 	
 	/**
 	 * Default values for the Auto Blogger.

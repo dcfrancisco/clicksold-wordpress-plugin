@@ -205,6 +205,7 @@ class CS_request {
 		global $CS_SECTION_PARAM_CONSTANTS;
 		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
 		global $CS_SECTION_VIP_PARAM_CONSTANT;
+		global $CS_CUST_LIST_URL_SEARCH_PATTERN;
 		
 		global $wpdb;
 		global $blog_id;
@@ -253,6 +254,20 @@ class CS_request {
 						}
 					}
 				}
+			}
+		}
+		
+		// Set the custom listing details link pattern if available
+		$cs_cust_list_url = get_option('cs_cust_list_url', '');
+		if(!empty($cs_cust_list_url)) {
+			$match = preg_match_all($CS_CUST_LIST_URL_SEARCH_PATTERN, $cs_cust_list_url, $items); 
+			if($match !== false && $match > 0) {
+				$sep = get_option('cs_cust_list_url_sep', '_');
+				$cs_cust_list_url = implode($sep, $items[0]);
+				$cs_cust_list_url = str_replace('%', '', $cs_cust_list_url);
+				$parameters['custom_list_url_pattern'] = $cs_cust_list_url;
+			} else {
+				//error_log('CS_request - match: ' . $match);
 			}
 		}
 		
