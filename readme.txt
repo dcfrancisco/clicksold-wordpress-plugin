@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.23 =
+* Added ability to specify property addresses in the listing details urls.
+
 = 1.22 =
 * Added listing status options for Featured Listings Widget
 
