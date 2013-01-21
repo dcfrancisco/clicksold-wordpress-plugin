@@ -116,9 +116,9 @@ require_once("cs_functions.php");
             </tr>
 <?php if(empty($hosted)){ ?>
             <tr valign="top">
-              <th scope="row"><label>Plugin Host Name</label></th>
+              <th scope="row"><label>Plugin Domain Name</label></th>
               <td>
-                <input name="<?php echo  $cs_opt_plugin_hostname; ?>" id="<?php echo  $cs_opt_plugin_hostname; ?>" type="text" value="<?php echo  $opt_plugin_hostname_val; ?>" class="regular-text" /> (Please enter your site url, the plugin will only work on this domain)
+                <input name="<?php echo  $cs_opt_plugin_hostname; ?>" id="<?php echo  $cs_opt_plugin_hostname; ?>" type="text" value="<?php echo  $opt_plugin_hostname_val; ?>" class="regular-text" /> (Please enter the domain name of the site where you are using the ClickSold plugin. Don't worry if the domain name is for a test site, you can always change it later. For more information click <a target="_blank" href="http://www.clicksold.com/wiki/index.php/Authorize_the_ClickSold_Plugin">here</a>.)
                 <div class="cs-opt-plugin-hostname-err"></div>
               </td>
             </tr>
@@ -130,7 +130,7 @@ require_once("cs_functions.php");
           </table>
 <?php if(empty($hosted)){ ?>   
           <div class="cs-form-section-inline-help">
-	  	    NOTE: If you are working with a ClickSold Affiliate please use the signup link they have provided to get your plugin number and key.
+	  	    NOTE: If you are working with a ClickSold Affiliate please use the signup link or key that they have provided to get your plugin number and key.
 	      </div>
 <?php } ?>	  
 	    </fieldset>

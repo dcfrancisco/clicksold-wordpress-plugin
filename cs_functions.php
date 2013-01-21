@@ -251,4 +251,20 @@ function cs_encode_for_html( $str ) {
 	}
 }
 
+/**
+ * Wrapper around WP_Query.queried_object_id - some plugins get confused if we call get_queried_object_id so we query the instance var directly, however as of
+ * WP 3.5 (I think) we're getting non defined warnings when WP_Debug is on. So we test to see if the var is defined and only use it if it is.
+ * 
+ * Reminder the incompatible plugin was WP-Property
+ */
+function cs_get_queried_object_id( $wp_query ) {
+
+	if(! isset( $wp_query->queried_object_id ) ) {
+		//$wp_query->get_queried_object_id(); // This is as of WP 3.5 throwing warnings regarding the $post object....
+		return;
+	} else {
+		return $wp_query->queried_object_id;
+	}
+}
+
 ?>

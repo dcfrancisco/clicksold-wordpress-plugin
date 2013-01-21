@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.24 =
+* Made authorization process clearer.
+
 = 1.23 =
 * Added ability to specify property addresses in the listing details urls.
 

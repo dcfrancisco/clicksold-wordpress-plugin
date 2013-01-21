@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.23
+Version: 1.24
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.23';
+$cs_plugin_version = '1.24';
 
 require_once('cs_constants.php');
 
@@ -581,7 +581,8 @@ if( !is_admin() ){
 		// We fetch the post id differently depending on if permalinks are enabled or not.
 		if( $wp_rewrite->using_permalinks()) {
 
-			$post_id = $wp_query->queried_object_id; // Note using get_queried_object_id sets the queried object if not set and this confuses some other plugins.
+			// Note calling get_queried_object_id directly confuses some plugins.
+			$post_id = cs_get_queried_object_id($wp_query);
 
 			//Check to see if this is one of our pages as the front page.
 			//Note that we can't use is_front_page() as it is too early in the loop
@@ -813,8 +814,10 @@ if( !is_admin() ){
 		// Genesis Framework - SEO
 		add_action('pre_get_posts', 'debug_param_output');
 		function debug_param_output($wp_query) {
-			$page_id = $wp_query->queried_object_id; // Note using get_queried_object_id() sets the queried object if not set and this confuses some other plugins.
 			
+			// Note calling get_queried_object_id directly confuses some plugins.
+			$page_id = cs_get_queried_object_id($wp_query);
+
 			if(empty($page_id)) $page_id = $wp_query->query_vars["page_id"];
 			
 			// 2012-12-10 EZ - I really don't think that this main query detection is working correctly it seems to always be 1, not a big deal as the corresponding page_id is blank for the other ones.
