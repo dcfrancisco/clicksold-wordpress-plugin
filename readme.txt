@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+
+= 1.25 =
+* Added wp debug info reporting feature.
+
 = 1.24 =
 * Made authorization process clearer.
 

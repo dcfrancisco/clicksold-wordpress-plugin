@@ -150,7 +150,7 @@ class CS_request {
 
 		$this->pluginSection = $pluginSection;
 
-		// Flag used for getting all 
+		// Flag used for getting all section names.
 		if(!is_null($getAllSections)) $this->getAllSections = $getAllSections;
 		 
 		// Configure the maximum timeout for this account.

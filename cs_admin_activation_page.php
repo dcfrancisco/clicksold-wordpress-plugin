@@ -21,6 +21,7 @@
 
 // Note: These have to be included before any output is sent to the browser so that servers with buffering disabled don't break when we try to start our session.
 require_once('../../../wp-load.php');
+require_once('../../../wp-admin/includes/admin.php'); // Required to gather the debug info as some of the required functions are admin ones.
 require_once("cs_constants.php");
 require_once("cs_functions.php");
 
@@ -114,6 +115,10 @@ require_once("cs_functions.php");
                 <?php } ?>
               </td>
             </tr>
+            <tr>
+              <th scope="row"><label>Plugin Status</label></th>
+              <td><div id="plugin-settings-status-autorized">Authorized</div><div id="plugin-settings-status-not-autorized">Not Authorized</div></td>
+            </tr>
 <?php if(empty($hosted)){ ?>
             <tr valign="top">
               <th scope="row"><label>Plugin Domain Name</label></th>
@@ -123,10 +128,6 @@ require_once("cs_functions.php");
               </td>
             </tr>
 <?php } ?>
-            <tr>
-              <th scope="row"><label>Plugin Status</label></th>
-              <td><div id="plugin-settings-status-autorized">Authorized</div><div id="plugin-settings-status-not-autorized">Not Authorized</div></td>
-            </tr>
           </table>
 <?php if(empty($hosted)){ ?>   
           <div class="cs-form-section-inline-help">
@@ -166,3 +167,27 @@ require_once("cs_functions.php");
 <?php if(empty($hosted)){ ?>
 <div id="cs_admin_signup_form"></div>
 <?php } ?>
+
+
+<div id="cs_send_debug_info_show_link">Debug (Show/Hide)</div>
+<div id="cs_send_debug_info_success_message" class="cs-form-feedback" style="display:none">Thank you your debug information has been submitted.</div>
+<form id="cs_send_debug_info_form" name="form2" method="post" action="" style="display:none">
+  <div class="cs-form-section">
+    <input type="Submit" id="cs_send_debug_info_form_submit" value="Submit Debug Info"/>
+
+    <fieldset>
+      <div class="cs-form-section-title">ClickSold / WordPress Debug Information:</div>
+
+      <div id="cs_debug_info" name="cs_debug_info">
+        <?php print(cs_generate_degbug_info()); ?>
+      </div>
+    </fieldset>
+  </div>
+</form>
+
+
+
+
+
+
+

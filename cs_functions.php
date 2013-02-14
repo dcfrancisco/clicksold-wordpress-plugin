@@ -267,4 +267,161 @@ function cs_get_queried_object_id( $wp_query ) {
 	}
 }
 
+/**
+ * Generates a string of key information about the wordpress install and ClickSold plugin state. Used to debug 3rd party wordpress hosting issues.
+ */
+function cs_generate_degbug_info() {
+	
+	global $wpdb;
+	global $cs_posts_table; // Name of the cs_posts table.
+	
+	$output = '';
+	
+	// Add the date.
+	$output = 'WP Reported Date: ' . date( 'Y-m-d H:i:s e O' ) . "<br>\n"; // Eg. 2013-02-05 16:25:34 UTC +0000
+	
+	$output .= "<br>\n-------------------- wordpress info --------------------<br>\n";
+	$output .= "Name: '" . get_bloginfo('name') . "'<br>\n";
+	$output .= "Desc/Tagline: '" . get_bloginfo('description') . "'<br>\n";
+	$output .= "WP Url: '" . get_bloginfo('wpurl') . "'<br>\n";
+	$output .= "Site URL: '" . get_bloginfo('siteurl') . "'<br>\n";
+	$output .= "Version: '" . get_bloginfo('version') . "'<br>\n";
+	$output .= "Template Url: '" . get_bloginfo('template_url') . "'<br>\n";
+	if( is_multisite() ) {
+		$output .= "Is Multisite: 'Yes'<br>\n";
+	} else {
+		$output .= "Is Multisite: 'No'<br>\n";
+	}
+	
+	// CS Posts Table.
+	$output .= "<br>\n-------------------- cs_posts --------------------<br>\n";
+	$output .= cs_generate_html_table_from_db_result_set( $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . $cs_posts_table . "", ARRAY_A ) );
+	
+	// Options table - CS options.
+	$output .= "<br>\n-------------------- options (cs*) --------------------<br>\n";
+	$output .= cs_generate_html_table_from_db_result_set( $wpdb->get_results("SELECT * FROM " . $wpdb->options . " where option_name like 'cs%' ", ARRAY_A ) );
+	
+	// Plugins.
+	$output .= "<br>\n-------------------- Plugins --------------------<br>\n";
+	$output .= cs_print_r_html( cs_get_plugins_enchanced( true ), true);
+
+	// WP Rewrites
+	$output .= "<br>\n-------------------- WP Rewrites --------------------<br>\n";
+	$output .= "*** WARNING: This only includes the default rules with wp_rewrite->rules = cs_add_rewrite_rules... this is NOT a valid representation of the rewrite rules as they appear on the front end.<br>\n";
+	global $wp_rewrite; // NOTE: our rewrite rules are added using the rewrite_rules_array filter and that's not called in the admin area so we have to apply our chances as IF this is what we were working with.
+	$wp_rewrite->rules = cs_add_rewrite_rules( array() );
+	$output .= cs_print_r_html( $wp_rewrite, true);
+	
+	// WP Filter - Global
+	$output .= "<br>\n-------------------- wp_filter ('the_content' - filter on the content itself) --------------------<br>\n";
+	global $wp_filter;
+	$output .= cs_print_r_html( $wp_filter['the_content'], true);
+
+	// Options table - CS options (Goes last as it's usually stupid long).
+	$output .= "<br>\n-------------------- posts --------------------<br>\n";
+	$output .= cs_generate_html_table_from_db_result_set( $wpdb->get_results("SELECT * FROM " . $wpdb->posts . "", ARRAY_A ) );
+
+	return $output;
+} 
+
+/**
+ * Returns a formatted html table given a mysql result array (as returned by $wpdb->get_results(ARRAY_A output type)). Used for presentation of table data.
+ */
+function cs_generate_html_table_from_db_result_set( $result ) {
+	
+	// Edge case for when the result is empty.
+	if( count( $result ) == 0 ) {
+		return "<table><tr><th>Empty Result.</th></tr></table>";
+	}
+	
+	// Now we know that we have at least one result.
+	
+	$output = '';
+	$output .= "<table>\n";
+
+	// Figure out the field names.
+	$field_names = array_keys( $result[0] );
+
+	// Print the header.
+	$output .= "  <tr>\n";
+	for( $i = 0; $i < count( $field_names ); $i++ ) {
+		$output .= "    <th>" . $field_names[$i] . "</th>\n";
+	}
+	$output .= "  </tr>\n";
+	
+	// Now the rows.
+	for( $row = 0; $row < count( $result ); $row++ ) {
+		
+		$output .= "  <tr>\n";
+		
+		for( $col = 0; $col < count( $field_names ); $col++ ) {
+			
+			$output .= "    <td>" . $result[ $row ][ $field_names[ $col ] ] . "</td>\n";
+
+		}
+		
+		$output .= "  </tr>\n";
+	}
+	
+	$output .= "</table>\n";
+	return $output;
+}
+
+/**
+ * Wraps around the print_r routine but makes the output html friendly this works by just surrounding the output with a <pre> (preformatted) tag.
+ */
+function cs_print_r_html( $obj, $return_string ) {
+	
+	$print_r_output = print_r( $obj, true );
+	
+	if( $return_string ) { // Return as a string.
+		return "<pre>".$print_r_output."</pre>";
+	} else { // Just print it just like print_r( $obj, false ) would do.
+		print "<pre>".$print_r_output."</pre>";
+	}
+	return "";
+}
+
+/**
+ * Starting with the output of get_plugins() this routine then adds the info as to if the plugins are activated or network activated.
+ */
+function cs_get_plugins_enchanced( $strip_useless_details ) {
+	
+	$plugins = get_plugins();
+	
+	// For each plugin test if it's activated or not and if it's netwrok activated or not.
+	foreach( $plugins as $plugin_path => $plugin_details ) {
+		
+		// Add the values that we need to know about.
+		if( is_plugin_active( $plugin_path ) ) {
+			$plugins[ $plugin_path ]['Is Active'] = 'Yes';
+		} else {
+			$plugins[ $plugin_path ]['Is Active'] = 'No';
+		}
+		
+		if( is_plugin_active_for_network( $plugin_path ) ) {
+			$plugins[ $plugin_path ]['Is Network Active'] = 'Yes';
+		} else {
+			$plugins[ $plugin_path ]['Is Network Active'] = 'No';
+		}
+
+		// get_plugins returns a lot of info about each plugin, some of it is useless for our needs so if requested we remove it.
+		if( $strip_useless_details ) {
+			unset( $plugins[ $plugin_path ]['PluginURI'] );
+			unset( $plugins[ $plugin_path ]['Author'] );
+			unset( $plugins[ $plugin_path ]['AuthorURI'] );
+			unset( $plugins[ $plugin_path ]['TextDomain'] );
+			unset( $plugins[ $plugin_path ]['DomainPath'] );
+			unset( $plugins[ $plugin_path ]['Network'] );
+			unset( $plugins[ $plugin_path ]['Title'] );
+			unset( $plugins[ $plugin_path ]['AuthorName'] );
+		}
+	}
+	
+	return $plugins;
+}
+
+
+
+
 ?>

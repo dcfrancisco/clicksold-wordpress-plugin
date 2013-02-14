@@ -74,7 +74,8 @@ class CS_ajax_request{
 		} else if( $this->is_admin_request() ) {	
 			// *** SPECIAL CASE ***
 			//If this is a listing details request, we need to have the request send in all the sections to construct the url
-			if(stristr($this->request_vars, "loadListing=true") != false || stristr($this->request_vars, "loadFavoriteListings=true") != false){
+			// Also if the caller has specifically requested that that all section names be sent (used to send debug info)
+			if(stristr($this->request_vars, "loadListing=true") != false || stristr($this->request_vars, "loadFavoriteListings=true") != false || stristr($this->request_vars, "request_all_section_names=true") != false){
 				$cs_request = new CS_request( $this->request_vars, $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"], true);
 			}else{
 				$cs_request = new CS_request( $this->request_vars, $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
