@@ -159,7 +159,9 @@ class CS_response
 		//error_log(print_r($this->resource_includes[$block], true));
 				
 		foreach($this->resource_includes[$block] as $include_item){
-			if(($include_item["type"] == "JS" || $include_item["type"] == "CSS" || $include_item["type"] == "JS_JAWR" || $include_item["type"] == "CSS_JAWR") && $include_item["name"] == "") { continue; } //JS, CSS, JS_JAWR & CSS_JAWR types require a name field!
+			if(($include_item["type"] == "JS" || $include_item["type"] == "CSS" || $include_item["type"] == "JS_JAWR" || 
+			    $include_item["type"] == "CSS_JAWR"|| $include_item["type"] == "WP_ENQ_JS"|| $include_item["type"] == "WP_ENQ_CSS") && 
+				$include_item["name"] == "") { continue; } //JS, CSS, JS_JAWR, CSS_JAWR, WP_ENQ_JS & WP_ENQ_CSS types require a name field!
 			
 			if(($include_item["type"] == "JS" || $include_item["type"] == "JS_JAWR") && !$skip_linked) {  //Javascript File path (URL)
 				$this->deregister_wp_jquery_ui($include_item["name"]);
@@ -174,10 +176,8 @@ class CS_response
 				wp_enqueue_style($include_item["name"]);
 					
 			}elseif($include_item["type"] == "JS_IN" && !$skip_inline){
-				
-				
 				$out = $this->sanitize_output( $include_item["content"] );
-				error_log("Printing .... inline script (".$out.")");
+				//error_log("Printing .... inline script (".$out.")");
 				echo '<script type="text/javascript">/*<![CDATA[*/',$out,'/*]]>*/</script>';
 				
 			}elseif($include_item["type"] == "CSS_IN" && !$skip_inline){   //Page CSS
@@ -187,6 +187,12 @@ class CS_response
 			}elseif($include_item["type"] == "IN_RAW" && !$skip_inline){
 				$out = $this->sanitize_output( $include_item["content"] );
 				print $out;
+				
+			}elseif($include_item["type"] == "WP_ENQ_JS"){
+				if(!wp_script_is($include_item["name"], 'queue')) wp_enqueue_script($include_item["name"]);
+				
+			}elseif($include_item["type"] == "WP_ENQ_CSS"){
+				if(!wp_style_is($include_item["name"], 'queue')) wp_enqueue_style($include_item["name"]);
 			}
 		}
 	}

@@ -59,6 +59,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 == Changelog ==
 
 
+= 1.26 =
+* Added editable content for listings details 404 page.
+
 = 1.25 =
 * Added wp debug info reporting feature.
 

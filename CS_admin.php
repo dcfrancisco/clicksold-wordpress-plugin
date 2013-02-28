@@ -37,9 +37,13 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 		 * Main constructor function run on object instantiation - sets up menu items and additional hooks for specific page scripts & styles
 		 */
 		function CS_admin(){
+			global $CS_ADMIN_MENU_ITEMS;
 			
 			// setup menu items
 			add_action('init', array($this, 'get_admin_section'));
+			
+			// Add TinyMCE scripts & styles to the My Listings view
+			if($CS_ADMIN_MENU_ITEMS['My Listings']['menu_slug'] == $_GET['page']) add_action('admin_head', array($this, 'init_editor'));
 						
 			// build plugin admin menu item
 			add_action('admin_menu', array($this, 'cs_admin_menu'));
@@ -57,6 +61,13 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			
 			// CS Notifications
 			add_action('admin_notices', array($this, 'display_cs_notices'));	
+		}
+			
+		/**
+		 * Initializes the TinyMCE Editor for use with the plugin
+		 */
+		function init_editor(){
+			if(function_exists('wp_tiny_mce')) wp_tiny_mce(false);
 		}
 				
 		/**
