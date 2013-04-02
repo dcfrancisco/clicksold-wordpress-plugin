@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.26
+Version: 1.28
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.26';
+$cs_plugin_version = '1.28';
 
 require_once('cs_constants.php');
 
@@ -345,6 +345,55 @@ function attempt_autologin_auth(){
 }
 
 /**
+ * WP Login and Logout hooks. Used to report the fact that a user that can admin cs as defined by the 'cs_current_user_can_admin_cs' routine has logged in or out.
+ * 
+ * The plugin server needs to know this as now we have some admin components that appear in the front office as opposed to being called from the back office. Before
+ * we could just assume that if we are hitting the Admin controller then that we are autorized to do so.
+ */
+add_action('wp_login', 'cs_wp_login');
+function cs_wp_login($user_login) {
+		
+	/**
+	 * NOTE NOTE NOTE: This routine has everything disabled. During the login process none of this seems to work. Note this is not an issue. Each and any request from the
+	 * wp_admin section to the admin controller will let it know that an authorized user is logged in. This is because plugins as of 1.27 are not capable of hitting the
+	 * admin controller unless they are doing so from the back office.
+	 */
+
+//	// Only report if the user can cs_current_user_can_admin_cs
+//	
+//	/** NOTE: We can't use cs_current_user_can_admin_cs() here as the current_user_can(xyz) does not work yet. */
+//	/** NOTE: 2 supposidly we're supposed to get the user object as well but that does not seem to be happening, so all we have to play with is the user_login. **/
+//	$user = get_userdatabylogin( $user_login );
+//
+//	/** WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+//	    This here duplicates the functionality of cs_current_user_can_admin_cs if this is updated that has to be updated as well. **/
+//	if( user_can( $user->ID, 'manage_options' ) ) {
+//
+//		// Needed to actually make the call.
+//		require_once('cs_constants.php');
+//		
+//		// Report that the user has logged in (This is done by performing any admin request, the response is never going to be used so it does not have to be a correct request)
+//		$request = new CS_request( "", "wp_admin" ); // Note we use the bare 'wp_admin' instead of using the constant $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] as the constants have not been loaded yet!
+//		$request->request();
+//	}
+}
+
+add_action('wp_logout', 'cs_wp_logout');
+function cs_wp_logout() {
+	
+	global $CS_SECTION_ADMIN_PARAM_CONSTANT;
+	
+	// Only report if the user can cs_current_user_can_admin_cs
+	if( cs_current_user_can_admin_cs() ) {
+		
+		// Report that the user has logged out.
+		$request = new CS_request( "pathway=407", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); // 407 corresponds to SystemInfo.RPM_PLUGIN_ADMIN_REPORT_WP_ADMIN_LOGOUT
+		$request->request();
+	}
+}
+
+
+/**
 * Checks the server to see if this account's mobile site is disabled
 */
 function cs_mobile_site_disabled() {
@@ -650,6 +699,7 @@ if( !is_admin() ){
 						// make sure the_content hook calls our functions to load the response in the appropriate spot
 						add_filter("wp_title", "cs_set_head_title", 0);
 						add_action("wp_head", "cs_set_meta_desc", 1);
+						add_action("wp_head", "cs_set_open_graph_meta_data", 1);
 						add_action("wp_head", array($cs_response, "cs_get_header_contents_linked_only"), 0);
 						add_action("wp_head", array($cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the enqueue stuff.
 						add_action("wp_footer", array($cs_response, "cs_get_footer_contents"), 0);
@@ -690,6 +740,7 @@ if( !is_admin() ){
 		global $CS_VARIABLE_COMMUNITY_META_TITLE_VARS;
 		global $CS_VARIABLE_ASSOCIATE_META_TITLE_VARS;
 		global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
+		global $CS_VARIABLE_LISTING_META_OG;
 		
 		global $page_vars;
 		global $meta_config;
@@ -735,6 +786,10 @@ if( !is_admin() ){
 			}
 		}
 		
+		// Set the OG page title tag if available
+		if(array_key_exists($CS_VARIABLE_LISTING_META_OG["_cs_listing_og_title"], $page_vars))
+			echo '<meta property="' . $CS_VARIABLE_LISTING_META_OG["_cs_listing_og_title"] . '" content="' . $cs_title . '" />' . "\n";
+		
 		return $cs_title . " ";
 	}
 
@@ -747,6 +802,7 @@ if( !is_admin() ){
 		global $CS_VARIABLE_ASSOCIATE_META_DESC_VAR;
 		global $CS_VARIABLE_COMMUNITY_META_TITLE_VARS;  //Title vars are also available for description
 		global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
+		global $CS_VARIABLE_LISTING_META_OG;
 		
 		global $post;
 		global $wp_query;
@@ -804,6 +860,38 @@ if( !is_admin() ){
 		}
 		
 		echo "<meta name='description' content='$content' />";
+		
+		// Set the OG description tag if available
+		if(array_key_exists($CS_VARIABLE_LISTING_META_OG["_cs_listing_og_desc"], $page_vars))
+			echo "\n" . '<meta property="' . $CS_VARIABLE_LISTING_META_OG["_cs_listing_og_desc"] . '" content="' . $content . '" />' . "\n";
+			
+	}
+	
+	/**
+	 * Function for setting some of the open graph meta tags - title and description are
+	 * added by the above two functions.
+	 */
+	function cs_set_open_graph_meta_data(){
+	
+		global $CS_VARIABLE_LISTING_META_OG;
+		global $page_vars;
+		
+		if(empty($page_vars)) return;
+		
+		$og_props = $CS_VARIABLE_LISTING_META_OG;
+		$og_meta_tags = "";
+		
+		foreach($og_props as $key => $value){
+			// Skip title & desc as they've been set in cs_set_meta_title & cs_set_meta_desc
+			if($key != "_cs_listing_og_title" && $key != "_cs_listing_og_desc") {
+				if(array_key_exists($value, $page_vars)) {
+					if($key == "_cs_listing_og_sitename") $og_meta_tags .= '<meta property="' . $value . '" content="' . get_bloginfo('name') . '" />' . "\n";
+					else $og_meta_tags .= '<meta property="' . $value . '" content="' . $page_vars[$value] . '" />' . "\n";				
+				}
+			}
+		}
+		
+		if(!empty($og_meta_tags)) echo $og_meta_tags;
 	}
 	
 	// Canonical Header - Override for CS generated pages e.g. site.com/communities/city/neigh
@@ -862,9 +950,6 @@ $load_widgets = true;
 
 if ( is_admin() ) {
 	$cs_admin = new CS_admin();
-
-	$cs_shortcodes = new CS_shortcodes( 'cs_listings' );
-	add_action('init', array( $cs_shortcodes, 'cs_add_tinymce_buttons' ) );
 	
 	//Do server check to see if creds are valid - for widgets page only
 	if( isset($pagenow) ) {

@@ -80,7 +80,7 @@ class CS_request {
 	protected $req_timeout_failed_attempts;
 	protected $req_timeout;
 	
-	protected $req_timeout_err_msg = "Could not retrieve response from CS server which is likely undergoing maintenance at this time, please try again shortly.";
+	public $req_timeout_err_msg = "Could not retrieve response from CS server which is likely undergoing maintenance at this time, please try again shortly.";
 	
 	/**
 	* construct the CS_request obj.
@@ -141,7 +141,7 @@ class CS_request {
 		
 		//Remove the array stuff (brackets w/numbers) from the parameters
 		//error_log("Request - VARS (Before): " . $cs_org_req);
-		$cs_org_req = preg_replace("/\%5B(\d+)\%5D/", "", $cs_org_req);		
+		$cs_org_req = preg_replace("/\%5B(\d+)\%5D/", "", $cs_org_req);
 		$cs_org_req = preg_replace("/\[\]/", "", $cs_org_req);
 		//error_log("Request - VARS (After): " . $cs_org_req);
 		
@@ -231,6 +231,14 @@ class CS_request {
 		if($this->pluginSection == $CS_SECTION_ADMIN_PARAM_CONSTANT['wp_admin_pname']) {
 			$parameters['wp_admin_pname'] = $CS_SECTION_ADMIN_PARAM_CONSTANT['wp_admin_pname'];
 			$parameters['wpAdminUrl'] = get_admin_url($blog_id);
+		}
+		
+		// Refuse to process an admin request when the currently logged in user does not have enough priveleges.
+		if($this->pluginSection == $CS_SECTION_ADMIN_PARAM_CONSTANT['wp_admin_pname'] && !cs_current_user_can_admin_cs()) {
+			
+			// Fake a response that will indicate that this type of access is not allowed.
+			$response['cs_req_err_msg'] = "ERROR: You do not have sufficient permissions to access this page.";
+			return $response;
 		}
 		
 		if($this->pluginSection == $CS_SECTION_VIP_PARAM_CONSTANT['wp_vip_pname']) {

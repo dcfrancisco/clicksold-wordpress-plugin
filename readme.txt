@@ -59,6 +59,15 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 == Changelog ==
 
 
+= 1.28 =
+* Autoblogger fixes.
+
+= 1.27 =
+* Hide the My Domains menu item more reliably for 3rd party hosted sites (even if the account type is not technically correct).
+* Support for listing 404 pages with customizable content.
+* Open graph support for FB and other social media.
+* Added support for up and coming search by code feature.
+
 = 1.26 =
 * Added editable content for listings details 404 page.
 

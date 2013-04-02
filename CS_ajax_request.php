@@ -19,10 +19,14 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+// 2013-03-27 - this was deemed necessary for wp-control.php at some point in time... so I'm including it here as it appears correct.
+define('DOING_AJAX', true);
+
 // We start and then clean the output buffer while running the wp load in between to make our ajax requests not include
 // any error text that the actual loading of wordpress may produce. This error text messes up json responses and image requests (captcha).
 ob_start();
 require_once('../../../wp-load.php');
+require_once('../../../wp-admin/includes/admin.php'); // Will setup wp correctly if the user is logged in so we can use for example the is_admin() function and expect to get a sane response.
 ob_end_clean();
 
 require_once('CS_request.php');
@@ -93,8 +97,8 @@ class CS_ajax_request{
 			$cs_response = new CS_response($cs_request->request());
 		}
 
-		// If timeout error, show nothing instead of the timeout error message
-		if($cs_response->is_error()) return "";
+		// If timeout error, show nothing instead of the timeout error message (2013-03-27 EZ Not sure why we're hiding the timeout message but the original code hid ALL error messages which is not what we wanted).
+		if($cs_response->is_error() && $cs_response->get_body_contents() == $cs_request->req_timeout_err_msg) return "";
 		
 		// If this request was one that could have changed the configuration ask the plugin to check for new settings.
 		if( $this->is_products_change_request() || $this->is_plugin_activation_request() ) {

@@ -421,7 +421,21 @@ function cs_get_plugins_enchanced( $strip_useless_details ) {
 	return $plugins;
 }
 
-
+/**
+ * Returns yes or no if the currently logged in user can administer the ClickSold plugin.
+ * 
+ * As this is here to guard the cs admin functions this will obviously return false if the user is not logged in.
+ */
+function cs_current_user_can_admin_cs() {
+	
+		/** WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+			The wp_login hook cs_wp_login re-implemnets this as this function does not work yet before the user is fully logged in.
+			* That one should be updated as well if this implementation is changed. **/
+	
+	// Until we go to the trouble of adding a specific cs-admin role... cs admins are defined as those who can manage options.
+	// NOTE: 2013-03-27 the CS admin area menu is linked to the manage_options capability as is the updating of the plugin number and key.
+	return current_user_can('manage_options');
+}
 
 
 ?>

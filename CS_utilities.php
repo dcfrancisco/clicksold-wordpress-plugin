@@ -59,45 +59,47 @@ class CS_utilities{
 		$now = time();
 		update_option($cs_autoblog_last_update, $now);
 			
-		//build arguments for each listing
-		foreach($response['listings'] as $listing){
-			if($listing['_cs_autoblog_cs_status'] == $CS_VARIABLE_AUTO_BLOG_RPM_STATUS_VARS['Active'] && $cs_autoblog_new_opt == "1"){
-				$cs_autoblog_title_opt = 'cs_autoblog_new_title';
-				$cs_autoblog_cnt_opt = 'cs_autoblog_new_content';
-			}else if($listing['_cs_autoblog_cs_status'] == $CS_VARIABLE_AUTO_BLOG_RPM_STATUS_VARS['Sold'] && $cs_autoblog_sold_opt == "1"){
-				$cs_autoblog_title_opt = 'cs_autoblog_sold_title';
-				$cs_autoblog_cnt_opt = 'cs_autoblog_sold_content';
-			}else{
-				continue; //Skip due to invalid status
+		if(!empty($response['listings'])) {
+			//build arguments for each listing
+			foreach($response['listings'] as $listing){
+				if($listing['_cs_autoblog_cs_status'] == $CS_VARIABLE_AUTO_BLOG_RPM_STATUS_VARS['Active'] && $cs_autoblog_new_opt == "1"){
+					$cs_autoblog_title_opt = 'cs_autoblog_new_title';
+					$cs_autoblog_cnt_opt = 'cs_autoblog_new_content';
+				}else if($listing['_cs_autoblog_cs_status'] == $CS_VARIABLE_AUTO_BLOG_RPM_STATUS_VARS['Sold'] && $cs_autoblog_sold_opt == "1"){
+					$cs_autoblog_title_opt = 'cs_autoblog_sold_title';
+					$cs_autoblog_cnt_opt = 'cs_autoblog_sold_content';
+				}else{
+					continue; //Skip due to invalid status
+				}
+			
+				$post_title_temp = get_option($cs_autoblog_title_opt);
+				$post_cnt_temp = get_option($cs_autoblog_cnt_opt);
+			
+				if(empty($post_title_temp) || empty($post_cnt_temp)) continue;  //Skip due to blank title/content templates
+				
+				$post_title = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_TITLE_CONTENT_VARS, $listing, $post_title_temp);
+				$post_cnt = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_TITLE_CONTENT_VARS, $listing, $post_cnt_temp, true);
+				$post_cnt = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_CONTENT_VARS, $listing, $post_cnt, true);
+				
+				$post_args = array(
+					'post_title' => $post_title,
+					'post_content' => $post_cnt,
+					'post_status' => 'publish',
+					'post_date' => $listing['_cs_autoblog_date'],
+					'post_author' => $user_ID,
+					'post_type' => 'post',
+					'post_category' => array(0)
+				);
+			
+				array_push($post_queue, $post_args);
 			}
-		
-			$post_title_temp = get_option($cs_autoblog_title_opt);
-			$post_cnt_temp = get_option($cs_autoblog_cnt_opt);
-		
-			if(empty($post_title_temp) || empty($post_cnt_temp)) continue;  //Skip due to blank title/content templates
 			
-			$post_title = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_TITLE_CONTENT_VARS, $listing, $post_title_temp);
-			$post_cnt = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_TITLE_CONTENT_VARS, $listing, $post_cnt_temp, true);
-			$post_cnt = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_CONTENT_VARS, $listing, $post_cnt, true);
-			
-			$post_args = array(
-				'post_title' => $post_title,
-				'post_content' => $post_cnt,
-				'post_status' => 'publish',
-				'post_date' => $listing['_cs_autoblog_date'],
-				'post_author' => $user_ID,
-				'post_type' => 'post',
-				'post_category' => array(0)
-			);
-		
-			array_push($post_queue, $post_args);
-		}
-		
-		//insert the posts
-		foreach($post_queue as $post){
-			$error = wp_insert_post($post, true); 
-			if(is_wp_error($error)){
-				error_log(print_r($error, true));
+			//insert the posts
+			foreach($post_queue as $post){
+				$error = wp_insert_post($post, true); 
+				if(is_wp_error($error)){
+					error_log(print_r($error, true));
+				}
 			}
 		}
 	}

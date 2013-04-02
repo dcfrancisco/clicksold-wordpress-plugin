@@ -101,6 +101,17 @@
 	);
 	
 	/**
+	 * Variable constants for Open Graph functionality
+	 */
+	$CS_VARIABLE_LISTING_META_OG = array(
+		"_cs_listing_og_title" => "og:title",
+		"_cs_listing_og_desc" => "og:description",
+		"_cs_listing_og_image" => "og:image",
+		"_cs_listing_og_url" => "og:url",
+		"_cs_listing_og_sitename" => "og:site_name"
+	);
+	
+	/**
 	 * Variable constants for parsing meta title for generated associate
 	 * profile pages
 	 */

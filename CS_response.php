@@ -304,7 +304,7 @@ class CS_response
 	 */
 	public function is_error(){
 		return $this->error_state;
-	}	
+	}
 	
 /*** Utility Functions *******************************************************************/
 	

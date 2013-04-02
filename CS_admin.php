@@ -44,7 +44,12 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			
 			// Add TinyMCE scripts & styles to the My Listings view
 			if($CS_ADMIN_MENU_ITEMS['My Listings']['menu_slug'] == $_GET['page']) add_action('admin_head', array($this, 'init_editor'));
-						
+			else {
+				// Add CS Shortcodes button to all editors except in the listings section
+				$cs_shortcodes = new CS_shortcodes( 'cs_listings' );
+				add_action('init', array( $cs_shortcodes, 'cs_add_tinymce_buttons' ) );
+			}
+			
 			// build plugin admin menu item
 			add_action('admin_menu', array($this, 'cs_admin_menu'));
 			
@@ -110,6 +115,14 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 				//look for the brokerage field - process if it is set
 				if(array_key_exists("brokerage", $item)){
 					if($item['brokerage'] != $isBrok){
+						//Remove the item
+						unset($menu[$key]);
+					}
+				}
+
+				// If we are not hosted remove the My Domains (aka the domain manager) menu item.
+				if( !cs_is_hosted() ) {
+					if( $item['menu_slug'] == 'cs_plugin_admin_domains' ) {
 						//Remove the item
 						unset($menu[$key]);
 					}
@@ -212,7 +225,8 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 
 					if( isset($config['name']) ) { $name = $config['name']; }
 
-					if($config['request'] == 'domain_manager' && $valid->acct_info == "none") continue;
+					// 2013-02-28 EZ - Instead of filtering out the domain manager menu item here based on the info returned by the plugin server we will do so in get_menu_items based on the result of the cs_is_hosted() function... which is more reliable as it really tells us if the plugin is running remotely not just what we *think* is going on.
+					//if($config['request'] == 'domain_manager' && $valid->acct_info == "none") continue;
 					
 					if( !isset( $config['external_link'] ) || "" == $config['external_link'] ) { // Regular internal link.
 
