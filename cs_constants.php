@@ -108,7 +108,22 @@
 		"_cs_listing_og_desc" => "og:description",
 		"_cs_listing_og_image" => "og:image",
 		"_cs_listing_og_url" => "og:url",
-		"_cs_listing_og_sitename" => "og:site_name"
+		"_cs_listing_og_sitename" => "og:site_name",
+		"_cs_listing_alt_og_title" => "alt_og:title",
+		"_cs_listing_alt_og_desc" => "alt_og:description"
+	);
+	
+	/**
+	 * Variable constants for Open Graph functionality
+	 */
+	$CS_VARIABLE_LISTING_META_OG_ID = array(
+		"_cs_listing_og_title" => "cs_og_title",
+		"_cs_listing_og_desc" => "cs_og_desc",
+		"_cs_listing_og_image" => "cs_og_img",
+		"_cs_listing_og_url" => "cs_og_url",
+		"_cs_listing_og_sitename" => "cs_og_site_name",
+		"_cs_listing_alt_og_title" => "cs_og_title",
+		"_cs_listing_alt_og_desc" => "cs_og_desc"
 	);
 	
 	/**
@@ -170,7 +185,7 @@
 	
 	$CS_VARIABLE_ASSOCIATE_META_TITLE_VARS_LEGEND = array(
 		"First Name" => $CS_VARIABLE_ASSOCIATE_META_TITLE_VARS["_cs_associate_first_name"],
-		"Last Name" => $CS_VARIABLE_ASSOCIATE_META_TITLE_VARS["_cs_associate_last_name"],
+		"Last Name" => $CS_VARIABLE_ASSOCIATE_META_TITLE_VARS["_cs_associate_last_name"]
 	);
 	
 	/**

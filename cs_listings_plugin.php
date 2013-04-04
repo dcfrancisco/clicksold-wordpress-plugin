@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.28
+Version: 1.29
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.28';
+$cs_plugin_version = '1.29';
 
 require_once('cs_constants.php');
 
@@ -874,19 +874,26 @@ if( !is_admin() ){
 	function cs_set_open_graph_meta_data(){
 	
 		global $CS_VARIABLE_LISTING_META_OG;
+		global $CS_VARIABLE_LISTING_META_OG_ID;
 		global $page_vars;
 		
 		if(empty($page_vars)) return;
 		
 		$og_props = $CS_VARIABLE_LISTING_META_OG;
+		$og_ids = $CS_VARIABLE_LISTING_META_OG_ID;
 		$og_meta_tags = "";
 		
 		foreach($og_props as $key => $value){
 			// Skip title & desc as they've been set in cs_set_meta_title & cs_set_meta_desc
 			if($key != "_cs_listing_og_title" && $key != "_cs_listing_og_desc") {
 				if(array_key_exists($value, $page_vars)) {
-					if($key == "_cs_listing_og_sitename") $og_meta_tags .= '<meta property="' . $value . '" content="' . get_bloginfo('name') . '" />' . "\n";
-					else $og_meta_tags .= '<meta property="' . $value . '" content="' . $page_vars[$value] . '" />' . "\n";				
+					if($key == "_cs_listing_og_sitename") {
+						$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . $value . '" content="' . get_bloginfo('name') . '" />' . "\n";
+					} else if(strpos($value, "alt_") === 0) {
+						$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . substr($value, 4) . '" content="' . $page_vars[$value] . '" />' . "\n";
+					} else {
+						$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . $value . '" content="' . $page_vars[$value] . '" />' . "\n";
+					}
 				}
 			}
 		}
