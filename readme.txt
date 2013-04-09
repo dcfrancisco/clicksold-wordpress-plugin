@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.30 =
+* Open Graph / fixes.
+
 = 1.29 =
 * Added dynamic Open Graph support for Listing Details in MLS Search. 
 

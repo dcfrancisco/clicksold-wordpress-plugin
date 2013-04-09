@@ -2,13 +2,16 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.29
+Version: 1.30
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.29';
+$cs_plugin_version = '1.30';
+
+global $cs_plugin_type;
+$cs_plugin_type = 'cs_listings_plugin';
 
 require_once('cs_constants.php');
 
@@ -117,8 +120,8 @@ function cs_add_query_vars($aVars) {
 	foreach($result as $parameter){
 		$aVars[] = $parameter->parameter;
 	}
+	
 	return $aVars;
-
 }
 
 //hook to rewrite_rules_array. This filter is checked every time you save/re-save your permalink structure
@@ -167,7 +170,6 @@ function cs_add_rewrite_rules($aRules) {
 	       'neighbourhoods/?$' => 'index.php?pagename=neighbourhoods',
 	       'neighbourhoods/([^/+]+)/?$' => 'index.php?pagename=neighbourhoods&neighbourhood=$matches[1]');
 
-	
 	$aRules = $aNewRules + $aRules;*/
 		
 	return $aRules;
@@ -588,7 +590,7 @@ if( !is_admin() ){
 	 */
 	function cs_process_vip_confirmation( $wp_query ){
 		global $CS_SECTION_PARAM_CONSTANTS;
-	
+		
 		remove_action('parse_query', 'cs_process_vip_confirmation', 5);
 		$cs_request = new CS_request(http_build_query($_GET), $CS_SECTION_PARAM_CONSTANTS["listings_pname"]);
 		$cs_response = new CS_response($cs_request->request());
@@ -622,7 +624,7 @@ if( !is_admin() ){
 		global $post_param;
 		global $page_vars;
 		global $meta_config;
-		
+				
 		/** Check for and process ClickSold Section pages (eg: listings/, communities/ or idx/). **/
 
 		$table_name = $wpdb->prefix . $cs_posts_table;
@@ -632,7 +634,7 @@ if( !is_admin() ){
 
 			// Note calling get_queried_object_id directly confuses some plugins.
 			$post_id = cs_get_queried_object_id($wp_query);
-
+			
 			//Check to see if this is one of our pages as the front page.
 			//Note that we can't use is_front_page() as it is too early in the loop
 			//to get the proper response.
@@ -652,6 +654,7 @@ if( !is_admin() ){
 				// process the request using the cs plugin server.
 				if($result['postid'] == $post_id){
 					$cs_org_req = "";
+					$post_param = $result['parameter'];
 					
 					if(array_key_exists($result['parameter'], $wp_query->query_vars)) {
 						$param = $wp_query->query_vars[$result['parameter']];
@@ -660,16 +663,17 @@ if( !is_admin() ){
 					}
 					
 					if(!empty($param)){
-						$post_param = $result['parameter'];
 						$cs_org_req = $param;
 						// If present, append GET query string to cs_org_req
 						// Note: primarily used for featured listings view
 						if(!empty($_GET)){
 							$cs_org_req .= "?" . http_build_query($_GET);
 						}
+						
 					// If no parameters were returned from the database, give cs_org_req the value of the GET query string if available
 					}else if(!empty($_GET)){ 
 						$cs_org_req = http_build_query($_GET);
+						
 					// If this page was set as a front page, we need to feed in the request manually
 					}else if($post_id == get_option( "page_on_front" ) && !$wp_rewrite->using_permalinks()){ 
 						$cs_org_req = "page_id=" . $post_id;
@@ -726,7 +730,7 @@ if( !is_admin() ){
 			$cs_shortcodes->cs_process_cs_shortcode_posts( $wp ); // Defer to the shortcodes class for this as the code is similar between our plugins.
 		}
 	} # End if function_exists
-		
+			
 	/**
 	 * Sets the meta title tag for ClickSold generated pages
 	 */
@@ -750,10 +754,7 @@ if( !is_admin() ){
 		
 		//Return the original title if any of the required config arrays are empty
 		if(empty($page_vars)|| empty($meta_config) || empty($post_param)) return $title;
-		
-		//This will tell us if this page is a generated page - if not, return the original title value
-		if(!key_exists($post_param, $wp_query->query_vars)) return $title;
-		
+				
 		/* NOTE: Subject to change once we decide on keying pages for use with this *
 		 * plugin                                                                   */
 		if($post_param == $CS_GENERATED_PAGE_PARAM_CONSTANTS['listings']){
@@ -768,7 +769,7 @@ if( !is_admin() ){
 		$cs_title = $meta_config['header_title'];
 		
 		// If the cs_title configured format is blank, we can just quit right here as there is nothing for us to do.
-		if( $cs_title == '' ) { return; }
+		if( $cs_title == '' ) return;
 
 		//replace wild cards with content, if found
 		foreach($options as $key => $value){
@@ -785,10 +786,6 @@ if( !is_admin() ){
 				$cs_title = substr_replace($cs_title, $page_vars[$key], $offset, strlen($value));
 			}
 		}
-		
-		// Set the OG page title tag if available
-		if(array_key_exists($CS_VARIABLE_LISTING_META_OG["_cs_listing_og_title"], $page_vars))
-			echo '<meta property="' . $CS_VARIABLE_LISTING_META_OG["_cs_listing_og_title"] . '" content="' . $cs_title . '" />' . "\n";
 		
 		return $cs_title . " ";
 	}
@@ -812,14 +809,12 @@ if( !is_admin() ){
 		global $meta_config;
 		
 		$options = array();
-		
-		if(empty($page_vars) || empty($meta_config) || empty($post_param)) { return; }
-		
-		if(!key_exists($post_param, $wp_query->query_vars)) { return; }
+				
+		if(empty($page_vars) || empty($meta_config) || empty($post_param)) return;
 		
 		$char_limit = (int) $meta_config['header_desc_char_limit'];
 		
-		if($char_limit <= 0){  
+		if($char_limit <= 0){ 
 			return;
 		}else if($char_limit > 200){
 			$char_limit = 200;
@@ -829,7 +824,7 @@ if( !is_admin() ){
 		$content = $meta_config['header_desc'];
 		
 		// If the content configured format is blank, we can just quit right here as there is nothing for us to do.
-		if( $content == '' ) { return; }
+		if( $content == '' ) { error_log('cs_set_meta_desc() exit(4)'); return; }
 		
 		/* NOTE: Subject to change once we decide on keying pages for use with this *
 		 * plugin                                                                   */
@@ -859,12 +854,15 @@ if( !is_admin() ){
 			$content .= "...";
 		}
 		
-		echo "<meta name='description' content='$content' />";
-		
-		// Set the OG description tag if available
-		if(array_key_exists($CS_VARIABLE_LISTING_META_OG["_cs_listing_og_desc"], $page_vars))
-			echo "\n" . '<meta property="' . $CS_VARIABLE_LISTING_META_OG["_cs_listing_og_desc"] . '" content="' . $content . '" />' . "\n";
-			
+		echo "\n<meta name='description' content='$content' />";
+	}
+	
+	/**
+	 * Sets the Open Graph namespace on the HTML starting tag
+	 */
+	add_filter('language_attributes', 'cs_set_og_ns');
+	function cs_set_og_ns( $output ) {
+		return $output . ' xmlns:og="http://ogp.me/ns#"';
 	}
 	
 	/**
@@ -881,19 +879,24 @@ if( !is_admin() ){
 		
 		$og_props = $CS_VARIABLE_LISTING_META_OG;
 		$og_ids = $CS_VARIABLE_LISTING_META_OG_ID;
-		$og_meta_tags = "";
+		$og_meta_tags = "\n";
 		
 		foreach($og_props as $key => $value){
 			// Skip title & desc as they've been set in cs_set_meta_title & cs_set_meta_desc
-			if($key != "_cs_listing_og_title" && $key != "_cs_listing_og_desc") {
-				if(array_key_exists($value, $page_vars)) {
-					if($key == "_cs_listing_og_sitename") {
-						$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . $value . '" content="' . get_bloginfo('name') . '" />' . "\n";
-					} else if(strpos($value, "alt_") === 0) {
-						$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . substr($value, 4) . '" content="' . $page_vars[$value] . '" />' . "\n";
-					} else {
-						$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . $value . '" content="' . $page_vars[$value] . '" />' . "\n";
-					}
+			if(array_key_exists($value, $page_vars)) {
+				if($key == "_cs_listing_og_sitename") {
+					$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . $value . '" content="' . get_bloginfo('name') . '" />' . "\n";
+				} else if($key == "_cs_listing_og_title") {
+					$page_id = get_the_id();
+					$title = get_the_title($page_id);
+					$cs_title = cs_set_head_title($title);
+					$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . $value . '" content="' . $cs_title . '" />' . "\n";
+				} else if($key == "_cs_listing_og_desc") {
+					$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . $value . '" content="' . $page_vars['_cs_listing_desc'] . '" />' . "\n";
+				} else if(strpos($value, "alt_") === 0) {
+					$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . substr($value, 4) . '" content="' . $page_vars[$value] . '" />' . "\n";
+				} else {
+					$og_meta_tags .= '<meta id="' . $og_ids[$key] . '" property="' . $value . '" content="' . $page_vars[$value] . '" />' . "\n";
 				}
 			}
 		}

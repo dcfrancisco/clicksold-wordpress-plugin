@@ -20,6 +20,7 @@
 */
 
 require_once(plugin_dir_path(__FILE__) . "cs_constants.php");
+require_once(plugin_dir_path(__FILE__) . "cs_functions.php");
 
 //Include the WP_Http class used for making HTTP requests
 if ( !class_exists( 'WP_Http' ) ) :
@@ -245,7 +246,9 @@ class CS_request {
 			$parameters['wp_vip_pname'] = $CS_SECTION_VIP_PARAM_CONSTANT['wp_vip_pname'];
 		}
 		
-		if($this->pluginSection != $CS_SECTION_ADMIN_PARAM_CONSTANT['wp_admin_pname'] || $this->getAllSections == true){
+		// This sets all of the plugin sections in the request, it's not done for wp_admin unless specifically requested and it's never done for the cs_admin_plugin (the one with the cs signup form as used on clicksold.com) as the db tables don't exist.
+		if( ( $this->pluginSection != $CS_SECTION_ADMIN_PARAM_CONSTANT['wp_admin_pname'] || $this->getAllSections == true ) && cs_get_cs_plugin_type() != 'cs_admin_plugin' ){
+
 			// Set page specific section parameters -- these are the ones that are "available"
 			$cs_posts = $wpdb->get_results( "SELECT postid, prefix FROM $cs_posts_table", OBJECT_K);
 			if( "" != get_option('permalink_structure', "") ) { // We are using permalinks.

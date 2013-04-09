@@ -437,5 +437,16 @@ function cs_current_user_can_admin_cs() {
 	return current_user_can('manage_options');
 }
 
+/**
+ * Returns the value of the $cs_plugin_type global or 'unknown' if it's not defined.
+ */
+function cs_get_cs_plugin_type() {
+	global $cs_plugin_type;
+
+	if( !isset( $cs_plugin_type ) ) { return 'Unknown'; }
+
+	return $cs_plugin_type;
+}
+
 
 ?>
