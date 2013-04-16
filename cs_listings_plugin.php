@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.30
+Version: 1.31
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.30';
+$cs_plugin_version = '1.31';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -415,36 +415,33 @@ if( !is_admin() ){
 	// Canonical redirects need to be turned off or some of our custom urls will not work
 	if(get_option("permalink_structure")) remove_filter('template_redirect', 'redirect_canonical');
 	
-	//if(!is_404() && !is_preview()){
-		
-		// Check if we need to blog listing updates
-		add_action('pre_get_posts', 'cs_listing_auto_blog_update');
-				
-		// For handling mobile site stuff
-		if(isset($_SERVER['HTTP_USER_AGENT'])) {
-			if((stripos(basename($_SERVER['REQUEST_URI']), 'cs_mobile.php') === FALSE) && (!isset($_COOKIE["csFullSite"]) || $_COOKIE["csFullSite"] != "true") && (strpos($_SERVER['HTTP_USER_AGENT'], 'iPad') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPod') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'BlackBerry') !== FALSE) ){
-				if(cs_mobile_site_disabled() == false) {
-					header('location:' . plugin_dir_url(__FILE__) . 'cs_mobile.php');
-					die();
-				}
+	// Check if we need to blog listing updates
+	add_action('pre_get_posts', 'cs_listing_auto_blog_update');
+			
+	// For handling mobile site stuff
+	if(isset($_SERVER['HTTP_USER_AGENT'])) {
+		if((stripos(basename($_SERVER['REQUEST_URI']), 'cs_mobile.php') === FALSE) && (!isset($_COOKIE["csFullSite"]) || $_COOKIE["csFullSite"] != "true") && (strpos($_SERVER['HTTP_USER_AGENT'], 'iPad') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPod') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'BlackBerry') !== FALSE) ){
+			if(cs_mobile_site_disabled() == false) {
+				header('location:' . plugin_dir_url(__FILE__) . 'cs_mobile.php');
+				die();
 			}
 		}
-		// For handling VIP confirmation links
-		if(!empty($_GET["pathway"]) && !empty($_GET["email_addr"]) && !empty($_GET["confirmationCode"])){
-			add_action('parse_query', 'cs_process_vip_confirmation', 5);
-			
-		// For handling VIP saved search links
-		}else if(!empty($_GET["s_s"])){
-			add_action('init', 'cs_saved_search_redirect', 5);
-			
-		// Normal page handling
-		}else{
-			// Adds inline javascript that changes masked domains to their original urls
-			add_action('parse_query', 'cs_process_cs_section_posts', 5); 	// ClickSold section posts are processed in parse_query because they need to be able to set the title.
-			add_action('wp', 'cs_process_cs_shortcode_posts'); 	// ClickSold shortcodes are processed when we are processing the post itself.	
-		}
-	//}
-	
+	}
+	// For handling VIP confirmation links
+	if(!empty($_GET["pathway"]) && !empty($_GET["email_addr"]) && !empty($_GET["confirmationCode"])){
+		add_action('parse_query', 'cs_process_vip_confirmation', 5);
+		
+	// For handling VIP saved search links
+	}else if(!empty($_GET["s_s"])){
+		add_action('init', 'cs_saved_search_redirect', 5);
+		
+	// Normal page handling
+	}else{
+		// Adds inline javascript that changes masked domains to their original urls
+		add_action('parse_query', 'cs_process_cs_section_posts', 5); 	// ClickSold section posts are processed in parse_query because they need to be able to set the title.
+		add_action('wp', 'cs_process_cs_shortcode_posts'); 	// ClickSold shortcodes are processed when we are processing the post itself.	
+	}
+		
 	/**
 	 * Checks options to see if we should run the listing auto blogger
 	 */
@@ -605,11 +602,28 @@ if( !is_admin() ){
 	}
 	
 	/**
+	 * Function that allows post queries on private pages to be added to the loop
+	 */
+	function cs_get_private_page($params) {
+		global $wpdb;
+		remove_filter('posts_fields_request', 'cs_get_private_page', 0);
+		return str_replace(
+            "$wpdb->posts.*", "$wpdb->posts.ID, $wpdb->posts.post_author, $wpdb->posts.post_date, " .
+			"$wpdb->posts.post_date_gmt, $wpdb->posts.post_content, $wpdb->posts.post_title, $wpdb->posts.post_excerpt, " . 
+			"REPLACE( $wpdb->posts.post_status, 'private', 'publish' ) AS `post_status`, $wpdb->posts.comment_status, " .
+			"$wpdb->posts.ping_status, $wpdb->posts.post_password, $wpdb->posts.post_name, $wpdb->posts.to_ping, " .
+			"$wpdb->posts.pinged, $wpdb->posts.post_modified, $wpdb->posts.post_modified_gmt, $wpdb->posts.post_content_filtered, " .
+			"$wpdb->posts.post_parent, $wpdb->posts.guid, $wpdb->posts.menu_order, $wpdb->posts.post_type, " .
+            "$wpdb->posts.post_mime_type, $wpdb->posts.comment_count", $params
+        );
+	}
+	
+	/**
 	 * process the request as an cs request if the post id matches
 	 * one of the ClickSold Plugin sections.
 	 */
 	function cs_process_cs_section_posts( $wp_query ){
-
+		
 		remove_action('parse_query', 'cs_process_cs_section_posts', 5);
 		
 		global $wpdb;
@@ -619,6 +633,7 @@ if( !is_admin() ){
 		global $cs_opt_plugin_key, $cs_opt_plugin_num;
 		global $cs_opt_tier_name;
 		global $cs_opt_brokerage;
+		global $CS_SECTION_PARAM_CONSTANTS;
 		
 		// Global vars needed for configuring meta tags
 		global $post_param;
@@ -655,6 +670,7 @@ if( !is_admin() ){
 				if($result['postid'] == $post_id){
 					$cs_org_req = "";
 					$post_param = $result['parameter'];
+					$force_private_page_load = false;
 					
 					if(array_key_exists($result['parameter'], $wp_query->query_vars)) {
 						$param = $wp_query->query_vars[$result['parameter']];
@@ -670,9 +686,16 @@ if( !is_admin() ){
 							$cs_org_req .= "?" . http_build_query($_GET);
 						}
 						
+						// Set force page load flag to true if we're looking for listing details
+						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname']) $force_private_page_load = true;
+						
 					// If no parameters were returned from the database, give cs_org_req the value of the GET query string if available
 					}else if(!empty($_GET)){ 
 						$cs_org_req = http_build_query($_GET);
+						
+						// Set force page load flag to true if we're looking for listing details
+						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname'] &&
+						   (stripos($cs_org_req, '&mlsnum=') !== false || stripos($cs_org_req, '&listnum=') !== false )) $force_private_page_load = true;
 						
 					// If this page was set as a front page, we need to feed in the request manually
 					}else if($post_id == get_option( "page_on_front" ) && !$wp_rewrite->using_permalinks()){ 
@@ -700,6 +723,9 @@ if( !is_admin() ){
 						}
 						*/
 						
+						// Force the request to show a CS generated page if set to private
+						if($force_private_page_load == true) add_filter('posts_fields_request', 'cs_get_private_page', 0);
+						
 						// make sure the_content hook calls our functions to load the response in the appropriate spot
 						add_filter("wp_title", "cs_set_head_title", 0);
 						add_action("wp_head", "cs_set_meta_desc", 1);
@@ -720,7 +746,7 @@ if( !is_admin() ){
 			}
 		}
 	}
-
+	
 	/**
 	 * Process the request as an ClickSold request if the content contains any cs_shortcodes.
 	 */
@@ -824,7 +850,7 @@ if( !is_admin() ){
 		$content = $meta_config['header_desc'];
 		
 		// If the content configured format is blank, we can just quit right here as there is nothing for us to do.
-		if( $content == '' ) { error_log('cs_set_meta_desc() exit(4)'); return; }
+		if( $content == '' ) { return; }
 		
 		/* NOTE: Subject to change once we decide on keying pages for use with this *
 		 * plugin                                                                   */

@@ -58,6 +58,11 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.31 =
+* Fix listing details can't be shown if listings/ page is set to not show.
+* Fix menu item duplication issue.
+* Fix page js being executed on plugin activation page.
+
 = 1.30 =
 * Open Graph / fixes.
 

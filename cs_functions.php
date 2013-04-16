@@ -26,10 +26,12 @@
 function cs_add_plugin_pages( $page, $prefix ){
 
 	global $wpdb;
-
+	global $cs_posts_table;
+	
 	$post_title = $page;
 	$post_name = strtolower($page);
 	$post_status = 'private';
+	$table_name = $wpdb->prefix . $cs_posts_table;
 	
 	$my_post = array(
 		'post_title' => $post_title,
@@ -39,16 +41,21 @@ function cs_add_plugin_pages( $page, $prefix ){
 		'ping_status' => 'closed'
 	);
 	
+	// Attempt to get the current post ID if it already exists
+	$post_id = $wpdb->get_var("SELECT $wpdb->posts.ID FROM $wpdb->posts, $table_name WHERE $wpdb->posts.ID = $table_name.postid AND $table_name.prefix = '$prefix'");
+	
 	// Insert the page/post into the database
-	$post_id = wp_insert_post( $my_post );
-	
-	$guid =  get_option('siteurl') ."/?page_id=$post_id";
-	$post_type    = 'page';
-	$wpdb->query("UPDATE $wpdb->posts SET guid = '$guid', post_type = '$post_type' WHERE ID = $post_id");
-	
-	/** For each (fixed / customised) menu on the account add our stuff. **/
-	if( get_option("cs_allow_manage_menus", 1) ) {
-		cs_add_post_to_custom_menus( $post_id, $post_type );
+	if(!isset($post_id)) {
+		$post_id = wp_insert_post( $my_post );
+		
+		$guid =  get_option('siteurl') ."/?page_id=$post_id";
+		$post_type = 'page';
+		$wpdb->query("UPDATE $wpdb->posts SET guid = '$guid', post_type = '$post_type' WHERE ID = $post_id");
+		
+		/** For each (fixed / customised) menu on the account add our stuff. **/
+		if( get_option("cs_allow_manage_menus", 1) ) {
+			cs_add_post_to_custom_menus( $post_id, $post_type );
+		}
 	}
 	
 	return $post_id;
@@ -87,7 +94,8 @@ function cs_add_post_to_custom_menus( $post_id, $post_type, $post_status = "publ
 
 		// Note: I can't figure out why this does not happen automatically when being ran from the wp-control script.
 		//       This essentially just links the new menu item to the menu.
-		$wpdb->query("INSERT INTO $wpdb->term_relationships VALUES ( $menu_item_id, ".$menu->term_taxonomy_id.", 0)");
+		$obj_id = $wpdb->get_var("SELECT $wpdb->term_relationships.object_id FROM $wpdb->term_relationships WHERE $wpdb->term_relationships.object_id = '$menu_item_id' AND $wpdb->term_relationships.term_taxonomy_id = '$menu->term_taxonomy_id'");
+		if(!isset($obj_id)) $wpdb->query("INSERT INTO $wpdb->term_relationships VALUES ( $menu_item_id, ".$menu->term_taxonomy_id.", 0)");
 	}
 }
 
@@ -100,10 +108,14 @@ function cs_add_cs_post( $post_id, $default_page, $prefix, $post_parameter, $tit
 
 	global $wpdb;
 	global $cs_posts_table;
-	$wpdb->insert($wpdb->prefix . $cs_posts_table, 
-	array( 'postid' => $post_id, 'defaultpage' => $default_page, 'prefix' => $prefix, 'parameter' => $post_parameter, 'header_title' => $title, 'header_desc' => $desc, 'header_desc_char_limit' => $desc_limit, 'available' => $avail ), 
-	array('%d','%s','%s','%s','%s','%s','%d','%d'));
 	
+	//Check if 
+	$existing_post_id = $wpdb->get_var("SELECT postid FROM " . $wpdb->prefix . $cs_posts_table . " WHERE postid = '$post_id'");
+	if(!isset($existing_post_id)) {
+		$wpdb->insert($wpdb->prefix . $cs_posts_table, 
+		array( 'postid' => $post_id, 'defaultpage' => $default_page, 'prefix' => $prefix, 'parameter' => $post_parameter, 'header_title' => $title, 'header_desc' => $desc, 'header_desc_char_limit' => $desc_limit, 'available' => $avail ), 
+		array('%d','%s','%s','%s','%s','%s','%d','%d'));
+	}
 	//error_log("Inserted cs_post with id: $post_id");
 }
 
@@ -202,7 +214,7 @@ function cs_restore_cs_post_state( $prefix ) {
 
 	// Load any current saved state.
 	$cs_posts_state = get_option( "cs_posts_state", array() );
-
+	
 	// If we don't have any state for this page we can just quit right here.
 	if( !isset( $cs_posts_state[ $prefix ] ) ) { return; }
 
@@ -214,7 +226,6 @@ function cs_restore_cs_post_state( $prefix ) {
 
 	// Restore the page settings (if available).
 	if( isset( $cs_posts_state[ $prefix ]['page_settings'] ) ) {
-
 		$wpdb->query('UPDATE '.$wpdb->posts.' SET post_title = "'.$cs_posts_state[ $prefix ]['page_settings']['post_title'].'", post_status = "'.$cs_posts_state[ $prefix ]['page_settings']['post_status'].'", post_name = "'.$cs_posts_state[ $prefix ]['page_settings']['post_name'].'" WHERE ID = "' . $cs_post_record->postid . '"');
 
 		// For the post status we also have to update any associated menu items.
@@ -321,7 +332,7 @@ function cs_generate_degbug_info() {
 	$output .= "<br>\n-------------------- posts --------------------<br>\n";
 	$output .= cs_generate_html_table_from_db_result_set( $wpdb->get_results("SELECT * FROM " . $wpdb->posts . "", ARRAY_A ) );
 
-	return $output;
+	return cs_kill_script( $output );
 } 
 
 /**
@@ -419,6 +430,18 @@ function cs_get_plugins_enchanced( $strip_useless_details ) {
 	}
 	
 	return $plugins;
+}
+
+/**
+ * Kills all of the script tags in the source by replacing "<script" / "</script" with "<cs_killed_script" and "</cs_killed_script" respectively.
+ * Used for the debug send generation so the scripts on pages don't get executed in the Plugin Activation tab (where the debug output is stored).
+ */
+function cs_kill_script( $input ) {
+	
+	$input = str_replace( "<script ", "<cs_killed_sript ", $input );
+	$input = str_replace( "</script ", "</cs_killed_sript ", $input );
+	
+	return $input;
 }
 
 /**

@@ -62,12 +62,31 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			add_action("wp_trash_post", array($this, "prevent_cs_trash_pages"), 1, 12);
 			add_action("wp_delete_post", array($this, "prevent_cs_trash_pages"), 1, 12);
 			
+			// Update page status when page is updated
+			add_action("edit_post", array($this, 'cs_edit_page_status'));
+			
 			if(strpos($_SERVER["QUERY_STRING"], "cs_page_del_error=true")) add_action('admin_notices', array($this, 'display_cs_page_delete_error'));
 			
 			// CS Notifications
 			add_action('admin_notices', array($this, 'display_cs_notices'));	
 		}
+		
+		/**
+		* Changes the saved status (visibility) value when a page is updated
+		*/
+		function cs_edit_page_status($page_id) {
+			global $wpdb;
+			global $cs_posts_table;
 			
+			$prefix = $wpdb->get_var('SELECT prefix FROM '. $wpdb->prefix . $cs_posts_table . " WHERE postid = $page_id");
+			if(isset($prefix)) {
+				$status = $wpdb->get_var("SELECT post_status FROM $wpdb->posts WHERE ID = $page_id");
+				$cs_posts_desired_statuses = get_option( "cs_posts_desired_statuses", array('listings' => 'publish', 'idx' => 'publish', 'communities' => 'publish', 'associates' => 'publish' ) );
+				$cs_posts_desired_statuses[$prefix] = $status;
+				update_option("cs_posts_desired_statuses", $cs_posts_desired_statuses);
+			}
+		}
+		
 		/**
 		 * Initializes the TinyMCE Editor for use with the plugin
 		 */
