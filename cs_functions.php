@@ -438,8 +438,10 @@ function cs_get_plugins_enchanced( $strip_useless_details ) {
  */
 function cs_kill_script( $input ) {
 	
-	$input = str_replace( "<script ", "<cs_killed_sript ", $input );
-	$input = str_replace( "</script ", "</cs_killed_sript ", $input );
+	$input = str_replace( "<script ", "<cs_killed_script ", $input );
+	$input = str_replace( "</script ", "</cs_killed_script ", $input );
+	$input = str_replace( "<iframe ", "<cs_killed_iframe ", $input );
+	$input = str_replace( "</iframe ", "</cs_killed_iframe ", $input );
 	
 	return $input;
 }

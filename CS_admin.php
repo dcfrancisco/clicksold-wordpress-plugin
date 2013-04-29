@@ -158,11 +158,26 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 		}
 		
 		/**
+		 * Initializes a prompt to delete the demo listing from this account.
+		 */
+		function cs_prompt_demo_listing_delete() {
+			echo 
+				'<script>
+					(function($){
+						$(document).ready(function() {
+							$.clickSoldUtils("csPromptDeleteDemoListing", { "ajaxTarget" : "' . plugins_url( 'CS_ajax_request.php', __FILE__ ) . '?wp_admin_pname=wp_admin&section=wp_admin" });
+						});
+					})(csJQ);
+				</script>';
+		}
+		
+		/**
 		 * Checks page slug (if available) and retrieves data from ClickSold server if necessary
 		 */
 		function get_admin_section(){
 		
 			global $CS_VARIABLE_META_ADMIN_NOTIFICATIONS;
+			global $CS_VARIABLE_META_ADMIN_DELETE_DEMO_LISTING;
 		
 			$menu = $this->get_menu_items();
 			$this->response = null;
@@ -200,6 +215,9 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 							if(!empty($page_vars)) {
 								// Admin Notifications
 								if(array_key_exists($CS_VARIABLE_META_ADMIN_NOTIFICATIONS, $page_vars)) update_option("cs_opt_notify", "1");
+								
+								// Remove demo listing after upgrade
+								if(array_key_exists($CS_VARIABLE_META_ADMIN_DELETE_DEMO_LISTING, $page_vars)) add_action("admin_footer", array($this, 'cs_prompt_demo_listing_delete'));
 							}
 							
 							/* DEPRECATED

@@ -151,6 +151,11 @@
 	$CS_VARIABLE_META_ADMIN_NOTIFICATIONS = "_cs_admin_notify";
 	
 	/**
+	 * Variable constant for prompting the user to remove the demo listing if still available
+	 */
+	$CS_VARIABLE_META_ADMIN_DELETE_DEMO_LISTING = "_cs_del_demo_listing";
+	
+	/**
 	 * Array of constants used for displaying possible field options for the generated 
 	 * listing details page header title
 	 */

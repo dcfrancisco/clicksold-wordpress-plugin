@@ -58,6 +58,11 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.32 =
+* Communties search results now works even if communties list page is disabled.
+* VIP login widget no longer crashes when incorrect plugin credentials are used.
+* Upgrade to Platinum prompts to remove demo exclusive listing.
+
 = 1.31 =
 * Fix listing details can't be shown if listings/ page is set to not show.
 * Fix menu item duplication issue.

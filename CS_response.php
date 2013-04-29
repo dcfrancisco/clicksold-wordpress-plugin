@@ -317,6 +317,8 @@ class CS_response
 	 */
 	private function my_json_decode($json){
 		
+		if(empty($json)) return "";
+		
 	    $comment = false;
 	    $out = '$x=';
 		try{

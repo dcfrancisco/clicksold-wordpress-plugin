@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.31
+Version: 1.32
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.31';
+$cs_plugin_version = '1.32';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -686,8 +686,10 @@ if( !is_admin() ){
 							$cs_org_req .= "?" . http_build_query($_GET);
 						}
 						
-						// Set force page load flag to true if we're looking for listing details
-						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname']) $force_private_page_load = true;
+						// Set force page load flag to true if we're looking for listing details or community search results
+						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname'] ||
+						   $result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['community_pname']) 
+							$force_private_page_load = true;
 						
 					// If no parameters were returned from the database, give cs_org_req the value of the GET query string if available
 					}else if(!empty($_GET)){ 
@@ -696,6 +698,10 @@ if( !is_admin() ){
 						// Set force page load flag to true if we're looking for listing details
 						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname'] &&
 						   (stripos($cs_org_req, '&mlsnum=') !== false || stripos($cs_org_req, '&listnum=') !== false )) $force_private_page_load = true;
+						
+						// Set force page load flag to true if we're looking for listing details
+						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['community_pname'] &&
+						   (stripos($cs_org_req, '&city=') !== false && stripos($cs_org_req, '&neigh=') !== false )) $force_private_page_load = true;
 						
 					// If this page was set as a front page, we need to feed in the request manually
 					}else if($post_id == get_option( "page_on_front" ) && !$wp_rewrite->using_permalinks()){ 
