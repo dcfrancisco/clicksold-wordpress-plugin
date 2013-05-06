@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.33 =
+* Compatability work around for Thesis theme framework.
+* Extended VIP functionality so widgets can run VIP methods without VIP panel or VIP widget present
+
 = 1.32 =
 * Communties search results now works even if communties list page is disabled.
 * VIP login widget no longer crashes when incorrect plugin credentials are used.

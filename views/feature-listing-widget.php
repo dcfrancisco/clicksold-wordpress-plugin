@@ -2,7 +2,7 @@
 echo $before_widget; 
 if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
 ?>
-<div id="<?php echo $this->get_field_id("") ?>container" class="<?php echo $this->widget_options['classname'] ?>-container widget">
+<div id="<?php echo $this->get_field_id("") ?>container" class="<?php echo $this->widget_options['classname'] ?>-container widget cs-widget">
   <div class="csFeatureListingModule" class="widgetContent">
     <div class="csFeatureListingWidget">
 	  Please Wait...

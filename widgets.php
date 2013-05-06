@@ -214,29 +214,55 @@ class CS_Widget extends WP_Widget {
 		if($cs_widgets_cssjs_included === true) return;
 		else $cs_widgets_cssjs_included = true;
 		
-		if($admin === true) add_action('admin_enqueue_scripts', array($this, 'get_admin_widget_scripts'));
-		else {add_action('wp_enqueue_scripts', array($this, 'get_front_widget_scripts'));
+		$cs_response = null;
+		
+		// Enqueue CSS & JS libs
+		if($admin === true) {
+			add_action('admin_enqueue_scripts', array($this, 'get_admin_widget_scripts'));	
+			add_action('admin_head', array($this, 'get_admin_widget_inline_scripts'));
+		} else {
+			add_action('wp_enqueue_scripts', array($this, 'get_front_widget_scripts'));
+			add_action('wp_head', array($this, 'get_front_widget_inline_scripts'));
 		}
 	}
 	
 	/**
-	 *  Called by wp_enqueue_scripts to retrieve Javascript / CSS scripts used in the widget front views
+	 *  Retrieves Javascript / CSS scripts used in widgets.php
 	 */
 	public function get_front_widget_scripts() {
 		$cs_request = new CS_request("pathway=590", null);
 		$cs_response = new CS_response($cs_request->request());
 		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_linked_only();
-		//error_log("running get_front_widget_scripts:".$cs_response->get_body_contents());
 	}
 	
 	/**
-	 *  Called by admin_enqueue_scripts to retrieve Javascript / CSS scripts used in widgets.php
+	 *  Retrieves inline Javascript for widgets
+	 */
+	public function get_front_widget_inline_scripts() {
+		$cs_request = new CS_request("pathway=590", null);
+		$cs_response = new CS_response($cs_request->request());
+		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_inline_only();
+	}
+	
+	/**
+	 *  Retrieves Javascript / CSS scripts used in widgets.php called in admin area
 	 */
 	public function get_admin_widget_scripts(){
 		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
 		$cs_request = new CS_request("pathway=591", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
 		$cs_response = new CS_response($cs_request->request());
 		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_linked_only();
+	}
+	
+	/**
+	 *  Retrieves inline Javascript for widgets called in admin area
+	 */
+	public function get_admin_widget_inline_scripts(){
+		error_log('get_admin_widget_inline_scripts HIT');
+		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
+		$cs_request = new CS_request("pathway=591", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
+		$cs_response = new CS_response($cs_request->request());
+		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_inline_only();
 	}
 	
 }

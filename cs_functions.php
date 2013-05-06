@@ -473,5 +473,11 @@ function cs_get_cs_plugin_type() {
 	return $cs_plugin_type;
 }
 
+/**
+ * Just a defined function that does nothing that we can put in actions if we need a placeholder.
+ */
+function cs_null_function() {
+	// Does nothing.
+}
 
 ?>

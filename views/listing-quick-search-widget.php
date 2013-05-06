@@ -1,5 +1,5 @@
 <?php echo $before_widget; ?>
-<div id="<?php echo $this->get_field_id("") ?>container" class="<?php echo $this->widget_options['classname'] ?>-container widget">
+<div id="<?php echo $this->get_field_id("") ?>container" class="<?php echo $this->widget_options['classname'] ?>-container widget cs-widget">
 
 <?php if ( !empty( $title ) ) { echo $before_title . $title . $after_title; } ?>
 

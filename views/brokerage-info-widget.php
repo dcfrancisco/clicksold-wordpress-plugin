@@ -1,6 +1,6 @@
 <?php 
 echo $before_widget;
-echo '<div class="'.$this->widget_options['classname'].'-container">';
+echo '<div class="'.$this->widget_options['classname'].'-container cs-widget">';
 if(!empty($instance['name']))
 	echo '  <h4>'. $instance['name'] .'</h4>';
 if(!empty($instance['addr']))

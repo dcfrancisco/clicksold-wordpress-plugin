@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.32
+Version: 1.33
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.32';
+$cs_plugin_version = '1.33';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -624,6 +624,9 @@ if( !is_admin() ){
 	 */
 	function cs_process_cs_section_posts( $wp_query ){
 		
+		/** 2013-05-06 EZ - Note added this junk add action so that when we remove the cs_process_cs_section_posts hook the 5 level does not get empty. The Thesis theme
+		 * framework freaks out if we remove this action from the '5' priority level therefore leaving that level blank. */
+		add_action("parse_query", "cs_null_function", 5);
 		remove_action('parse_query', 'cs_process_cs_section_posts', 5);
 		
 		global $wpdb;

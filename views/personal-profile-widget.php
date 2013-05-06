@@ -2,7 +2,7 @@
 echo $before_widget;
 if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
 if ( !empty( $image ) ) {
-	echo '<div class="'.$this->widget_options['classname'].'-image-container">';
+	echo '<div class="'.$this->widget_options['classname'].'-image-container cs-widget">';
 	
 	if ( $link ) {
 		//echo '<a class="'.$this->widget_options['classname'].'-image-link" href="'.$link.'" target="'.$linktarget.'">';
