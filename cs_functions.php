@@ -480,4 +480,35 @@ function cs_null_function() {
 	// Does nothing.
 }
 
+/**
+ * Takes the cs org request url query string (to be used when this is set on a CS_request object) and filters it by each pattern present in the
+ * cs_filter_org_req_parameters option. This is done because on some wp setup extra parameters are always appeneded eg: q=<slug> which confuse
+ * the plugin server which is expecting a correctly formatted query. However we still have to allow the parameters to be set from the wild so
+ * CS can still support query strings sent by the browser.
+ */
+function cs_filter_org_req_parameters( $cs_org_req ) {
+	
+	// This is a list of regexes that we will use to filter the input on.
+	$cs_filter_org_req_parameters = get_option("cs_filter_org_req_parameters", "");
+	
+	// Break the list up on \n to create an array.
+	$filter_regex_array = explode( "\n", $cs_filter_org_req_parameters );
+	
+	foreach( $filter_regex_array as $filter_regex ) {
+
+		// Skip blank lines.
+		if( $filter_regex == "" ) { continue; }
+
+		// Clear anything from the string matching the pattern.
+		$cs_org_req_filtered = preg_replace( $filter_regex, "", $cs_org_req ); 
+		
+		// If the result is null an error occured and the regex is likely wrong, let's not pootch everything by setting $cs_org_req to null.
+		if( $cs_org_req_filtered !== NULL ) {
+			$cs_org_req = $cs_org_req_filtered;
+		}
+	}
+
+	return $cs_org_req;
+}
+
 ?>

@@ -146,8 +146,8 @@ class CS_request {
 		$cs_org_req = preg_replace("/\[\]/", "", $cs_org_req);
 		//error_log("Request - VARS (After): " . $cs_org_req);
 		
-		// Set the First cs_org_req.
-		$this->cs_org_req_arr[ $this->current_req_section ] = $cs_org_req; // Format is n => value
+		// Set the First cs_org_req. // Format is n => value
+		$this->cs_org_req_arr[ $this->current_req_section ] = cs_filter_org_req_parameters( $cs_org_req ); // NOTE: Before setting the org request we filter it using the configured regex filters.
 
 		$this->pluginSection = $pluginSection;
 
@@ -181,7 +181,7 @@ class CS_request {
 	 */
 	public function add_req_section( $cs_org_req ) {
 		$this->current_req_section++;
-		$this->cs_org_req_arr[ $this->current_req_section ] = $cs_org_req; // Format is n => value
+		$this->cs_org_req_arr[ $this->current_req_section ] = cs_filter_org_req_parameters( $cs_org_req ); // NOTE: Before setting the org request we filter it using the configured regex filters. // Format is n => value
 	}
 
 	/**
