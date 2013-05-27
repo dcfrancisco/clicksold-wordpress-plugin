@@ -254,7 +254,7 @@ class CS_request {
 			if( "" != get_option('permalink_structure', "") ) { // We are using permalinks.
 				$wp_gen_posts = $wpdb->get_results("SELECT ID, post_name FROM $posts_table WHERE ID IN(" . implode(", ", array_keys($cs_posts)) . ")", OBJECT_K);
 				foreach($wp_gen_posts as $key => $value) {
-					$parameters[array_search($cs_posts[$key]->prefix , $CS_SECTION_PARAM_CONSTANTS)] = $value->post_name;
+					$parameters[array_search($cs_posts[$key]->prefix , $CS_SECTION_PARAM_CONSTANTS)] = cs_get_page_name_with_parent_page_path( $value->ID ); // We send the entire path (with parent pages) to the server so it then generates the correct links on it's end.
 				}
 			} else { // If we're not using permalinks we need to translate the section names into the appropriate "page_id=###" values.
 				foreach( $CS_SECTION_PARAM_CONSTANTS as $sec_param_name => $sec_param_value ) {

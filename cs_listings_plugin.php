@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.34
+Version: 1.35
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.34';
+$cs_plugin_version = '1.35';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -130,36 +130,26 @@ function cs_add_rewrite_rules($aRules) {
 	global $wpdb;
 	global $cs_posts_table;
 		
-	//get all posts we know are from ClickSold. Query wp_cs_posts
-	$table_name = $wpdb->prefix . $cs_posts_table;
-	$cs_posts = $wpdb->get_results( "SELECT postid FROM $table_name GROUP BY postid" ); //gets unique post ids
-	// create IN Clause ex. "(1,2,3)" etc.
-	
-	$post_id_str = "(";	
-	for($i = 0; $i < count($cs_posts); $i++){
-		if( $i != count($cs_posts) - 1)
-			$post_id_str = $post_id_str . $cs_posts[$i]->postid . ",";
-		else $post_id_str = $post_id_str . $cs_posts[$i]->postid;
-	}
-	$post_id_str = $post_id_str . ")";
-	
-	$wp_posts = $wpdb->get_results( "SELECT ID, post_title, post_name FROM $wpdb->posts WHERE ID IN $post_id_str" );
-		
+	//get all posts we know are from ClickSold. Query wp_cs_posts and wp_posts.
+	$cs_posts = $wpdb->get_results( "SELECT postid FROM " . $wpdb->prefix . $cs_posts_table . " GROUP BY postid" ); //gets unique post ids
+	$wp_posts = $wpdb->get_results( "SELECT ID, post_title, post_name, post_parent FROM $wpdb->posts WHERE ID IN (" . cs_generate_list_from_wpdb_result( $cs_posts, 'postid', ', ' ) . ")" );
+
+	// Add a rewrite rule for each CS post.
 	foreach($wp_posts as $post){
 		$parameters_array = array(); // array that will contain all the parameters associated with a postid
-		$parameters = $wpdb->get_results("SELECT parameter FROM $table_name WHERE postid = $post->ID");
+		$parameters = $wpdb->get_results("SELECT parameter FROM " . $wpdb->prefix . $cs_posts_table . " WHERE postid = $post->ID");
 		$i = 0;
 		foreach($parameters as $param){
 			$parameters_array[$i]= $param->parameter; //store the parameter in an array
 			$i = $i + 1;
 		}
-	
+
 		//get all subpages that have this ClickSold page as its parent
 		$sub_pages = $wpdb->get_results( "SELECT ID, post_name FROM $wpdb->posts WHERE post_parent = $post->ID AND post_type = 'page'" );
 
 		//now we have list of parameters ($parameters_array)
 		//and we have reference to the post_name ($post->post_name) -> create the rewrite rules
-		$cs_rewrite = new CS_rewrite($post->post_name, $parameters_array, $sub_pages, false);
+		$cs_rewrite = new CS_rewrite($post->post_name, $parameters_array, cs_get_page_name_with_parent_page_path( $post->ID ), $sub_pages, false);
 		$aNewRules = $cs_rewrite->getRewriteRuleArray();
 		$aRules = $aNewRules + $aRules;
 	}
@@ -357,8 +347,8 @@ function cs_wp_login($user_login) {
 		
 	/**
 	 * NOTE NOTE NOTE: This routine has everything disabled. During the login process none of this seems to work. Note this is not an issue. Each and any request from the
-	 * wp_admin section to the admin controller will let it know that an authorized user is logged in. This is because plugins as of 1.27 are not capable of hitting the
-	 * admin controller unless they are doing so from the back office.
+	 * wp_admin section to the admin controller will let it know that an authorized user is logged in. This works because plugins as of 1.27 are not capable of hitting the
+	 * admin controller unless they are doing so from the back office and for plugins before 1.27 the controller will not set the logged in flag on hits to the back office.
 	 */
 
 //	// Only report if the user can cs_current_user_can_admin_cs
@@ -394,6 +384,20 @@ function cs_wp_logout() {
 	}
 }
 
+/**
+ * This handler is currently here only so that we can refresh our rewrite rules when a CS page is saved as it's parent could have been assigned or cleared.
+ */
+add_action('save_post', 'cs_save_post');
+function cs_save_post( $post_id ) {
+	
+	// http://codex.wordpress.org/Plugin_API/Action_Reference/save_post states that these could be revisions and instructs us to use wp_is_post_revision() - because this could just be a revision.
+	if ( !wp_is_post_revision( $post_id ) ) {
+		
+		// NOTE: We have to refresh the permalinks even if we are updating a non CS post... this is because we could be updating the name or parent child relationship of a non cs post that is the parent of a cs post.
+		global $wp_rewrite;
+		$wp_rewrite->flush_rules(); // flush_rules calls the rewrite_rules_array hook for which we have a handler that adds the custom rewrite rules for our custom CS pages.
+	}
+}
 
 /**
 * Checks the server to see if this account's mobile site is disabled
@@ -650,7 +654,7 @@ if( !is_admin() ){
 		// We fetch the post id differently depending on if permalinks are enabled or not.
 		if( $wp_rewrite->using_permalinks()) {
 
-			// Note calling get_queried_object_id directly confuses some plugins.
+			// Note calling get_queried_object_id directly confuses some other plugins.
 			$post_id = cs_get_queried_object_id($wp_query);
 			
 			//Check to see if this is one of our pages as the front page.

@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.35 =
+* Correctly process CS special pages when they are children pages.
+
 = 1.34 =
 * Added feature to strip out unwanted automatically appended url parameters.
 

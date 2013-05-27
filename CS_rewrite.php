@@ -38,9 +38,9 @@ class CS_rewrite {
      * constructor. Takes in a pagename, array of parameters that the rewrite rule supports, subpages for this post,
 	 * and a boolean value used to indicate wheather or not to display these parameters in the rewrite rule.
      */
-	public function __construct($pagename, $params, $sub_pages, $show_parameter_in_key){
+	public function __construct($pagename, $params, $pagename_with_parent_path, $sub_pages, $show_parameter_in_key){
 
-		$this->pagename = $pagename;
+		$this->pagename = $pagename_with_parent_path;			// Here we use the pagename with it's parent(s) prefixed to catch the case where a cs page is a child page of another page.
 		$this->show_parameter_in_key = $show_parameter_in_key;
 		$this->sub_pages = $sub_pages;
 		//loop through and add all the parameters in $param array into $this->parameters array
@@ -93,11 +93,15 @@ class CS_rewrite {
 	}
 	/**
 	 * returns the pattern portion for specfic rewrite rule
+	 * 
+	 * NOTE: About the rules, they are pretty simple matching the pagename with possibly some extra subdirectories which are passed in as parametes eg: /communities/Edmonton/Oliver/1/
+	 * - the part in front is to allow for the support of optional parent pages, when the CS pages are children of some 3rd party parent.
+	 * 
 	 */
 	private function __getPatternPartOfArray($count){
 		$aParameter = "(.*)"; //match anything after the post name.
 		if($count == 0) return $this->pagename . "/?$";		
-
+		
 		$keyPart = $this->pagename . "/";
 		for($i = 0; $i < $count; $i++){
 

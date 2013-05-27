@@ -55,7 +55,6 @@ class CS_Widget extends WP_Widget {
 	 * @author ClickSold
 	 */
 	public function get_image_url( $id, $width=false, $height=false ) {
-		
 		// Get attachment and resize but return attachment path (needs to return url)
 		$attachment = wp_get_attachment_metadata( $id );
 		$attachment_url = wp_get_attachment_url( $id );
@@ -119,70 +118,6 @@ class CS_Widget extends WP_Widget {
 			$file = 'views/' . $template;
 		}
 		return apply_filters( $custom_filter_name . $template, $file);
-	}
-	
-	/**
-	 * Somewhat hacky way of replacing "Insert into Post" with "Insert into Widget"
-	 *
-	 * @param string $translated_text text that has already been translated (normally passed straight through)
-	 * @param string $source_text text as it is in the code
-	 * @param string $domain domain of the text aka $this->pluginDomain
-	 * @return void
-	 * @author ClickSold
-	 */
-	public function replace_text_in_thickbox($translated_text, $source_text, $domain) {	
-		if ( $this->is_in_widget_context() ) {
-			if ('Insert into Post' == $source_text) {
-				return __('Insert Into Widget', $this->pluginDomain );
-			}
-		}
-		return $translated_text;
-	}
-	
-	/**
-	 * Filter image_end_to_editor results
-	 *
-	 * @param string $html 
-	 * @param int $id 
-	 * @param string $alt 
-	 * @param string $title 
-	 * @param string $align 
-	 * @param string $url 
-	 * @param array $size 
-	 * @return string javascript array of attachment url and id or just the url 
-	 * @author ClickSold 
-	 */
-	public function image_send_to_editor( $html, $id, $caption, $title, $align, $url, $size, $alt = '' ) {
-		// Normally, media uploader return an HTML string (in this case, typically a complete image tag surrounded by a caption).
-		// Don't change that; instead, send custom javascript variables back to opener.
-		// Check that this is for the widget. Shouldn't hurt anything if it runs, but let's do it needlessly.
-		if ( $this->is_in_widget_context() ) {
-			if ($alt=='') $alt = $title;
-			?>
-			<script type="text/javascript">
-				// send image variables back to opener
-				var win = window.dialogArguments || opener || parent || top;
-				win.IW_html = '<?php echo addslashes($html) ?>';
-				win.IW_img_id = '<?php echo $id ?>';
-				win.IW_size = '<?php echo $size ?>';
-			</script>
-			<?php
-		}
-		return $html;
-	}
-	
-	/**
-	 * Remove from url tab until that functionality is added to widgets.
-	 *
-	 * @param array $tabs 
-	 * @return void
-	 * @author ClickSold
-	 */
-	public function media_upload_tabs($tabs) {
-		if ( $this->is_in_widget_context() ) {
-			unset($tabs['type_url']);
-		}
-		return $tabs;
 	}
 		
 	/**
@@ -258,13 +193,131 @@ class CS_Widget extends WP_Widget {
 	 *  Retrieves inline Javascript for widgets called in admin area
 	 */
 	public function get_admin_widget_inline_scripts(){
-		error_log('get_admin_widget_inline_scripts HIT');
 		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
 		$cs_request = new CS_request("pathway=591", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
 		$cs_response = new CS_response($cs_request->request());
 		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_inline_only();
 	}
 	
+	/**
+	 * Calls wp_enqueue_media() 
+	 */
+	public function call_admin_media_upload_files(){
+		wp_enqueue_media();
+	}	
+	
+	/**
+	 * Turns off usage of the WP 3.5 media uploader if returns false
+	 */
+	private function activate_new_media_upload() {
+		return false;
+	}
+	
+	/**
+	 *  Returns boolean on whether or not the WP version is 3.5 or higher
+	 */
+	public function use_new_media_upload() {
+		global $wp_version;
+		if($this->activate_new_media_upload() == false) return false;
+		return version_compare($wp_version, '3.5', '>=');
+	}
+	
+	/**
+	 *  Initializes media upload functionality
+	 */
+	public function init_media_upload() {
+		global $wp_version;
+		if ( $this->activate_new_media_upload() == false || version_compare($wp_version, '3.5', '<') )
+			$this->init_old_media_upload();
+		else
+			$this->init_new_media_upload();
+	}
+	
+/** Old Media Upload **/
+	
+	public function init_old_media_upload() {
+		global $pagenow;
+		add_action( 'admin_init', array( $this, 'fix_async_upload_image' ) );
+		if ( 'widgets.php' == $pagenow ) {
+			wp_enqueue_style( 'thickbox' );
+			wp_enqueue_script( 'thickbox' );
+			$this->get_widget_scripts(true);
+		} else if ( 'media-upload.php' == $pagenow || 'async-upload.php' == $pagenow ) {
+			add_filter( 'image_send_to_editor', array( $this,'image_send_to_editor'), 1, 8 );
+			add_filter( 'gettext', array( $this, 'replace_text_in_thickbox' ), 1, 3 );
+			add_filter( 'media_upload_tabs', array( $this, 'media_upload_tabs' ) );
+		}
+	}
+	
+	/**
+	 * Filter image_end_to_editor results
+	 *
+	 * @param string $html 
+	 * @param int $id 
+	 * @param string $alt 
+	 * @param string $title 
+	 * @param string $align 
+	 * @param string $url 
+	 * @param array $size 
+	 * @return string javascript array of attachment url and id or just the url 
+	 * @author ClickSold 
+	 */
+	public function image_send_to_editor( $html, $id, $caption, $title, $align, $url, $size, $alt = '' ) {
+		// Normally, media uploader return an HTML string (in this case, typically a complete image tag surrounded by a caption).
+		// Don't change that; instead, send custom javascript variables back to opener.
+		// Check that this is for the widget. Shouldn't hurt anything if it runs, but let's do it needlessly.
+		if ( $this->is_in_widget_context() ) {
+			if ($alt=='') $alt = $title;
+			?>
+			<script type="text/javascript">
+				// send image variables back to opener
+				var win = window.dialogArguments || opener || parent || top;
+				win.IW_html = '<?php echo addslashes($html) ?>';
+				win.IW_img_id = '<?php echo $id ?>';
+				win.IW_size = '<?php echo $size ?>';
+			</script>
+			<?php
+		}
+		return $html;
+	}
+	
+	/**
+	 * Somewhat hacky way of replacing "Insert into Post" with "Insert into Widget"
+	 *
+	 * @param string $translated_text text that has already been translated (normally passed straight through)
+	 * @param string $source_text text as it is in the code
+	 * @param string $domain domain of the text aka $this->pluginDomain
+	 * @return void
+	 * @author ClickSold
+	 */
+	public function replace_text_in_thickbox($translated_text, $source_text, $domain) {	
+		if ( $this->is_in_widget_context() ) {
+			if ('Insert into Post' == $source_text) {
+				return __('Insert Into Widget', $this->pluginDomain );
+			}
+		}
+		return $translated_text;
+	}
+	
+	/**
+	 * Remove from url tab until that functionality is added to widgets.
+	 *
+	 * @param array $tabs 
+	 * @return void
+	 * @author ClickSold
+	 */
+	public function media_upload_tabs($tabs) {
+		if ( $this->is_in_widget_context() ) {
+			unset($tabs['type_url']);
+		}
+		return $tabs;
+	}
+	
+/** New Media Upload **/
+	public function init_new_media_upload() {
+		add_action('admin_enqueue_scripts', array($this, 'call_admin_media_upload_files'));
+		$this->get_widget_scripts(true);
+	}
 }
 
 /**
@@ -287,19 +340,9 @@ class Personal_Profile_Widget extends CS_Widget {
 		$control_ops = array( 'id_base' => 'cs-widget-personal-profile' );
 		$this->WP_Widget('cs-widget-personal-profile', __('ClickSold Profile Widget', $this->pluginDomain), $widget_ops, $control_ops);
 		
-		global $pagenow;
-		if (defined("WP_ADMIN") && WP_ADMIN) {
-    			add_action( 'admin_init', array( $this, 'fix_async_upload_image' ) );
-			if ( 'widgets.php' == $pagenow ) {
-				wp_enqueue_style( 'thickbox' );
-				wp_enqueue_script( 'thickbox' );
-				$this->get_widget_scripts(true);
-			} elseif ( 'media-upload.php' == $pagenow || 'async-upload.php' == $pagenow ) {
-				add_filter( 'image_send_to_editor', array( $this,'image_send_to_editor'), 1, 8 );
-				add_filter( 'gettext', array( $this, 'replace_text_in_thickbox' ), 1, 3 );
-				add_filter( 'media_upload_tabs', array( $this, 'media_upload_tabs' ) );
-			}
-		}else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
+		if ( defined("WP_ADMIN") && WP_ADMIN ) {
+    		$this->init_media_upload();
+		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
 			$this->get_widget_scripts(false);
 		}
 	}
@@ -419,21 +462,11 @@ class Brokerage_Info_Widget extends CS_Widget {
 		$this->WP_Widget($this->PLUGIN_SLUG, $this->PLUGIN_NAME, $widget_opts);
 		
 		// Load JavaScript and Stylesheets
-		
-		global $pagenow;
-		if( defined( "WP_ADMIN" ) && WP_ADMIN) { // Only do this work when in the back office and loading the widgets section.
-			if( 'widgets.php' == $pagenow ) {
-				//Load array of brokerage logos from server
-				$this->get_brokerage_logos();
-				wp_enqueue_style( 'thickbox' );
-				wp_enqueue_script( 'thickbox' );
-				$this->get_widget_scripts(true);
-			} else if( 'media-upload.php' == $pagenow || 'async-upload.php' == $pagenow ) {
-				add_filter( 'image_send_to_editor', array( $this,'image_send_to_editor'), 1, 8 );
-				add_filter( 'gettext', array( $this, 'replace_text_in_thickbox' ), 1, 3 );
-				add_filter( 'media_upload_tabs', array( $this, 'media_upload_tabs' ) );
-			}
-		}else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ){
+		if ( defined("WP_ADMIN") && WP_ADMIN ) {
+			global $pagenow;
+			if( 'widgets.php' == $pagenow ) $this->get_brokerage_logos();  //Load array of brokerage logos from server
+    		$this->init_media_upload();
+		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
 			$this->get_widget_scripts(false);
 		}		
 	}
@@ -538,19 +571,9 @@ class IDX_Search_Widget extends CS_Widget {
 		
 		$this->WP_Widget($this->PLUGIN_SLUG, $this->PLUGIN_NAME, $widget_ops);
 
-		global $pagenow;
-		if (defined("WP_ADMIN") && WP_ADMIN) {
-    			add_action( 'admin_init', array( $this, 'fix_async_upload_image' ) );
-			if ( 'widgets.php' == $pagenow ) {
-				wp_enqueue_style( 'thickbox' );
-				wp_enqueue_script( 'thickbox' );
-				$this->get_widget_scripts(true);
-			} elseif ( 'media-upload.php' == $pagenow || 'async-upload.php' == $pagenow ) {
-				add_filter( 'image_send_to_editor', array( $this,'image_send_to_editor'), 1, 8 );
-				add_filter( 'gettext', array( $this, 'replace_text_in_thickbox' ), 1, 3 );
-				add_filter( 'media_upload_tabs', array( $this, 'media_upload_tabs' ) );
-			}
-		}else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
+		if ( defined("WP_ADMIN") && WP_ADMIN ) {
+    		$this->init_media_upload();
+		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
 			$this->get_widget_scripts(false);
 		}
 	}
@@ -592,7 +615,6 @@ class IDX_Search_Widget extends CS_Widget {
 		}
 		
 		if( $_SERVER["HTTPS"] == "on" ) $instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);
-		
 		return $instance;
 	}
 
@@ -628,6 +650,7 @@ class IDX_Search_Widget extends CS_Widget {
 			'largeText' => 'Map-Based Search',
 			'imageurl' => $this->default_img_url
 		));
+				
 		include( $this->getTemplateHierarchy( 'cs_template_idx-search-widget_', 'idx-search-widget-admin' ) );
 	}
 	
@@ -671,21 +694,9 @@ class Mobile_Site_Widget extends CS_Widget {
 		
 		$this->WP_Widget($this->PLUGIN_SLUG, $this->PLUGIN_NAME, $widget_ops);
 
-		global $pagenow;
-		if (defined("WP_ADMIN") && WP_ADMIN) {
-
-			add_action( 'admin_init', array( $this, 'fix_async_upload_image' ) );
-
-			if ( 'widgets.php' == $pagenow ) {
-				wp_enqueue_style( 'thickbox' );
-				wp_enqueue_script( 'thickbox' );
-				$this->get_widget_scripts(true);
-			} elseif ( 'media-upload.php' == $pagenow || 'async-upload.php' == $pagenow ) {
-				add_filter( 'image_send_to_editor', array( $this,'image_send_to_editor'), 1, 8 );
-				add_filter( 'gettext', array( $this, 'replace_text_in_thickbox' ), 1, 3 );
-				add_filter( 'media_upload_tabs', array( $this, 'media_upload_tabs' ) );
-			}
-		}else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
+		if ( defined("WP_ADMIN") && WP_ADMIN ) {
+    		$this->init_media_upload();
+		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
 			$this->get_widget_scripts(false);
 		}
 	}
@@ -782,18 +793,8 @@ class Buying_Info_Widget extends CS_Widget{
 		
 		$this->WP_Widget( $this->PLUGIN_SLUG, $this->PLUGIN_NAME, $widget_opts );
 		
-		global $pagenow;
-		if( defined('WP_ADMIN') && WP_ADMIN ) {
-			add_action( 'admin_init', array($this, 'fix_async_upload_image') );
-			if($pagenow == 'widgets.php'){
-				wp_enqueue_style( 'thickbox' );
-				wp_enqueue_script( 'thickbox' );
-				$this->get_widget_scripts(true);
-			}else if($pagenow == 'media-upload.php' || $pagenow == 'async-upload.php'){
-				add_filter( 'image_send_to_editor', array( $this, 'image_send_to_editor' ), 1, 8 );
-				add_filter( 'gettext', array( $this, 'replace_text_in_thickbox' ), 1, 3 );
-				add_filter( 'media_upload_tabs', array( $this, 'media_upload_tabs' ) );
-			}
+		if ( defined("WP_ADMIN") && WP_ADMIN ) {
+    		$this->init_media_upload();
 		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
 			$this->get_widget_scripts(false);
 		}
@@ -881,19 +882,9 @@ class Selling_Info_Widget extends CS_Widget{
 		
 		$this->WP_Widget( $this->PLUGIN_SLUG, $this->PLUGIN_NAME, $widget_opts );
 		
-		global $pagenow;
-		if( defined('WP_ADMIN') && WP_ADMIN ) {
-			add_action( 'admin_init', array($this, 'fix_async_upload_image') );
-			if($pagenow == 'widgets.php'){
-				wp_enqueue_style( 'thickbox' );
-				wp_enqueue_script( 'thickbox' );
-				$this->get_widget_scripts(true);
-			}else if($pagenow == 'media-upload.php' || $pagenow == 'async-upload.php'){
-				add_filter( 'image_send_to_editor', array( $this, 'image_send_to_editor' ), 1, 8 );
-				add_filter( 'gettext', array( $this, 'replace_text_in_thickbox' ), 1, 3 );
-				add_filter( 'media_upload_tabs', array( $this, 'media_upload_tabs' ) );
-			}
-		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true ) ) {
+		if ( defined("WP_ADMIN") && WP_ADMIN ) {
+    		$this->init_media_upload();
+		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
 			$this->get_widget_scripts(false);
 		}
 	}

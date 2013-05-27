@@ -511,4 +511,48 @@ function cs_filter_org_req_parameters( $cs_org_req ) {
 	return $cs_org_req;
 }
 
+/**
+ * Generates a list from a particular column of a db result set.
+ */
+function cs_generate_list_from_wpdb_result( $wpdb_result_set, $col_name, $delim ) {
+	
+	$output_list = "";
+	$loop_delim = "";
+	for( $i = 0; $i < count($wpdb_result_set); $i++){
+		$output_list = $output_list . $loop_delim . $wpdb_result_set[$i]->$col_name;
+		$loop_delim = $delim;
+	}
+	
+	return $output_list;
+}
+
+/**
+ * For any given post id (assuming it's parents are pages this will return a path of all of the parents).
+ * 
+ * Always returns "" unless there is a valid parent path.
+ */
+function cs_get_page_name_with_parent_page_path( $post_id ) {
+	global $wpdb;
+
+	$current_page = $wpdb->get_results( "SELECT ID, post_name, post_parent FROM $wpdb->posts WHERE ID = $post_id AND post_type = 'page'" );
+
+	// If we don't find anything return "".
+	if( count( $current_page ) == 0 ) { return ""; }
+
+	// If we have a parent.
+	if( $current_page[0]->post_parent != 0) {
+		
+		return cs_get_page_name_with_parent_page_path( $current_page[0]->post_parent ) . "/" . $current_page[0]->post_name;
+	} else { // Current page has no parent.
+		return $current_page[0]->post_name;
+	} 
+}
+
+
+
+
+
+
+
+
 ?>

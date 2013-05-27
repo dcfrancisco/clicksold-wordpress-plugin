@@ -1,7 +1,11 @@
 <div class="<?php echo $this->id; ?>">
 <?php
-	$media_upload_iframe_src = "media-upload.php?type=image&widget_id=".$this->id; //NOTE #1: the widget id is added here to allow uploader to only return array if this is used with image widget so that all other uploads are not harmed.
+if($this->use_new_media_upload()) {
+	$image_upload_iframe_src = "";
+} else {
+	$media_upload_iframe_src = "media-upload.php?type=image&context=".$this->id."&TB_iframe=true";
 	$image_upload_iframe_src = apply_filters('image_upload_iframe_src', "$media_upload_iframe_src");
+}
 ?>
   <p>
     <label for="<?php echo $this->get_field_id('name'); ?>">Brokerage Name</label><br/>
@@ -53,7 +57,8 @@ else echo "<img src=\"{$instance['logo_src']}\" style=\"border:1px solid black;m
 	var opts = {
 		"logo_src_id" : "<?php echo $this->get_field_id('logo_src'); ?>",
 		"upload_logo_src_id" : "<?php echo $this->get_field_id('upload_logo_src'); ?>",
-		"img_upload_src" : "<?php echo $image_upload_iframe_src; ?>&TB_iframe=true",
+		"img_upload_src" : "<?php echo $image_upload_iframe_src; ?>",
+<?php if($this->use_new_media_upload()) { ?>"use_new_media_upload" : true, <?php } ?>
 		"preview_img_cnt" : "display-<?php echo $this->get_field_id('logo_src'); ?>"
 	};
   
