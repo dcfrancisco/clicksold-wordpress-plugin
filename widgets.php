@@ -210,7 +210,7 @@ class CS_Widget extends WP_Widget {
 	 * Turns off usage of the WP 3.5 media uploader if returns false
 	 */
 	private function activate_new_media_upload() {
-		return false;
+		return true;
 	}
 	
 	/**
