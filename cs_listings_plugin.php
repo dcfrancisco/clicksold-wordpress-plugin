@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.36
+Version: 1.37
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.36';
+$cs_plugin_version = '1.37';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -1096,7 +1096,12 @@ function add_cs_info_retrieval_link_on_login_page() {
 	echo '</div>';
 }
 
-    
-    
+// Decide whether or not to show offers on login
+add_action('wp_login', 'cs_offers_popup_init');
+function cs_offers_popup_init(){
+	$tier = get_option("cs_opt_tier_name", "Bronze");
+	$adDisabled = get_option("cs_opt_disable_offers_popup", "0");
+	if($tier == "Bronze" && $adDisabled == "0") update_option("cs_opt_show_offers_popup", "1");
+}
 
 ?>

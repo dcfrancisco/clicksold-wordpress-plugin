@@ -151,6 +151,11 @@
 	$CS_VARIABLE_META_ADMIN_NOTIFICATIONS = "_cs_admin_notify";
 	
 	/**
+	 * Variable constant for displaying plugin notifications in admin area
+	 */
+	$CS_VARIABLE_ADMIN_HELP_PAGE = "_cs_admin_help_page";
+	
+	/**
 	 * Variable constant for prompting the user to remove the demo listing if still available
 	 */
 	$CS_VARIABLE_META_ADMIN_DELETE_DEMO_LISTING = "_cs_del_demo_listing";

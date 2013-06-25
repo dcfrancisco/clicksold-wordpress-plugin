@@ -19,6 +19,8 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 global $cs_logo_path;
+global $cs_offers_config;
+global $cs_help_page;
 
 require_once(plugin_dir_path(__FILE__) . 'CS_config.php');
 require_once(plugin_dir_path(__FILE__) . 'cs_functions.php');
@@ -26,6 +28,7 @@ require_once(plugin_dir_path(__FILE__) . 'widgets.php');
 
 $cs_posts_table = "cs_posts";
 $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
+$cs_help_page = "";
 
 	class CS_admin{
 		
@@ -68,7 +71,83 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 			if(strpos($_SERVER["QUERY_STRING"], "cs_page_del_error=true")) add_action('admin_notices', array($this, 'display_cs_page_delete_error'));
 			
 			// CS Notifications
-			add_action('admin_notices', array($this, 'display_cs_notices'));	
+			add_action('admin_notices', array($this, 'display_cs_notices'));
+			
+			// CS Login Popup 
+			add_action('admin_init', array($this, 'cs_show_offers_popup_config'));
+		}
+		
+		function cs_show_offers_popup_config(){
+			global $cs_offers_config;
+			global $CS_SECTION_ADMIN_PARAM_CONSTANT;
+			
+			$showOffers = get_option("cs_opt_show_offers_popup", "0");
+			if($showOffers == "1") {
+				update_option("cs_opt_show_offers_popup", "0");
+				
+				$cs_request = new CS_request( "pathway=633", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] );
+				$cs_response = new CS_response( $cs_request->request() );
+				if($cs_response->is_error()) return;
+				
+				$cs_offers_config = $cs_response->cs_get_json();
+				if(!empty($cs_offers_config)) {
+					add_action('admin_enqueue_scripts', array($cs_response, 'cs_get_header_contents_linked_only'), 0);
+					add_action('admin_print_scripts', array($this, 'cs_show_offers_popup'), 20);
+				}
+			}
+		}
+		
+		function cs_show_offers_popup() {
+			global $cs_offers_config;
+			if(empty($cs_offers_config)) return;
+			
+			$imgStyles = "";
+			if(!empty($cs_offers_config['imgWidth'])) $imgStyles .= "width:{$cs_offers_config['imgWidth']};";
+			if(!empty($cs_offers_config['imgHeight'])) $imgStyles .= "height:{$cs_offers_config['imgHeight']};"; 
+			if(!empty($imgStyles)) $imgStyles = " styles=\\\"$imgStyles\\\"";
+			
+			$imgUrl = $cs_offers_config['imgUrl'];
+			if(empty($imgUrl)) $imgUrl = plugins_url('images/welcome-upgrade.png', __FILE__);
+			
+			$nonce = wp_create_nonce("cs_disable_offers_popup");
+			$utilsUrl = plugins_url('CS_ajax_utilities.php', __FILE__);
+			
+			echo
+				"<script>
+					(function($){ 
+						$(document).ready(function(){				 
+							var csPopupHtml = \"<div id=\\\"cs_offers_popup\\\">\" +
+							                  \"  <div class=\\\"cs_offers_popup_image\\\">\" +
+											  \"    <a href=\\\"http://{$cs_offers_config['link']}\\\" target=\\\"_blank\\\">\" +
+											  \"      <img src=\\\"$imgUrl\\\"$imgStyles>\" +
+											  \"    </a>\" +
+											  \"  </div>\" +
+											  \"  <div class=\\\"cs_disable_popup_form\\\">\" +
+											  \"    <label>Do not show this again</label>\" + 
+											  \"    <input id=\\\"cs_disable_offers_popup\\\" type=\\\"checkbox\\\" name=\\\"disable_popup\\\" />\" +
+											  \"  </div>\" +
+											  \"</div>\";
+									  
+							var csPopupOpts = {
+								html : csPopupHtml,
+								className : \"cs_offers_popup_modal\",
+								width : \"{$cs_offers_config['modWidth']}\",
+								height : \"{$cs_offers_config['modHeight']}\",
+								onCleanup : function(){
+									if($(\"#cs_disable_offers_popup\").is(\":checked\")) {
+										$.ajax({
+											type:\"GET\",
+											url: \"$utilsUrl\",
+											data: \"disableOffersPopup=true&_csnonce=$nonce\"
+										});
+									}
+								}
+							};
+							
+							$.clickSoldUtils(\"infoBoxCreate\", csPopupOpts);
+						});
+					})(csJQ);
+				 </script>";
 		}
 		
 		/**
@@ -172,13 +251,34 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 		}
 		
 		/**
+		 * Adds a ClickSold help link to the admin bar
+		 */
+		function cs_add_help_link() {
+			global $wp_admin_bar;
+			global $cs_help_page;
+			
+			if( !is_super_admin() || !is_admin_bar_showing() ) return;
+			
+			$wp_admin_bar->add_node(
+				array (
+					'id' => 'cs_help_link',
+					'title' => __('ClickSold Help'),
+					'href' => __('http://www.clicksold.com/wiki/index.php/' . $cs_help_page),
+					'meta' => array ('target' => '_blank')
+				)
+			);
+		}
+		
+		/**
 		 * Checks page slug (if available) and retrieves data from ClickSold server if necessary
 		 */
 		function get_admin_section(){
 		
 			global $CS_VARIABLE_META_ADMIN_NOTIFICATIONS;
 			global $CS_VARIABLE_META_ADMIN_DELETE_DEMO_LISTING;
-		
+			global $CS_VARIABLE_ADMIN_HELP_PAGE;
+			global $cs_help_page;
+			
 			$menu = $this->get_menu_items();
 			$this->response = null;
 			
@@ -218,6 +318,9 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 								
 								// Remove demo listing after upgrade
 								if(array_key_exists($CS_VARIABLE_META_ADMIN_DELETE_DEMO_LISTING, $page_vars)) add_action("admin_footer", array($this, 'cs_prompt_demo_listing_delete'));
+								
+								// Set the help link based on the selected page
+								if(array_key_exists($CS_VARIABLE_ADMIN_HELP_PAGE, $page_vars)) $cs_help_page = $page_vars[$CS_VARIABLE_ADMIN_HELP_PAGE];
 							}
 							
 							/* DEPRECATED
@@ -227,6 +330,7 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 							*/
 							
 							//Add actions for setting header/footer resources
+							add_action('admin_bar_menu', array($this, 'cs_add_help_link'), 1000);
 							add_action('admin_enqueue_scripts', array($this->response, 'cs_get_header_contents_linked_only'), 0);
 							add_action('admin_enqueue_scripts', array($this->response, 'cs_get_header_contents_inline_only'), 11);
 							add_action('admin_print_footer_scripts', array($this->response, 'cs_get_footer_contents'));
@@ -272,8 +376,12 @@ $cs_logo_path = plugins_url("images/orbGreen.png", __FILE__);
 
 						// We have to add it directly to the admin menu because there is no function to add arbitrary external links.
 						global $submenu; // Submenu here is a misnomer as it's actually the full menu.
+						global $cs_help_page;
+						$ext_link = $config['external_link'];
+						if(!empty($cs_help_page)) $ext_link = str_replace('Main_Page', $cs_help_page, $ext_link);
+						
 						if( isset( $submenu[ $config['parent_slug'] ] ) ) { // This won't be present for non admin users.
-							array_push( $submenu[ $config['parent_slug'] ], array( $name, 'manage_options' , $config['external_link'] ) );
+							array_push( $submenu[ $config['parent_slug'] ], array( $name, 'manage_options' , $ext_link ) );
 						}
 					}
 				}

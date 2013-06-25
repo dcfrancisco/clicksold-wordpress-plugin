@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.37 =
+* Help link framework.
+
 = 1.36 =
 * Use new 3.5+ media uploader for custom widget images.
 
