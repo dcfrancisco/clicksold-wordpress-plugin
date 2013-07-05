@@ -775,7 +775,8 @@ if( !is_admin() ){
 	 */
 	function cs_set_head_title($title){
 		
-		remove_filter("wp_title", "cs_set_head_title", 0);
+		// 2013-07-05 EZ - Genesis does not do it's filter correctly on pages (eg: listings/) where we should not be changing the title. So this is moved below once we know that we are actually responsible for updating the title.
+		//remove_filter("wp_title", "cs_set_head_title", 0);
 		
 		global $post;
 		global $wp_query;
@@ -792,8 +793,11 @@ if( !is_admin() ){
 		$options = array();
 		
 		//Return the original title if any of the required config arrays are empty
-		if(empty($page_vars)|| empty($meta_config) || empty($post_param)) return $title;
-				
+		if(empty($page_vars) || empty($meta_config) || empty($post_param)) return $title;
+		
+		// Below the above line we know that we are reponsible for the title update.
+		remove_filter("wp_title", "cs_set_head_title", 0); // 2013-07-05 EZ - I have no idea why this removes the Genesis filters but it appears to be doing just that.
+
 		/* NOTE: Subject to change once we decide on keying pages for use with this *
 		 * plugin                                                                   */
 		if($post_param == $CS_GENERATED_PAGE_PARAM_CONSTANTS['listings']){
