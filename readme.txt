@@ -2,7 +2,7 @@
 Contributors: ClickSold
 Tags: idx, vow, rets, real estate, mls, realtor, listing, listings, craigslist, rental, google map, agent, broker, properties, trulia, zillow, dsidx
 Requires at least: 3.0.0
-Tested up to: 3.5.1
+Tested up to: 3.5.2
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -57,6 +57,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
+
+
+= 1.38 =
+* Compatability with wp-property plugin and better detection of special page names when they are already being used.
 
 = 1.37 =
 * Help link framework.

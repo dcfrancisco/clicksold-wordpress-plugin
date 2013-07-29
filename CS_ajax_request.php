@@ -20,6 +20,7 @@
 */
 
 // 2013-03-27 - this was deemed necessary for wp-control.php at some point in time... so I'm including it here as it appears correct.
+// 2013-07-26 - this is done in wp-admin/admin-ajax.php and may make the loading faster.
 define('DOING_AJAX', true);
 
 // We start and then clean the output buffer while running the wp load in between to make our ajax requests not include
@@ -32,6 +33,7 @@ ob_end_clean();
 require_once('CS_request.php');
 require_once('CS_response.php');
 require_once('cs_constants.php');
+
 
 class CS_ajax_request{
 	protected $request_vars;

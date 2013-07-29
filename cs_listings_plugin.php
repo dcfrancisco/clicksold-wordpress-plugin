@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.37
+Version: 1.38
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.37';
+$cs_plugin_version = '1.38';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -439,6 +439,10 @@ if( !is_admin() ){
 	}else if(!empty($_GET["s_s"])){
 		add_action('init', 'cs_saved_search_redirect', 5);
 		
+	// For handling email clicks
+	}else if(isset($_GET["em"]) && isset($_GET["z"]) && isset($_GET["uid"]) && isset($_GET["out"])){
+		add_action('init', 'cs_process_email_click', 5);
+		
 	// Normal page handling
 	}else{
 		// Adds inline javascript that changes masked domains to their original urls
@@ -514,6 +518,25 @@ if( !is_admin() ){
 		echo "<script type=\"text/javascript\">";
 		echo "location.href=\"" . $link . "\";";
 		echo "</script>";
+	}
+	
+	function cs_process_email_click(){
+		global $wpdb;
+		global $CS_SECTION_PARAM_CONSTANTS;
+		global $wp_rewrite;
+		
+		$vars = $_GET;
+		$vars['pathway'] = '640';
+		
+		$cs_request = new CS_request(http_build_query($vars), "");
+		$cs_response = new CS_response($cs_request->request());
+		
+		$protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
+		
+		// Run redirect to site
+		echo '<script type="text/javascript">';
+		echo 'location.href="' . $protocol . '://' . $_SERVER['HTTP_HOST'] . '";';
+		echo '</script>';
 	}
 	
 	/**

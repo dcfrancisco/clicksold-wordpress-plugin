@@ -35,7 +35,7 @@ function cs_add_plugin_pages( $page, $prefix ){
 	
 	$my_post = array(
 		'post_title' => $post_title,
-		'post_name' => $post_name,
+		'post_name' => cs_get_unique_post_name( $post_name, -1 ), // Make sure that the postname is unique.
 		'post_status' => $post_status,
 		'comment_status' => 'closed',  //Disable comments for these generated pages
 		'ping_status' => 'closed'
@@ -223,6 +223,9 @@ function cs_restore_cs_post_state( $prefix ) {
 
 		$wpdb->query( 'UPDATE '.$wpdb->prefix . $cs_posts_table.' SET header_title = "'.$cs_posts_state[ $prefix ]['seo']['header_title'].'", header_desc = "'.$cs_posts_state[ $prefix ]['seo']['header_desc'].'", header_desc_char_limit = "'.$cs_posts_state[ $prefix ]['seo']['header_desc_char_limit'].'"  WHERE prefix = "' . $prefix .'"' );
 	}
+
+	// The post name in the saved state can't simply be restored - as it's possible that a page by the same name has been added while the plugin was deactivated.
+	$cs_posts_state[ $prefix ]['page_settings']['post_name'] = cs_get_unique_post_name( $cs_posts_state[ $prefix ]['page_settings']['post_name'], $cs_post_record->postid );
 
 	// Restore the page settings (if available).
 	if( isset( $cs_posts_state[ $prefix ]['page_settings'] ) ) {
@@ -548,7 +551,47 @@ function cs_get_page_name_with_parent_page_path( $post_id ) {
 	} 
 }
 
-
+/**
+ * This function gets the postname to use. It takes an original post name and appends a '-N' (starting at 1) if the desired
+ * post name is already used.
+ * 
+ * If page id to ignore is non -1. Then if we get a duplicate post_name but the post matches this id then it won't be skipped.
+ */
+function cs_get_unique_post_name( $post_name, $post_id_to_ignore ) {
+	
+	/** Make sure that the post name <slug> is not duplicated */
+	$count = 1;
+	$post_name_to_use = $post_name;
+	
+	while(1) {
+		
+		// Create the name we want to use, not for the first one we try the bare postname as we don't want it always appending a '-N' if it's not necessary.
+		if( $count == 1 ) { // Note this will start the generated names at '<name>-2' which matches wordpress' default behaviour.
+			$post_name_to_use = $post_name;
+		} else {
+			$post_name_to_use = $post_name . "-" . $count;
+		}
+		
+		// See if the potential post name is already in use.
+		if( !get_page_by_path( $post_name_to_use, ARRAY_N, 'page' ) ) {
+			// Not in use, split.
+			break;
+		} else {
+			// Post name is in use. However we must check if it's not in use by the page_id that we've been told to ignore.
+			if( $post_id_to_ignore != -1 ) {
+				
+				if( get_page_by_path( $post_name_to_use, OBJECT, 'page' )->ID == $post_id_to_ignore ) {
+					// We're good we've been told to ingore this one.
+					break;
+				}
+			}
+		}
+		
+		$count++;
+	}
+	
+	return $post_name_to_use;
+}
 
 
 
