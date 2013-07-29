@@ -61,6 +61,7 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 = 1.38 =
 * Compatability with wp-property plugin and better detection of special page names when they are already being used.
+* Allow Genesis custom document title to work on cs generated pages.
 
 = 1.37 =
 * Help link framework.
