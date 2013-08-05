@@ -69,6 +69,8 @@ class CS_request {
 	protected $plugin_vip_controller = 'WPPluginVIPDash';
 	protected $plugin_utils_controller = 'WPPluginUtilsRpm';
 	protected $plugin_mobile_controller = 'WPPluginMobile';
+	protected $plugin_mobile_vip_controller = 'WPPluginMobileVIP';
+	
 	protected $plugin_captcha_controller = 'jcaptcha';
 	
 	protected $proxy_server = '';	// Will be selected from $production_proxy_server or $test_proxy_server in the constructor.
@@ -92,6 +94,7 @@ class CS_request {
 		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
 		global $CS_SECTION_VIP_PARAM_CONSTANT;
 		global $CS_SECTION_MOBILE_PARAM_CONSTANT;
+		global $CS_SECTION_MOBILE_VIP_PARAM_CONSTANT;
 		global $CS_SECTION_CAPTCHA_IMG_PARAM_CONSTANT;
 		global $cs_plugin_version;
 
@@ -129,6 +132,8 @@ class CS_request {
 			$this->proxy_server .= $this->plugin_utils_controller;
 		} else if($CS_SECTION_MOBILE_PARAM_CONSTANT == $pluginSection) {
 			$this->proxy_server .= $this->plugin_mobile_controller;
+		} else if($CS_SECTION_MOBILE_VIP_PARAM_CONSTANT['wp_mobile_vip_pname'] == $pluginSection) {
+			$this->proxy_server .= $this->plugin_mobile_vip_controller;
 		} else {
 			$this->proxy_server .= $this->plugin_controller;
 		}

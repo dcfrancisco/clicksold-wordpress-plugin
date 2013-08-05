@@ -57,7 +57,8 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
-
+= 1.39 =
+* Added VIP functionality to mobile site
 
 = 1.38 =
 * Compatability with wp-property plugin and better detection of special page names when they are already being used.

@@ -29,24 +29,40 @@ class cs_mobile {
 
 	protected $request_vars;
 	protected $content_type;
-
+	protected $plugin_section;
+	
 	function __construct() {
+		global $CS_SECTION_MOBILE_PARAM_CONSTANT;
+		global $CS_SECTION_MOBILE_VIP_PARAM_CONSTANT;
+		global $CS_MOBILE_VIP_PARAM;
+		
 		$this->request_vars = $_SERVER['QUERY_STRING'];
 		if($_SERVER['REQUEST_METHOD'] == 'POST') { 
 			$post_vars = http_build_query($_POST);
 			if(!empty($post_vars)) $this->request_vars .= "&" . $post_vars; 
 		}
 		
+		$this->plugin_section = $CS_SECTION_MOBILE_PARAM_CONSTANT;
+		
 		//If an empty call, go to mobile home page
 		if(empty($this->request_vars)) {
 			$this->request_vars = "pathway=458"; 
+			
+		//Set the VIP plugin section if the VIP Param is present
+		} else {
+			foreach($CS_SECTION_MOBILE_VIP_PARAM_CONSTANT as $key=>$value) {
+				$vip_param = $key . '=' . $value;
+				break;
+			}
+			$index = strpos($this->request_vars, $vip_param);
+			if($index !== false) {
+				$this->plugin_section = $CS_SECTION_MOBILE_VIP_PARAM_CONSTANT['wp_mobile_vip_pname'];
+			}
 		}
 	}
 	
 	public function get_response() {
-		global $CS_SECTION_MOBILE_PARAM_CONSTANT;
-		
-		$cs_request = new CS_request( $this->request_vars, $CS_SECTION_MOBILE_PARAM_CONSTANT );
+		$cs_request = new CS_request( $this->request_vars, $this->plugin_section );
 		$cs_response = new CS_response($cs_request->request());
 		if($cs_response->is_error()) return "";
 		

@@ -38,6 +38,11 @@
 		"wp_vip_pname" => "wp_vip"
 	);
 	
+	$CS_SECTION_MOBILE_PARAM_CONSTANT = "wp_mobile";
+	$CS_SECTION_MOBILE_VIP_PARAM_CONSTANT = array(
+		"wp_mobile_vip_pname" => "wp_mobile_vip"
+	);
+	
 	/**
 	* Not really needed as it defaults to the normal controller but here for consistency
 	*/
@@ -46,8 +51,6 @@
 	);
 	
 	$CS_SECTION_CAPTCHA_IMG_PARAM_CONSTANT = "captcha";
-	
-	$CS_SECTION_MOBILE_PARAM_CONSTANT = "wp_mobile";
 	
 	/**
 	 * Variable constants for the values stored as the 'parameter' field 
