@@ -46,8 +46,10 @@ $cs_help_page = "";
 			add_action('init', array($this, 'get_admin_section'));
 			
 			// Add TinyMCE scripts & styles to the My Listings view
-			if($CS_ADMIN_MENU_ITEMS['My Listings']['menu_slug'] == $_GET['page']) add_action('admin_head', array($this, 'init_editor'));
-			else {
+			if($CS_ADMIN_MENU_ITEMS['My Listings']['menu_slug'] == $_GET['page'] ||
+			   $CS_ADMIN_MENU_ITEMS['My Website']['menu_slug'] == $_GET['page'] ) {
+				add_action('admin_head', array($this, 'init_editor'));
+			} else {
 				// Add CS Shortcodes button to all editors except in the listings section
 				$cs_shortcodes = new CS_shortcodes( 'cs_listings' );
 				add_action('init', array( $cs_shortcodes, 'cs_add_tinymce_buttons' ) );
@@ -172,7 +174,7 @@ $cs_help_page = "";
 		function init_editor(){
 			if(function_exists('wp_tiny_mce')) wp_tiny_mce(false);
 		}
-				
+		
 		/**
 		 * Queries the server to notify the user of any account misconfigurations 
 		 */

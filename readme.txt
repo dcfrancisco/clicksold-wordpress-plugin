@@ -57,6 +57,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
+= 1.40 =
+* Ability to customize the mobile site's front page
+
 = 1.39 =
 * Added VIP functionality to mobile site
 
