@@ -180,6 +180,7 @@ function cs_save_cs_post_state( $prefix ) {
 	$cs_posts_state[ $prefix ] = array();
 	$cs_posts_state[ $prefix ]['seo'] = array();            // Init our sections. (This is done because they will be treated atomically, if a section is not present all of it's values will not be restored when calling the restore function).
 	$cs_posts_state[ $prefix ]['page_settings'] = array();  //   this is also to prevent namespace conflicts for out sections.
+	$cs_posts_state[ $prefix ]['post_meta'] = array();		// -- stores all of the metadata for this post, eg: page title, layout etc...
 
 	// Save the data from the cs_posts table (SEO settings).
 	$cs_posts_state[ $prefix ]['seo']['header_title'] = $cs_post_record->header_title;
@@ -187,11 +188,30 @@ function cs_save_cs_post_state( $prefix ) {
 	$cs_posts_state[ $prefix ]['seo']['header_desc_char_limit'] = $cs_post_record->header_desc_char_limit;
 
 	// Save the info about the actual post that represents the page.
-	$wp_page = $wpdb->get_row('SELECT post_title, post_status, post_name FROM '.$wpdb->posts.' WHERE ID = "' . $cs_post_record->postid . '"');
+	$wp_page = $wpdb->get_row('SELECT post_title, post_status, post_name, post_parent, post_content, menu_order FROM '.$wpdb->posts.' WHERE ID = "' . $cs_post_record->postid . '"');
 
 	$cs_posts_state[ $prefix ]['page_settings']['post_title'] = $wp_page->post_title;
 	$cs_posts_state[ $prefix ]['page_settings']['post_status'] = $wp_page->post_status;
 	$cs_posts_state[ $prefix ]['page_settings']['post_name'] = $wp_page->post_name;
+	$cs_posts_state[ $prefix ]['page_settings']['post_content'] = $wp_page->post_content;
+	$cs_posts_state[ $prefix ]['page_settings']['menu_order'] = $wp_page->menu_order;
+
+	// Save the info about the posts parent relationships -- aka if it has a parent.
+	$cs_posts_state[ $prefix ]['page_settings']['post_parent'] = $wp_page->post_parent;
+	
+	// Get all posts that have this page as their parent and save that as well.
+	$cs_posts_state[ $prefix ]['page_settings']['post_is_parent_to'] = array();
+	$child_pages = $wpdb->get_results('SELECT id FROM '.$wpdb->posts.' WHERE post_parent = "' . $cs_post_record->postid . '"');
+	foreach ( $child_pages as $child_page ) {
+		$cs_posts_state[ $prefix ]['page_settings']['post_is_parent_to'][$child_page->id] = $child_page->id;
+	}
+
+	// Save the post metadata // We skip some of the meta keys as they are not applicable and don't have to be saved.
+	$wp_page_meta_values = $wpdb->get_results('SELECT meta_key, meta_value FROM '.$wpdb->postmeta.' WHERE post_id = "' . $cs_post_record->postid . '" and meta_key not in ("_edit_lock", "_edit_last")');
+	foreach ( $wp_page_meta_values as $wp_page_meta_value ) {
+
+		$cs_posts_state[ $prefix ]['post_meta'][ $wp_page_meta_value->meta_key ] = $wp_page_meta_value->meta_value;
+	}
 
 	// Save back and we're done.
 	update_option( "cs_posts_state", $cs_posts_state );
@@ -229,12 +249,44 @@ function cs_restore_cs_post_state( $prefix ) {
 
 	// Restore the page settings (if available).
 	if( isset( $cs_posts_state[ $prefix ]['page_settings'] ) ) {
-		$wpdb->query('UPDATE '.$wpdb->posts.' SET post_title = "'.$cs_posts_state[ $prefix ]['page_settings']['post_title'].'", post_status = "'.$cs_posts_state[ $prefix ]['page_settings']['post_status'].'", post_name = "'.$cs_posts_state[ $prefix ]['page_settings']['post_name'].'" WHERE ID = "' . $cs_post_record->postid . '"');
+		$wpdb->query('UPDATE '.$wpdb->posts.' SET post_title = "'.$cs_posts_state[ $prefix ]['page_settings']['post_title'].'", post_status = "'.$cs_posts_state[ $prefix ]['page_settings']['post_status'].'", post_name = "'.$cs_posts_state[ $prefix ]['page_settings']['post_name'].'", post_content = "'.$cs_posts_state[ $prefix ]['page_settings']['post_content'].'", menu_order = "'.$cs_posts_state[ $prefix ]['page_settings']['menu_order'].'" WHERE ID = "' . $cs_post_record->postid . '"');
 
 		// For the post status we also have to update any associated menu items.
 		foreach ($wpdb->get_results('SELECT meta_value, post_id FROM '.$wpdb->postmeta.' WHERE meta_key = "_menu_item_object_id" and meta_value = "'.$cs_post_record->postid.'"') as $menu_item) {
 
 			$wpdb->query('UPDATE '.$wpdb->posts.' SET post_status = "'.$cs_posts_state[ $prefix ]['page_settings']['post_status'].'" WHERE ID = "' . $menu_item->post_id . '"');
+		}
+	}
+	
+	// Restore this post's parent post setting (if it has been saved - and this post did have a parent) -- assuming that it exists.
+	if( isset( $cs_posts_state[ $prefix ]['page_settings']['post_parent'] ) && $cs_posts_state[ $prefix ]['page_settings']['post_parent'] != 0 ) {
+		
+		// First of all we must check if this post's parent (as saved in the state) still exists.
+		$parent_post = $wpdb->get_row('SELECT COUNT(1) AS post_count FROM '.$wpdb->posts.' WHERE id = "' . $cs_posts_state[ $prefix ]['page_settings']['post_parent'] .'"');
+		//error_log("Restoring post(".$cs_post_record->postid.") -> it's parent was saved as being (".$cs_posts_state[ $prefix ]['page_settings']['post_parent'].") -- this parent has (".$parent_post->post_count.") entries in the posts table.");
+		if( $parent_post->post_count > 0 ) {
+
+			$wpdb->query('UPDATE '.$wpdb->posts.' SET post_parent = "'.$cs_posts_state[ $prefix ]['page_settings']['post_parent'].'" WHERE ID = "' . $cs_post_record->postid . '"');
+		}
+	}
+	
+	// Restore this post as the parent of any posts that had it marked as their parent.
+	if( isset( $cs_posts_state[ $prefix ]['page_settings']['post_is_parent_to'] ) ) {
+	
+		foreach( $cs_posts_state[ $prefix ]['page_settings']['post_is_parent_to'] as $child_post_id ) {
+//			error_log("Restoring(".$cs_post_record->postid.") - post (".$child_post_id.") had it as it's parent.");
+			
+			// Set this post's current postid as the post_parent of all of the posts that had it as it's parent.
+			$wpdb->query('UPDATE '.$wpdb->posts.' SET post_parent = "'.$cs_post_record->postid.'" WHERE ID = "' . $child_post_id . '"');
+		}
+	}
+
+	// Restore the page metadata (if available).
+	if( isset( $cs_posts_state[ $prefix ]['post_meta'] ) ) {
+
+		foreach( $cs_posts_state[ $prefix ]['post_meta'] as $post_meta_key => $post_meta_value ) {
+			
+			$wpdb->query('INSERT INTO '.$wpdb->postmeta.' (post_id, meta_key, meta_value) VALUES ("'.$cs_post_record->postid.'", "'.$post_meta_key.'", "'.$post_meta_value.'")');
 		}
 	}
 

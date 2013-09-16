@@ -31,6 +31,11 @@ $cs_widgets_cssjs_included = false;
 */
 class CS_Widget extends WP_Widget {
 	
+	// These cache the response that queried the plugin server for the widget scripts. This is done because the inline scripts and the linked scripts are enqueued in different handlers and we don't want to always have to hit the
+	// plugin server twice in order to get them.
+	protected $front_widget_scripts_cs_response;
+	protected $admin_widget_scripts_cs_response;
+	
 	/**
 	 * This constructor is ONLY used by the cs dashboard widget as it needs an instance of this class
 	 * to call the get_widget_scripts routine (to enqueue the widget css).
@@ -165,18 +170,26 @@ class CS_Widget extends WP_Widget {
 	 *  Retrieves Javascript / CSS scripts used in widgets.php
 	 */
 	public function get_front_widget_scripts() {
-		$cs_request = new CS_request("pathway=590", null);
-		$cs_response = new CS_response($cs_request->request());
-		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_linked_only();
+		
+		// If we have not yet queried for the widget scripts let's do so now.
+		if( !isset( $this->front_widget_scripts_cs_response ) ) {
+			$cs_request = new CS_request("pathway=590", null);
+			$this->front_widget_scripts_cs_response = new CS_response($cs_request->request());
+		}
+		if(!$this->front_widget_scripts_cs_response->is_error()) $this->front_widget_scripts_cs_response->cs_get_header_contents_linked_only();
 	}
 	
 	/**
 	 *  Retrieves inline Javascript for widgets
 	 */
 	public function get_front_widget_inline_scripts() {
-		$cs_request = new CS_request("pathway=590", null);
-		$cs_response = new CS_response($cs_request->request());
-		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_inline_only();
+
+		// If we have not yet queried for the widget scripts let's do so now.
+		if( !isset( $this->front_widget_scripts_cs_response ) ) {
+			$cs_request = new CS_request("pathway=590", null);
+			$this->front_widget_scripts_cs_response = new CS_response($cs_request->request());
+		}
+		if(!$this->front_widget_scripts_cs_response->is_error()) $this->front_widget_scripts_cs_response->cs_get_header_contents_inline_only();
 	}
 	
 	/**
@@ -184,9 +197,13 @@ class CS_Widget extends WP_Widget {
 	 */
 	public function get_admin_widget_scripts(){
 		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
-		$cs_request = new CS_request("pathway=591", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
-		$cs_response = new CS_response($cs_request->request());
-		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_linked_only();
+
+		// If we have not yet queried for the widget scripts let's do so now.
+		if( !isset( $this->admin_widget_scripts_cs_response ) ) {
+			$cs_request = new CS_request("pathway=591", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
+			$this->admin_widget_scripts_cs_response = new CS_response($cs_request->request());
+		}
+		if(!$this->admin_widget_scripts_cs_response->is_error()) $this->admin_widget_scripts_cs_response->cs_get_header_contents_linked_only();
 	}
 	
 	/**
@@ -194,9 +211,13 @@ class CS_Widget extends WP_Widget {
 	 */
 	public function get_admin_widget_inline_scripts(){
 		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
-		$cs_request = new CS_request("pathway=591", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
-		$cs_response = new CS_response($cs_request->request());
-		if(!$cs_response->is_error()) $cs_response->cs_get_header_contents_inline_only();
+
+		// If we have not yet queried for the widget scripts let's do so now.
+		if( !isset( $this->admin_widget_scripts_cs_response ) ) {
+			$cs_request = new CS_request("pathway=591", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
+			$this->admin_widget_scripts_cs_response = new CS_response($cs_request->request());
+		}
+		if(!$this->admin_widget_scripts_cs_response->is_error()) $this->admin_widget_scripts_cs_response->cs_get_header_contents_inline_only();
 	}
 	
 	/**

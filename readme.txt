@@ -57,6 +57,11 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
+
+= 1.41 =
+* Better save / restore of state across plugin deactivation / reactivation for special CS generated pages.
+* Optimization to prevent duplicate call to CS plugin server to fetch widget scripts.
+
 = 1.40 =
 * Ability to customize the mobile site's front page
 
