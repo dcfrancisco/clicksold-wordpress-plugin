@@ -122,6 +122,7 @@ class CS_Widget extends WP_Widget {
 		} else {
 			$file = 'views/' . $template;
 		}
+		
 		return apply_filters( $custom_filter_name . $template, $file);
 	}
 		
@@ -489,13 +490,13 @@ class Brokerage_Info_Widget extends CS_Widget {
     		$this->init_media_upload();
 		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) ) {
 			$this->get_widget_scripts(false);
-		}		
+		}
 	}
 	
 	function widget($args, $instance) {
 		extract($args, EXTR_SKIP);
 		echo $before_widget;
-
+		
 		include( $this->getTemplateHierarchy( 'cs_template_brokerage-info-widget_', 'brokerage-info-widget' ) );
 		
 		echo $after_widget;
@@ -1241,11 +1242,10 @@ class VIP_Widget extends CS_Widget{
 	private $PLUGIN_NAME = 'ClickSold VIP Widget';
 	private $PLUGIN_SLUG = 'cs-vip-widget';
 	private $PLUGIN_CLASSNAME = 'widget-vip';
-	private $PLUGIN_FEAT_LIST_OPTS = array();
 	private $BROKERAGE = false;
 	
 	function VIP_Widget(){
-	
+		
 		global $PLUGIN_NAME;
 		global $PLUGIN_SLUG;
 		global $PLUGIN_CLASSNAME;
@@ -1273,6 +1273,7 @@ class VIP_Widget extends CS_Widget{
 	}
 	
 	function widget( $args, $instance ){
+		
 		global $CS_SECTION_VIP_PARAM_CONSTANT;
 	
 		$cs_request = new CS_request("pathway=168&vipLoginCheck=true", $CS_SECTION_VIP_PARAM_CONSTANT["wp_vip_pname"]);
@@ -1296,7 +1297,7 @@ class VIP_Widget extends CS_Widget{
 		return $instance;
 	}
 	
-	function form( $instance ){	
+	function form( $instance ){
 		$instance_opts = array(
 			'title' => 'VIP Options',
 			'hideOpts' => 1
@@ -1305,5 +1306,132 @@ class VIP_Widget extends CS_Widget{
 		include( $this->getTemplateHierarchy( 'cs_template_vip-widget_', 'vip-widget-admin' ) );
 	}
 	
+}
+
+/**
+ * IDX Quick Search Widget
+ * @author ClickSold
+ */
+class IDX_QS_Widget extends CS_WIDGET {
+	
+	private $PLUGIN_NAME = 'ClickSold IDX Quick Search Widget';
+	private $PLUGIN_SLUG = 'cs-idx-qs-widget';
+	private $PLUGIN_CLASSNAME = 'widget-idx-qs';
+	private $PLUGIN_PROP_TYPES = array();
+	
+	function IDX_QS_Widget() {
+		global $PLUGIN_NAME;
+		global $PLUGIN_SLUG;
+		global $PLUGIN_CLASSNAME;
+		
+		$this->pluginDomain = 'idx_qs_widget';
+		
+		$this->loadPluginTextDomain();
+		$widget_opts = array(
+			'classname' => $this->PLUGIN_CLASSNAME,
+			'description' => 'Adds the ability to run a IDX search from the current page'
+		);
+		
+		$this->WP_Widget( $this->PLUGIN_SLUG, $this->PLUGIN_NAME, $widget_opts );
+		
+		global $pagenow;
+		if( defined( "WP_ADMIN" ) && WP_ADMIN && 'widgets.php' == $pagenow ) {
+			$this->get_widget_scripts(true);
+		}else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) && !wp_script_is($this->PLUGIN_SLUG . '-js') ) {
+			$this->get_widget_scripts(false);
+		}
+	}
+	
+	function widget( $args, $instance ) {
+		global $wpdb;
+		global $wp_rewrite;
+		global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
+				
+		$table_name = $wpdb->prefix . "cs_posts";
+		
+		//Get the relative url to the IDX search page
+		$page = $wpdb->get_row("SELECT postid, parameter FROM " . $table_name . " WHERE parameter = '" . $CS_GENERATED_PAGE_PARAM_CONSTANTS["idx"] . "'");
+		
+		$idx_id = $page->postid;
+		if(is_null($idx_id)) return;
+		
+		$using_permalinks = $wp_rewrite->using_permalinks();
+		
+		// Get the pathname or query string of those pages
+		if( $using_permalinks ) {
+			$idx_url = $wpdb->get_var("SELECT post_name FROM " . $wpdb->posts . " WHERE ID = " . $idx_id . " AND post_type = 'page' AND post_status != 'trash'");
+		} else {
+			$using_permalinks = 0;
+			
+			$idx_url = $wpdb->get_var("SELECT guid FROM " . $wpdb->posts . " WHERE ID = " . $idx_id . " AND post_type = 'page' AND post_status != 'trash'");
+			
+			//Strip the root url
+			$patt = "/\/\?/";
+			$idx_url_parts = preg_split($patt, $idx_url);
+			
+			//Check if the guid is valid
+			if(count($idx_url_parts) < 2) return;
+			
+			$idx_url = "?" . $idx_url_parts[1];
+		}
+				
+		if(is_null($idx_url)) return;
+		
+		if($wp_rewrite->using_permalinks()) {
+			$idx_url .= '/?';
+		} else {
+			$idx_url .= '&';
+		}
+		
+		extract( $args );
+		extract( $instance );
+		
+		$widget_styles = '';
+		if(is_numeric($min_width)) $widget_styles .= 'min-width:' . $min_width . 'px;';
+		if(is_numeric($min_height)) $widget_styles .= 'min-height:' . $min_height . 'px;';
+		if(is_numeric($max_width)) $widget_styles .= 'max-width:' . $max_width . 'px;';
+		if(is_numeric($max_height)) $widget_styles .= 'max-height:' . $max_height . 'px;';
+		
+		include( $this->getTemplateHierarchy( 'cs_template_idx-qs-widget_', 'idx-quick-search-widget' ) );
+	}
+	
+	function update( $new_instance, $old_instance ) {
+		if(!is_numeric($new_instance['min_width'])) $new_instance['min_width'] = '';
+		if(!is_numeric($new_instance['min_height'])) $new_instance['min_height'] = '';
+		if(!is_numeric($new_instance['max_width'])) $new_instance['max_width'] = '';
+		if(!is_numeric($new_instance['max_height'])) $new_instance['max_height'] = '';
+		return $new_instance;
+	}
+	
+	function form( $instance ) {
+	    global $PLUGIN_PROP_TYPES;
+		if(empty($PLUGIN_PROP_TYPES)) $this->get_property_types();
+		$prop_types = $PLUGIN_PROP_TYPES;
+		
+		$instance_opts = array(
+			'default_prop_type' => $PLUGIN_PROP_TYPES[0]['val'],
+			'min_width' => '',
+			'min_height' => '',
+			'max_width' => '',
+			'max_height' => ''
+		);
+		$instance = wp_parse_args((array) $instance, $instance_opts);
+		include( $this->getTemplateHierarchy( 'cs_template_idx-qs-widget_', 'idx-quick-search-widget-admin' ) );
+	}
+	
+	/**
+	*
+	*/
+	private function get_property_types() {
+		global $PLUGIN_PROP_TYPES;
+		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
+		
+		$cs_request = new CS_request('pathway=640&idxQuickSearch_loadConfig=true', $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
+		$cs_response = new CS_response($cs_request->request());
+		if($cs_response->is_error()) return '';
+		
+		$response = $cs_response->cs_get_json();
+		$PLUGIN_PROP_TYPES = $response['cs_idx_qs_prop_types'];
+	}
 }
 ?>

@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.41
+Version: 1.42
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.41';
+$cs_plugin_version = '1.42';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -1068,6 +1068,7 @@ if ( $load_widgets == true && get_option("cs_db_version", FALSE) != FALSE ) {  /
 	if(!is_null($wpdb->get_var('SELECT postid FROM ' . $wpdb->prefix . $cs_posts_table . ' WHERE prefix = "' . $CS_SECTION_PARAM_CONSTANTS['idx_pname'] . '" AND available = 1'))){
 		add_action('widgets_init', create_function('', 'register_widget("IDX_Search_Widget");'));
 		add_action('widgets_init', create_function('', 'register_widget("Listing_QS_Widget");'));
+		add_action('widgets_init', create_function('', 'register_widget("IDX_QS_Widget");'));
 	}
 }
 	

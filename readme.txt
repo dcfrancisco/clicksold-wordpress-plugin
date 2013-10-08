@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.42 =
+* Added IDX Quick Search Widget.
+
 = 1.41 =
 * Better save / restore of state across plugin deactivation / reactivation for special CS generated pages.
 * Optimization to prevent duplicate call to CS plugin server to fetch widget scripts.
