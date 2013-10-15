@@ -645,7 +645,24 @@ function cs_get_unique_post_name( $post_name, $post_id_to_ignore ) {
 	return $post_name_to_use;
 }
 
+/**
+ * When called will de-register all known CS hooks. This is to be used on pages where the CS plugin can't be active but for some reason a widget or other component
+ * needs to be present. For example if this single page uses a page template that has a cs widget in the sidebar.
+ * 
+ * Alternatively you can use add_action('widgets_init','cs_deregister_cs_hooks', 0); - depending on where in the code the call is placed this may be required.
+ * 
+ */
+function cs_deregister_cs_hooks() {
 
+	// Remove - CS owned page processing.
+	remove_action('parse_query', 'cs_process_cs_section_posts', 5);
+	remove_action('init', 'cs_process_email_click', 5);
+	remove_action('init', 'cs_saved_search_redirect', 5);
+	remove_action('parse_query', 'cs_process_vip_confirmation', 5);
+
+	// Widgets.
+	remove_action('widgets_init','cs_register_cs_widgets', 1);
+}
 
 
 

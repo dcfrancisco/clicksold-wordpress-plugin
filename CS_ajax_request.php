@@ -20,20 +20,25 @@
 */
 
 // 2013-03-27 - this was deemed necessary for wp-control.php at some point in time... so I'm including it here as it appears correct.
-// 2013-07-26 - this is done in wp-admin/admin-ajax.php and may make the loading faster.
+// 2013-07-26 - this is normally done in wp-admin/admin-ajax.php and may make the loading wp slightly faster.
 define('DOING_AJAX', true);
 
-// We start and then clean the output buffer while running the wp load in between to make our ajax requests not include
-// any error text that the actual loading of wordpress may produce. This error text messes up json responses and image requests (captcha).
+/** We start and then clean the output buffer while running the wp load in between to make our ajax requests not include
+    any error text that the actual loading of wordpress may produce. This error text messes up json responses and image requests (captcha). */
 ob_start();
 require_once('../../../wp-load.php');
 require_once('../../../wp-admin/includes/admin.php'); // Will setup wp correctly if the user is logged in so we can use for example the is_admin() function and expect to get a sane response.
-ob_end_clean();
+// Sometimes plugins loaded by wordpress call ob_start() as well, this get's stacked so cleaning the buffer once is sometimes not enough. eg: NextGEN Gallery does this. We flush the buffer multiple times to make (relatively) sure we're at the top of the buffer.
+for($i = 0; $i < 5; $i++) {
+	ob_end_clean();
+}
+
+// Here we start buffering the ajax output once more. This script needs to be able to set the headers so we can't allow ANY output till that's done.
+ob_start();
 
 require_once('CS_request.php');
 require_once('CS_response.php');
 require_once('cs_constants.php');
-
 
 class CS_ajax_request{
 	protected $request_vars;
@@ -155,7 +160,7 @@ class CS_ajax_request{
 	$ajax_request = new CS_ajax_request;
 	$response_body = $ajax_request->get_response();
 	$response_body = trim($response_body);
-	
+
 	if( $ajax_request->captcha == true ) { // Make sure that it reports itself as an image if it's an image request.
 		header('Content-Type: image/jpeg');
 		
@@ -170,4 +175,7 @@ class CS_ajax_request{
 		header('Content-Type: ' . $ajax_request->get_content_type());
 		echo $response_body;
 	}
+	
+	// Finally now that we've had a chance to set the headers, we can flush the buffer.
+	ob_end_flush();
 ?>
