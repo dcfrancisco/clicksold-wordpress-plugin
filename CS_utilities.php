@@ -40,6 +40,7 @@ class CS_utilities{
 		global $cs_autoblog_new;
 		global $cs_autoblog_sold;
 		global $cs_autoblog_last_update;
+		global $wpdb;
 		
 		$cs_autoblog_new_opt = get_option($cs_autoblog_new);
 		$cs_autoblog_sold_opt = get_option($cs_autoblog_sold);
@@ -55,19 +56,22 @@ class CS_utilities{
 		
 		$response = $cs_response->cs_get_json();
 		
-		$post_queue = array();
 		$now = time();
 		update_option($cs_autoblog_last_update, $now);
 			
 		if(!empty($response['listings'])) {
+			$cs_autoblog_post_type = ''; // Will be either Active or Sold.
+			
 			//build arguments for each listing
 			foreach($response['listings'] as $listing){
 				if($listing['_cs_autoblog_cs_status'] == $CS_VARIABLE_AUTO_BLOG_RPM_STATUS_VARS['Active'] && $cs_autoblog_new_opt == "1"){
 					$cs_autoblog_title_opt = 'cs_autoblog_new_title';
 					$cs_autoblog_cnt_opt = 'cs_autoblog_new_content';
+					$cs_autoblog_post_type = 'Active';
 				}else if($listing['_cs_autoblog_cs_status'] == $CS_VARIABLE_AUTO_BLOG_RPM_STATUS_VARS['Sold'] && $cs_autoblog_sold_opt == "1"){
 					$cs_autoblog_title_opt = 'cs_autoblog_sold_title';
 					$cs_autoblog_cnt_opt = 'cs_autoblog_sold_content';
+					$cs_autoblog_post_type = 'Sold';
 				}else{
 					continue; //Skip due to invalid status
 				}
@@ -80,6 +84,40 @@ class CS_utilities{
 				$post_title = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_TITLE_CONTENT_VARS, $listing, $post_title_temp);
 				$post_cnt = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_TITLE_CONTENT_VARS, $listing, $post_cnt_temp, true);
 				$post_cnt = $this->listing_autoblog_process_wildcards($CS_VARIABLE_AUTO_BLOG_CONTENT_VARS, $listing, $post_cnt, true);
+
+				/* - Check if a post for this event already exists ------------------------------------*/
+				// Check if the post already exists - based on the post_meta (post_meta for auto blogged posts started in CS >= v1.44) (Note here we just use a bare query as the get_post_meta type functions require the post id which we don't have.)
+				$post_already_exists = false;
+				$existing_post_ids = $wpdb->get_col('SELECT post_id FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_cs_autoblog_post_listnum" and meta_value = "'.$listing['_cs_autoblog_listnumber'].'"'); // Note because of the type (eg: Active / Sold) there could be multiple entries for this listnum.
+				foreach( $existing_post_ids as $existing_post_id ) {
+					
+					// Now we must check that this existing post is of the same type (eg: Active / Sold).
+					$existing_post_type = get_post_meta( $existing_post_id, "_cs_autoblog_post_type", true /* single result */ );
+					
+					// If it's equal to the current post type we know this one has already been blogged about so we can skip it.
+					if( $existing_post_type == $cs_autoblog_post_type ) {
+						error_log("CS_utilities.php - listing_autoblog_get_listing_posts - post $existing_post_id of type $existing_post_type ALREADY exists (post_meta check) - SKIPPING.");
+						
+						$post_already_exists = true;
+						break;
+					}
+				}
+				// If above we determined that this post is already present we can skip it's addition here.
+				if( $post_already_exists ) { continue; }
+
+				// Check if the post already exists - based on it's title (assuming the mls number is over 4 chars long). This is to not dupliate posts added by cs plugins < 1.44 which did not track the listnum of the source listing in the post_meta).
+				// Here again we need to do a bare query as we're trying to find posts by title.
+				// NOTE: This is not perfect, if the user has changed post title formats or the posts themselves then this will re-blog the entry but we can't do any better than this based on the fact that pre 1.44 plugins did not store post metadata.
+				$existing_post_count = $wpdb->get_var('SELECT count(1) FROM ' . $wpdb->posts . ' WHERE post_title = "'.$post_title.'" and post_type = "post"');
+				
+				// If we have such a post we skip auto blogging it again.
+				if( $existing_post_count > 0 ) {
+					error_log("CS_utilities.php - listing_autoblog_get_listing_posts - post $post_title of type $cs_autoblog_post_type ALREADY exists (post_title check) - SKIPPING.");
+						
+					continue;
+				}
+				/* - END - Check if a post for this event already exists ------------------------------------*/
+
 				
 				$post_args = array(
 					'post_title' => $post_title,
@@ -91,16 +129,19 @@ class CS_utilities{
 					'post_category' => array(0)
 				);
 			
-				array_push($post_queue, $post_args);
-			}
-			
-			//insert the posts
-			foreach($post_queue as $post){
-				$error = wp_insert_post($post, true); 
-				if(is_wp_error($error)){
-					error_log(print_r($error, true));
+				// Insert the new post.
+				$post_id_or_error = wp_insert_post( $post_args, true /* wp_error */ ); 
+				if( is_wp_error( $post_id_or_error ) ) {
+					error_log( print_r( $post_id_or_error, true ) );
+				} else { // We're good we inserted the post.
+				
+					// For each post added we save it's mlsnumber as well as it's listing number in the postmeta (this is so we can track the posts that we've added).
+					update_post_meta( $post_id_or_error, "_cs_autoblog_post_mlsnum",  $listing['_cs_autoblog_mlsnumber'] );
+					update_post_meta( $post_id_or_error, "_cs_autoblog_post_listnum", $listing['_cs_autoblog_listnumber'] );
+					update_post_meta( $post_id_or_error, "_cs_autoblog_post_type",    $cs_autoblog_post_type ); // $cs_autoblog_post_type was computed earlier to be human readable 'Active' or 'Sold'
 				}
 			}
+			
 		}
 	}
 	

@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.44 =
+* Auto-Blogger now more reliable and resiliant to timing issues.
+
 = 1.43 =
 * Compatibility with Next GEN Gallery plugin.
 * Added function to allow for disabling CS on a specific page.
