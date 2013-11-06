@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.45 =
+* Fix IDX Quick Search Widget.
+
 = 1.44 =
 * Auto-Blogger now more reliable and resiliant to timing issues.
 
