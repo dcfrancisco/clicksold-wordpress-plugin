@@ -213,7 +213,21 @@ require_once('cs_functions.php');
 				// as we can't get it back anyways because the post id's change when CS re-adds them.
 				wp_delete_post ($a->postid, true /* force, aka no trash */ );
 
-				// For some reason wp_delete_post does not catch these.
+				// Now remove the menu items that belong to this post if we're allowed to do so.
+				if( get_option('cs_allow_manage_menus', 0) == 1 ) {
+
+					// Menu items are linked to the posts via the postmeta table where the meta_key == '_menu_item_object_id' so to get the menu item's post_ids (menu items are also stored in the posts table)
+					// we need all of the postmeta values where meta_key == '_menu_item_object_id' and meta_value = '<the id of the page we just deleted>'
+					$post_meta_result = $wpdb->get_results("select * from ".$wpdb->postmeta." where meta_key = '_menu_item_object_id' and meta_value = '".$a->postid."';");
+
+					foreach ( $post_meta_result as $post_meta ) {
+						
+						// Now we can use the wp_delete_post to delete the 'post' that is really the menu item.
+						wp_delete_post( $post_meta->post_id );
+					}
+				}
+
+				// The above removes the posts and their menu items however it fails to remove the posts from the categories (we do that here manually).
 				$wpdb->query("DELETE FROM ".$wpdb->term_relationships." where object_id = '".$a->postid."'");
 			}
 		}

@@ -2,7 +2,7 @@
 Contributors: ClickSold
 Tags: idx, vow, rets, real estate, mls, realtor, listing, listings, craigslist, rental, google map, agent, broker, properties, trulia, zillow, dsidx
 Requires at least: 3.0.0
-Tested up to: 3.5.2
+Tested up to: 3.7.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -57,6 +57,11 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
+
+
+= 1.46 =
+* CS now correctly cleans up menu item posts when being deactivated assuming that the allow CS to update menus option is on.
+* CS now correctly re-links manually specified menu items corresponding to it's pages during a deactivation / reactivation cycle.
 
 = 1.45 =
 * Fix IDX Quick Search Widget.

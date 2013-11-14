@@ -213,6 +213,23 @@ function cs_save_cs_post_state( $prefix ) {
 		$cs_posts_state[ $prefix ]['post_meta'][ $wp_page_meta_value->meta_key ] = $wp_page_meta_value->meta_value;
 	}
 
+	/** Save the id's of ALL menu items pointing at this post. --------------------------------------- */
+	// Menu items are linked to the posts via the postmeta table where the meta_key == '_menu_item_object_id' so to get the menu item's post_ids (menu items are also stored in the posts table)
+	// we need all of the postmeta values where meta_key == '_menu_item_object_id' and meta_value = '<the id of the page we are saving state for>'
+	// NOTE: The above section where it saves the post_meta ONLY saves the post meta for the actual post we're saving the state for -- this will save the post id's of any menu items that 'point' to the
+	// post that we're saving the state for.
+	$post_menu_items = $wpdb->get_results("select * from ".$wpdb->postmeta." where meta_key = '_menu_item_object_id' and meta_value = '".$cs_post_record->postid."';");
+
+	// Create a list of all of the post id's that represent the menu items that point at this post (the one we're saving state for).
+	$menu_items_that_point_at_this_post = array();
+	foreach ( $post_menu_items as $post_meta ) {
+
+		$menu_items_that_point_at_this_post[ $post_meta->post_id ] = $post_meta->post_id;
+	}
+	
+	// Save this list along with the post's state.
+	$cs_posts_state[ $prefix ]['menu_items_that_point_at_this_post'] = $menu_items_that_point_at_this_post;
+	
 	// Save back and we're done.
 	update_option( "cs_posts_state", $cs_posts_state );
 }
@@ -287,6 +304,17 @@ function cs_restore_cs_post_state( $prefix ) {
 		foreach( $cs_posts_state[ $prefix ]['post_meta'] as $post_meta_key => $post_meta_value ) {
 			
 			$wpdb->query('INSERT INTO '.$wpdb->postmeta.' (post_id, meta_key, meta_value) VALUES ("'.$cs_post_record->postid.'", "'.$post_meta_key.'", "'.$post_meta_value.'")');
+		}
+	}
+
+	// Re-link any menu items that were pointing at this post.
+	if( isset( $cs_posts_state[ $prefix ]['menu_items_that_point_at_this_post'] ) ) {
+	
+		// These ar the post id's of the menu items that were pointing at the cs post that we're restoring.
+		foreach( $cs_posts_state[ $prefix ]['menu_items_that_point_at_this_post'] as $menu_item_post_id ) {
+			
+			// Update the menu item's post metadata so that it now points to the new post that we've just created.
+			update_post_meta( $menu_item_post_id, '_menu_item_object_id', $cs_post_record->postid );
 		}
 	}
 
