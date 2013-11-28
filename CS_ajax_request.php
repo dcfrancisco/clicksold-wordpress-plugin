@@ -82,7 +82,7 @@ class CS_ajax_request{
 			$this->request_vars = substr($this->request_vars , 8);
 			$cs_request = new CS_request( $this->request_vars, $CS_SECTION_CAPTCHA_IMG_PARAM_CONSTANT );
 			$cs_response = new CS_response( $cs_request->request( 'GET' ), $CS_SECTION_CAPTCHA_IMG_PARAM_CONSTANT );
-		} else if( $this->is_admin_request() ) {	
+		} else if( $this->is_admin_request() == true ) {	
 			// *** SPECIAL CASE ***
 			//If this is a listing details request, we need to have the request send in all the sections to construct the url
 			// Also if the caller has specifically requested that that all section names be sent (used to send debug info)

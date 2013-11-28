@@ -18,9 +18,18 @@ if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
 		$("#<?php echo $this->get_field_id("") ?>container").FeatureListingWidget({
 			plugin : true,
 			ajaxTarget : "<?php echo plugins_url( 'CS_ajax_request.php', dirname(__FILE__) ) ?>",
-<?php if($this->BROKERAGE === false) { ?>
-			listingSection : <?php echo $instance['listing_section']; ?>,
-<?php } ?>			
+			listingSection : "<?php echo $instance['listing_section']; ?>",
+<?php if(!empty($instance['user_defined_listings'])) { ?>
+			userDefinedListings : [
+<?php   foreach($instance['user_defined_listings'] as $index => $mlsNum) {
+          if($index == count($instance['user_defined_listings']) - 1) { ?>
+				"<?php echo $mlsNum ?>"
+<?php     } else { ?>
+				"<?php echo $mlsNum ?>",
+<?php     } ?>
+<?php   } ?>
+			],
+<?php } ?>
 			listingType : <?php echo $instance['listing_type']; ?>,
 			listingStatus : "<?php echo $instance['listing_status']; ?>",
 			listingUrl : "<?php echo $listings_url; ?>",

@@ -15,7 +15,7 @@ $cs_plugin_type = 'cs_listings_plugin';
 
 require_once('cs_constants.php');
 
-global $cs_db_version; 
+global $cs_db_version;
 $cs_db_version =  "1.1"; //change this db version,deactivate,activate the plugin
 			  //to regenerate the table that it uses
 
@@ -59,13 +59,13 @@ $cs_autoblog_sold_content = 'cs_autoblog_sold_content';
 // CS delayed shortcode insertion system - this holds the captured output of cs_shortcodes if this option is being used.
 global $cs_delayed_shortcodes_captured_values;
 
-// initial values for this plugin. By default the plugin key 
+// initial values for this plugin. By default the plugin key
 // and plugin number are empty. These values can be updated
 // once the plugin is activated by calling ClickSold.
 global $cs_plugin_options;
 $cs_plugin_options = array(
-  $cs_opt_plugin_key     => "", 
-  $cs_opt_plugin_num     => "", 
+  $cs_opt_plugin_key     => "",
+  $cs_opt_plugin_num     => "",
   $cs_opt_brokerage => "0",
   $cs_change_products_request => "0",
   $cs_autoblog_new => "0",
@@ -76,7 +76,7 @@ $cs_plugin_options = array(
   $cs_autoblog_new_content => $cs_autoblog_default_post_content_active,
   $cs_autoblog_sold_title => $cs_autoblog_default_post_title_sold,
   $cs_autoblog_sold_content => $cs_autoblog_default_post_content_sold
-);   
+);
 
 global $cs_logo_path;
 $cs_logo_path = plugins_url("orbGreen.png", __FILE__);
@@ -105,7 +105,7 @@ require_once('CS_utilities.php');
 require_once(ABSPATH. 'wp-includes/pluggable.php');
 
 //hook add_query_vars function to query_vars.
-//query_vars: applied to the list of public WordPress query variables before the SQL query is formed. 
+//query_vars: applied to the list of public WordPress query variables before the SQL query is formed.
 //            Useful for removing extra permalink information the plugin has dealt with in some other manner.
 add_filter('query_vars', 'cs_add_query_vars');
 function cs_add_query_vars($aVars) {
@@ -113,14 +113,14 @@ function cs_add_query_vars($aVars) {
 	global $wpdb;
 	global $cs_posts_table;
 	$table_name = $wpdb->prefix . $cs_posts_table;
-	
+
 	//grab each parameter from the db and add it to list of query variables. Using GROUP BY
 	//clause here since we want to eliminate the duplicate parameters
 	$result = $wpdb->get_results("SELECT parameter FROM $table_name GROUP BY parameter" );
 	foreach($result as $parameter){
 		$aVars[] = $parameter->parameter;
 	}
-	
+
 	return $aVars;
 }
 
@@ -129,7 +129,7 @@ add_filter('rewrite_rules_array', 'cs_add_rewrite_rules');
 function cs_add_rewrite_rules($aRules) {
 	global $wpdb;
 	global $cs_posts_table;
-		
+
 	//get all posts we know are from ClickSold. Query wp_cs_posts and wp_posts.
 	$cs_posts = $wpdb->get_results( "SELECT postid FROM " . $wpdb->prefix . $cs_posts_table . " GROUP BY postid" ); //gets unique post ids
 	$wp_posts = $wpdb->get_results( "SELECT ID, post_title, post_name, post_parent FROM $wpdb->posts WHERE ID IN (" . cs_generate_list_from_wpdb_result( $cs_posts, 'postid', ', ' ) . ")" );
@@ -153,7 +153,7 @@ function cs_add_rewrite_rules($aRules) {
 		$aNewRules = $cs_rewrite->getRewriteRuleArray();
 		$aRules = $aNewRules + $aRules;
 	}
-	
+
 	//above lines actually generate the commented out code below, but, dynamically!
 	/*$aNewRules = array('listings/?$' => 'index.php?pagename=listings',
                'listings/([^/]+)/?$' => 'index.php?pagename=listings&mlsnum=$matches[1]',
@@ -161,32 +161,32 @@ function cs_add_rewrite_rules($aRules) {
 	       'neighbourhoods/([^/+]+)/?$' => 'index.php?pagename=neighbourhoods&neighbourhood=$matches[1]');
 
 	$aRules = $aNewRules + $aRules;*/
-		
+
 	return $aRules;
 }
 
 /**
  * Init the session early (needed so the cs plugin server does not need to generate a new session for each request).
- * 
+ *
  * If the cs_opt_use_cookies_instead_of_sessions option is set this will set a cookie as opposed to initializing the session.
  */
 if(! function_exists('cs_init_session') ) {
 	function cs_init_session() {
-		
+
 		if( !get_option( 'cs_opt_use_cookies_instead_of_sessions', 0 ) ) { // Use regular sessions.
 			if(!session_id()){
 				session_start();
 			}
 		} else { // Use cookie based user tracking (for hosts that don't support php sessions).
-			
+
 			if(! isset($_COOKIE['cs_login'] ) ) {
-				
+
 				// Grab a new cookie value.
 				$cs_login_cookie_val = "cs_login_" . time();
-				
+
 				// Set the cookie.
 				setcookie( 'cs_login', $cs_login_cookie_val);
-				
+
 				// Store it in the COOKIE global so we don't have to worry about passing it along.
 				$_COOKIE['cs_login'] = $cs_login_cookie_val;
 			} else { // Else we already have a cookie, re-set it if it's too old.
@@ -226,14 +226,14 @@ function check_product_update(){
 	global $cs_opt_tier_name;
 	global $cs_opt_plugin_key;
 	global $cs_opt_plugin_num;
-	
+
 	if ( get_option( $cs_change_products_request ) == "1" && !get_option( $cs_opt_plugin_key, "" ) == "" && !get_option( $cs_opt_plugin_num, "" ) == "" ) {
-		
+
 		//make request to RPM server about allowed features
 		$cs_request = new CS_request( "tier_validate", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); //error_log( "Response: " . print_r( $cs_request->request(), true ) );
 		$cs_response = new CS_response( $cs_request->request() );
 		if( $cs_response->is_error() ) return;
-		
+
 		$vars = $cs_response->cs_set_vars(); // error_log( "vars: " . print_r( $vars, true ) );
 
 		if(empty($vars)) {
@@ -245,15 +245,15 @@ function check_product_update(){
 			}
 			return;
 		} else {
-			
+
 			// 2012-10-02 EZ - This has been replaced by a change in CS_ajax_request.php. If we are processing a call that could have changed the configuration
 			// we set the $cs_change_products_request AFTER the call has completed. The next plugin request (and we don't care if it's back or front office) will
 			// re-configure the plugin and clear the $cs_change_products_request flag.
-			
+
 			//// Compare Tier Name & Brokerage Flag with WordPress db values - if they match, exit without unsetting the cs_change_products_request flag.
-			//// Note that this is to prevent the plugin from being given old configuration data when the site is hit during the upgrade process. 
+			//// Note that this is to prevent the plugin from being given old configuration data when the site is hit during the upgrade process.
 			//$brokerage = (bool) get_option("cs_opt_brokerage", 0);
-			//if( $vars['tierName'] == get_option("cs_opt_tier_name") && 
+			//if( $vars['tierName'] == get_option("cs_opt_tier_name") &&
 			//  ($brokerage && $vars['brokerage'] == "true" ||
 			//  !$brokerage && $vars['brokerage'] == "false") ) {
 			//	return false;
@@ -269,11 +269,11 @@ function check_product_update(){
 
 		// For each section (tier_feature ie: idx, associates), update the status / diaplay of the associated pages.
 		foreach( $CS_SECTION_PARAM_CONSTANTS as $tier_feature ) {
-			
+
 			$feature_post_id = $wpdb->get_var('SELECT postid FROM ' . $wpdb->prefix . "cs_posts" . ' WHERE PREFIX = "' . $tier_feature . '"');
 
 			if ( $feature_post_id > 0 && $vars[$tier_feature] != "" ) { // If this tier_feature has an associated post AND it's one of the tier_features reported by the cs server.
-				
+
 				$postStatus = ( $vars[$tier_feature] === "true" && ( !isset( $cs_posts_desired_statuses[$tier_feature] ) || $cs_posts_desired_statuses[$tier_feature] == "publish" ) )?"publish":"private";	// All posts associated with available features are set to publish, if not available set to private (this keeps them in or out of dynamically created menus) -- unless of course an available feature marked as do not show.
 				$wpdb->update( $wpdb->posts, array( "post_status" => $postStatus ), array( "ID" => $feature_post_id ), array( "%s" ), array( "%d" ) );
 				$wpdb->update( $wpdb->prefix . "cs_posts", array( "available" => ( $vars[$tier_feature] === "true" )?"1":"0" ), array( "postid" => $feature_post_id ), array( "%s" ), array( "%d" ) ); // The available field on the cs_posts table controls which sections of the cs back office are disabled.
@@ -288,14 +288,13 @@ function check_product_update(){
 				if( $vars[$tier_feature] !== "true" ) {
 
 					// Find and remove all of the menu references to this feature's post.
-					foreach( wp_get_associated_nav_menu_items( $feature_post_id ) as $feature_menu_item_id ) {
+					foreach( wp_get_associated_nav_menu_items( $feature_post_id, 'post_type', page ) as $feature_menu_item_id ) {
 
-						$wpdb->query( "DELETE from ".$wpdb->posts." WHERE ID = '".$feature_menu_item_id."'" );
-						$wpdb->query( "DELETE from ".$wpdb->postmeta." WHERE post_id = '".$feature_menu_item_id."'" );
-						$wpdb->query( "DELETE from ".$wpdb->term_relationships." WHERE object_id = '".$feature_menu_item_id."'" );
+						// Now we can use the wp_delete_post to delete the 'post' that is really the menu item.
+						wp_delete_post( $feature_menu_item_id );
 					}
 				} else if( $vars[$tier_feature] === "true" && count( wp_get_associated_nav_menu_items( $feature_post_id ) ) == 0 ) { // If the feature of the page is available but has no associated menu items we have to add it to the custom menus.
-					
+
 					// Add the page to the menus.
 					if( get_option("cs_allow_manage_menus", 1) ) {
 						cs_add_post_to_custom_menus( $feature_post_id, 'page', $postStatus ); // We know that these are pages as we don't have feature dependant posts.
@@ -303,7 +302,7 @@ function check_product_update(){
 				}
 			}
 		}
-		
+
 		if (($vars["isWaitingForUpdate"] != "") && ($vars["isWaitingForUpdate"] == "false")) {
 			update_option($cs_change_products_request, "0");
 		}
@@ -314,7 +313,7 @@ function check_product_update(){
 
 	}
 }
-	
+
 $post_param = "";
 $page_vars = array();  //Global Variable for holding page variables
 $meta_config = array();
@@ -338,13 +337,13 @@ function attempt_autologin_auth(){
 
 /**
  * WP Login and Logout hooks. Used to report the fact that a user that can admin cs as defined by the 'cs_current_user_can_admin_cs' routine has logged in or out.
- * 
+ *
  * The plugin server needs to know this as now we have some admin components that appear in the front office as opposed to being called from the back office. Before
  * we could just assume that if we are hitting the Admin controller then that we are autorized to do so.
  */
 add_action('wp_login', 'cs_wp_login');
 function cs_wp_login($user_login) {
-		
+
 	/**
 	 * NOTE NOTE NOTE: This routine has everything disabled. During the login process none of this seems to work. Note this is not an issue. Each and any request from the
 	 * wp_admin section to the admin controller will let it know that an authorized user is logged in. This works because plugins as of 1.27 are not capable of hitting the
@@ -352,18 +351,18 @@ function cs_wp_login($user_login) {
 	 */
 
 //	// Only report if the user can cs_current_user_can_admin_cs
-//	
+//
 //	/** NOTE: We can't use cs_current_user_can_admin_cs() here as the current_user_can(xyz) does not work yet. */
 //	/** NOTE: 2 supposidly we're supposed to get the user object as well but that does not seem to be happening, so all we have to play with is the user_login. **/
 //	$user = get_userdatabylogin( $user_login );
 //
-//	/** WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+//	/** WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 //	    This here duplicates the functionality of cs_current_user_can_admin_cs if this is updated that has to be updated as well. **/
 //	if( user_can( $user->ID, 'manage_options' ) ) {
 //
 //		// Needed to actually make the call.
 //		require_once('cs_constants.php');
-//		
+//
 //		// Report that the user has logged in (This is done by performing any admin request, the response is never going to be used so it does not have to be a correct request)
 //		$request = new CS_request( "", "wp_admin" ); // Note we use the bare 'wp_admin' instead of using the constant $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] as the constants have not been loaded yet!
 //		$request->request();
@@ -372,12 +371,12 @@ function cs_wp_login($user_login) {
 
 add_action('wp_logout', 'cs_wp_logout');
 function cs_wp_logout() {
-	
+
 	global $CS_SECTION_ADMIN_PARAM_CONSTANT;
-	
+
 	// Only report if the user can cs_current_user_can_admin_cs
 	if( cs_current_user_can_admin_cs() ) {
-		
+
 		// Report that the user has logged out.
 		$request = new CS_request( "pathway=407", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); // 407 corresponds to SystemInfo.RPM_PLUGIN_ADMIN_REPORT_WP_ADMIN_LOGOUT
 		$request->request();
@@ -389,10 +388,10 @@ function cs_wp_logout() {
  */
 add_action('save_post', 'cs_save_post');
 function cs_save_post( $post_id ) {
-	
+
 	// http://codex.wordpress.org/Plugin_API/Action_Reference/save_post states that these could be revisions and instructs us to use wp_is_post_revision() - because this could just be a revision.
 	if ( !wp_is_post_revision( $post_id ) ) {
-		
+
 		// NOTE: We have to refresh the permalinks even if we are updating a non CS post... this is because we could be updating the name or parent child relationship of a non cs post that is the parent of a cs post.
 		global $wp_rewrite;
 		$wp_rewrite->flush_rules(); // flush_rules calls the rewrite_rules_array hook for which we have a handler that adds the custom rewrite rules for our custom CS pages.
@@ -413,15 +412,15 @@ function cs_mobile_site_disabled() {
 
 // hijack the post action only if we are in the front of the website
 if( !is_admin() ){
-	
+
 	global $wp_rewrite;
-	
+
 	// Canonical redirects need to be turned off or some of our custom urls will not work
 	if(get_option("permalink_structure")) remove_filter('template_redirect', 'redirect_canonical');
-	
+
 	// Check if we need to blog listing updates
 	add_action('pre_get_posts', 'cs_listing_auto_blog_update');
-			
+
 	// For handling mobile site stuff
 	if(isset($_SERVER['HTTP_USER_AGENT'])) {
 		if((stripos(basename($_SERVER['REQUEST_URI']), 'cs_mobile.php') === FALSE) && (!isset($_COOKIE["csFullSite"]) || $_COOKIE["csFullSite"] != "true") && (strpos($_SERVER['HTTP_USER_AGENT'], 'iPad') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPod') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'BlackBerry') !== FALSE) ){
@@ -434,22 +433,22 @@ if( !is_admin() ){
 	// For handling VIP confirmation links
 	if(!empty($_GET["pathway"]) && !empty($_GET["email_addr"]) && !empty($_GET["confirmationCode"])){
 		add_action('parse_query', 'cs_process_vip_confirmation', 5);
-		
+
 	// For handling VIP saved search links
 	}else if(!empty($_GET["s_s"])){
 		add_action('init', 'cs_saved_search_redirect', 5);
-		
+
 	// For handling email clicks
 	}else if(isset($_GET["em"]) && isset($_GET["z"]) && isset($_GET["uid"]) && isset($_GET["out"])){
 		add_action('init', 'cs_process_email_click', 5);
-		
+
 	// Normal page handling
 	}else{
 		// Adds inline javascript that changes masked domains to their original urls
 		add_action('parse_query', 'cs_process_cs_section_posts', 5); 	// ClickSold section posts are processed in parse_query because they need to be able to set the title.
-		add_action('wp', 'cs_process_cs_shortcode_posts'); 	// ClickSold shortcodes are processed when we are processing the post itself.	
+		add_action('wp', 'cs_process_cs_shortcode_posts'); 	// ClickSold shortcodes are processed when we are processing the post itself.
 	}
-		
+
 	/**
 	 * Checks options to see if we should run the listing auto blogger
 	 */
@@ -459,11 +458,11 @@ if( !is_admin() ){
 		global $cs_autoblog_sold;
 		global $cs_autoblog_last_update;
 		global $cs_autoblog_freq;
-		
+
 		//DEBUG - could possibly just leave it here and prevent these options from being added on plugin init
 		if( get_option($cs_autoblog_new) === false ) { add_option($cs_autoblog_new, "0"); }
 		if( get_option($cs_autoblog_sold) === false ) { add_option($cs_autoblog_sold, "0"); }
-		
+
 		if( get_option($cs_autoblog_new) == "1" || get_option($cs_autoblog_sold) == "1" ) {
 			$last_update = get_option($cs_autoblog_last_update);
 			if(!empty($last_update)){
@@ -472,13 +471,13 @@ if( !is_admin() ){
 				$last_update = intval($last_update);
 				$freq = get_option($cs_autoblog_freq);
 				$days = 0;
-				
+
 				// Get number of days since last update
 				while($last_update < $now) {
-					$last_update = strtotime(date('Y-m-d', $last_update) . " +1 day"); 
+					$last_update = strtotime(date('Y-m-d', $last_update) . " +1 day");
 					$days++;
 				}
-				
+
 				//Skip update if number of days is not past the frequency (days before next update)
 				if( $days < $freq ) return;
 			}
@@ -487,58 +486,58 @@ if( !is_admin() ){
 			$cs_utils->listing_autoblog_get_listing_posts();
 		}
 	}
-	
+
 	function cs_saved_search_redirect(){
 		global $wpdb;
 		global $CS_SECTION_PARAM_CONSTANTS;
 		global $wp_rewrite;
-		
+
 		// Get / construct MLS search URL
 		$cs_posts = $wpdb->prefix . "cs_posts";
 		$pageid = $wpdb->get_var('SELECT postid FROM ' . $cs_posts . ' WHERE prefix = "' . $CS_SECTION_PARAM_CONSTANTS['listings_pname']  . '"');
-		
+
 		if(is_null($pageid)) return;
-		
+
 		$vars = $_GET;
 		unset($vars['s_s']);  // Safe to keep but let's remove it anyways
 		//$link = get_page_uri($pageid);
 		$link = get_permalink($pageid);
-		
+
 		if(empty($link)) return;
-		
+
 		if($wp_rewrite->using_permalinks()){
 			$link .= "?" . http_build_query($vars);
 		}else{
 			$link .= "&" . http_build_query($vars);
 		}
-		
+
 		//error_log("Listings Saved Search URI: " . $link);
-		
+
 		// Run redirect to site
 		echo "<script type=\"text/javascript\">";
 		echo "location.href=\"" . $link . "\";";
 		echo "</script>";
 	}
-	
+
 	function cs_process_email_click(){
 		global $wpdb;
 		global $CS_SECTION_PARAM_CONSTANTS;
 		global $wp_rewrite;
-		
+
 		$vars = $_GET;
 		$vars['pathway'] = '640';
-		
+
 		$cs_request = new CS_request(http_build_query($vars), "");
 		$cs_response = new CS_response($cs_request->request());
-		
+
 		$protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
-		
+
 		// Run redirect to site
 		echo '<script type="text/javascript">';
 		echo 'location.href="' . $protocol . '://' . $_SERVER['HTTP_HOST'] . '";';
 		echo '</script>';
 	}
-	
+
 	/**
 	* Removes the edit link from the template itself if the current page is one generated from this plugin.
 	*/
@@ -546,19 +545,19 @@ if( !is_admin() ){
 	function remove_edit_post_link( $link ){
 		global $wpdb;
 		global $wp_admin_bar;
-		
+
 		if(!in_the_loop()) wp_reset_query();
-		
+
 		$cs_posts = $wpdb->prefix . "cs_posts";
 		$cs_page_ids = $wpdb->get_col('SELECT postid FROM ' . $cs_posts);
-		
+
 		if(is_page($cs_page_ids)){
-			return ''; 
+			return '';
 		}else{
 			return $link;
 		}
 	}
-		
+
 	/**
 	* Removes the "Edit Page" link from the admin bar if the current page is one generated from this plugin.
 	*/
@@ -566,12 +565,12 @@ if( !is_admin() ){
 	function remove_admin_bar_edit(){
 		global $wpdb;
 		global $wp_admin_bar;
-		
+
 		if(!in_the_loop()) wp_reset_query();
-		
+
 		$cs_posts = $wpdb->prefix . "cs_posts";
 		$cs_page_ids = $wpdb->get_col('SELECT postid FROM ' . $cs_posts);
-		
+
 		if(is_page($cs_page_ids)) $wp_admin_bar->remove_menu('edit');
 	}
 
@@ -597,9 +596,9 @@ if( !is_admin() ){
 			return $the_content;
 		}
 	}
-	
+
 	/**
-	 * Surrounds the contents of the page with a div wrapper for use with our styles. 
+	 * Surrounds the contents of the page with a div wrapper for use with our styles.
 	 * Used in conjunction with add_filter - the_content
 	 * @param unknown_type $content
 	 */
@@ -614,20 +613,20 @@ if( !is_admin() ){
 	 */
 	function cs_process_vip_confirmation( $wp_query ){
 		global $CS_SECTION_PARAM_CONSTANTS;
-		
+
 		remove_action('parse_query', 'cs_process_vip_confirmation', 5);
 		$cs_request = new CS_request(http_build_query($_GET), $CS_SECTION_PARAM_CONSTANTS["listings_pname"]);
 		$cs_response = new CS_response($cs_request->request());
-		
+
 		// Stop processing if connection was lost
 		if( $cs_response->is_error() ) return;
-		
+
 		// make sure the_content hook calls our functions to load the response in the appropriate spot
 		add_action("wp_head", array($cs_response, "cs_get_header_contents_linked_only"), 0);
 		add_action("wp_head", array($cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the enqueue stuff.
 		add_action("wp_footer", array($cs_response, "cs_get_footer_contents"), 0);
 	}
-	
+
 	/**
 	 * Function that allows post queries on private pages to be added to the loop
 	 */
@@ -636,7 +635,7 @@ if( !is_admin() ){
 		remove_filter('posts_fields_request', 'cs_get_private_page', 0);
 		return str_replace(
             "$wpdb->posts.*", "$wpdb->posts.ID, $wpdb->posts.post_author, $wpdb->posts.post_date, " .
-			"$wpdb->posts.post_date_gmt, $wpdb->posts.post_content, $wpdb->posts.post_title, $wpdb->posts.post_excerpt, " . 
+			"$wpdb->posts.post_date_gmt, $wpdb->posts.post_content, $wpdb->posts.post_title, $wpdb->posts.post_excerpt, " .
 			"REPLACE( $wpdb->posts.post_status, 'private', 'publish' ) AS `post_status`, $wpdb->posts.comment_status, " .
 			"$wpdb->posts.ping_status, $wpdb->posts.post_password, $wpdb->posts.post_name, $wpdb->posts.to_ping, " .
 			"$wpdb->posts.pinged, $wpdb->posts.post_modified, $wpdb->posts.post_modified_gmt, $wpdb->posts.post_content_filtered, " .
@@ -644,18 +643,18 @@ if( !is_admin() ){
             "$wpdb->posts.post_mime_type, $wpdb->posts.comment_count", $params
         );
 	}
-	
+
 	/**
 	 * process the request as an cs request if the post id matches
 	 * one of the ClickSold Plugin sections.
 	 */
 	function cs_process_cs_section_posts( $wp_query ){
-		
+
 		/** 2013-05-06 EZ - Note added this junk add action so that when we remove the cs_process_cs_section_posts hook the 5 level does not get empty. The Thesis theme
 		 * framework freaks out if we remove this action from the '5' priority level therefore leaving that level blank. */
 		add_action("parse_query", "cs_null_function", 5);
 		remove_action('parse_query', 'cs_process_cs_section_posts', 5);
-		
+
 		global $wpdb;
 		global $wp_rewrite;
 		global $cs_response;
@@ -664,50 +663,50 @@ if( !is_admin() ){
 		global $cs_opt_tier_name;
 		global $cs_opt_brokerage;
 		global $CS_SECTION_PARAM_CONSTANTS;
-		
+
 		// Global vars needed for configuring meta tags
 		global $post_param;
 		global $page_vars;
 		global $meta_config;
-				
+
 		/** Check for and process ClickSold Section pages (eg: listings/, communities/ or idx/). **/
 
 		$table_name = $wpdb->prefix . $cs_posts_table;
-		
+
 		// We fetch the post id differently depending on if permalinks are enabled or not.
 		if( $wp_rewrite->using_permalinks()) {
 
 			// Note calling get_queried_object_id directly confuses some other plugins.
 			$post_id = cs_get_queried_object_id($wp_query);
-			
+
 			//Check to see if this is one of our pages as the front page.
 			//Note that we can't use is_front_page() as it is too early in the loop
 			//to get the proper response.
 			if(empty($post_id)) $post_id = $wp_query->query_vars["page_id"];
-			
+
 		} else $post_id = $wp_query->get( "page_id" ); // NOTE: calling $wp_query->get_queried_object_id() does NOT work here... likely too early in the processing.
-		
+
 		//error_log(print_r( $wp_query, true ));
 		// print ( "<br>(" . $post_id . ")<br>" );
-		
+
 		if(!empty($post_id)){
 			$result = $wpdb->get_row( "SELECT postid, defaultpage, prefix, parameter, header_title, header_desc, header_desc_char_limit FROM $table_name WHERE postid = $post_id", ARRAY_A );
-			
+
 			if($result != null){
-				
+
 				// The post matches one that cs added for the user
 				// process the request using the cs plugin server.
 				if($result['postid'] == $post_id){
 					$cs_org_req = "";
 					$post_param = $result['parameter'];
 					$force_private_page_load = false;
-					
+
 					if(array_key_exists($result['parameter'], $wp_query->query_vars)) {
 						$param = $wp_query->query_vars[$result['parameter']];
 					} else {
 						$param = "";
 					}
-					
+
 					if(!empty($param)){
 						$cs_org_req = $param;
 						// If present, append GET query string to cs_org_req
@@ -715,42 +714,42 @@ if( !is_admin() ){
 						if(!empty($_GET)){
 							$cs_org_req .= "?" . http_build_query($_GET);
 						}
-						
+
 						// Set force page load flag to true if we're looking for listing details or community search results
 						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname'] ||
-						   $result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['community_pname']) 
+						   $result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['community_pname'])
 							$force_private_page_load = true;
-						
+
 					// If no parameters were returned from the database, give cs_org_req the value of the GET query string if available
-					}else if(!empty($_GET)){ 
+					}else if(!empty($_GET)){
 						$cs_org_req = http_build_query($_GET);
-						
+
 						// Set force page load flag to true if we're looking for listing details
 						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['listings_pname'] &&
 						   (stripos($cs_org_req, '&mlsnum=') !== false || stripos($cs_org_req, '&listnum=') !== false )) $force_private_page_load = true;
-						
+
 						// Set force page load flag to true if we're looking for listing details
 						if($result['prefix'] == $CS_SECTION_PARAM_CONSTANTS['community_pname'] &&
 						   (stripos($cs_org_req, '&city=') !== false && stripos($cs_org_req, '&neigh=') !== false )) $force_private_page_load = true;
-						
+
 					// If this page was set as a front page, we need to feed in the request manually
-					}else if($post_id == get_option( "page_on_front" ) && !$wp_rewrite->using_permalinks()){ 
+					}else if($post_id == get_option( "page_on_front" ) && !$wp_rewrite->using_permalinks()){
 						$cs_org_req = "page_id=" . $post_id;
 					}
-					
+
 					// K, here we skip calls to the plugin server if we're just requesting resource files.
 					if( preg_match( '/\.png$|\.gif$/s', $cs_org_req ) ) { // If it's any of the known types.
 						return;
 					}
-					
+
 					$cs_request = new CS_request($cs_org_req, $result['prefix']);
 					$cs_response = new CS_response($cs_request->request());
-					
+
 					if(!$cs_response->is_error()) {
-						
+
 						$page_vars = $cs_response->cs_set_vars();
 						$meta_config = array('header_title' => $result['header_title'], 'header_desc' => $result['header_desc'], 'header_desc_char_limit' => $result['header_desc_char_limit']);
-						
+
 						// Configure the account type based on the account config value given
 						/*
 						if(!empty($page_vars)) {
@@ -758,10 +757,10 @@ if( !is_admin() ){
 							$cs_config->cs_plugin_check_brokerage($page_vars);
 						}
 						*/
-						
+
 						// Force the request to show a CS generated page if set to private
 						if($force_private_page_load == true) add_filter('posts_fields_request', 'cs_get_private_page', 0);
-						
+
 						// make sure the_content hook calls our functions to load the response in the appropriate spot
 						add_filter("wp_title", "cs_set_head_title", 0);
 						add_action("wp_head", "cs_set_meta_desc", 1);
@@ -769,12 +768,12 @@ if( !is_admin() ){
 						add_action("wp_head", array($cs_response, "cs_get_header_contents_linked_only"), 0);
 						add_action("wp_head", array($cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the enqueue stuff.
 						add_action("wp_footer", array($cs_response, "cs_get_footer_contents"), 0);
-						
+
 						// For CS page content we don't want it to get filtered by anything else. So we set the priority to a high number so our stuff gets ran LAST.
 						// 2012-08-29 EZ - no longer required now that we've set our the_content filters to 101 and 102 --- remove_filter("the_content", "wpautop");  //This line prevents wordpress from replacing double line breaks with <br> tags i.e. messes up the pagination sections in listing results views
 						add_filter("the_content", array($cs_response, "get_body_contents"), 101);
 						add_filter("the_content", "cs_styling_wrap", 102); //This line wraps all content around a div so our styles can take precedence over the template styles
-					} else { 
+					} else {
 						// Show connection timeout error message
 						add_filter("the_content", array($cs_response, "get_body_contents"), 101);
 					}
@@ -782,7 +781,7 @@ if( !is_admin() ){
 			}
 		}
 	}
-	
+
 	/**
 	 * Process the request as an ClickSold request if the content contains any cs_shortcodes.
 	 */
@@ -792,15 +791,15 @@ if( !is_admin() ){
 			$cs_shortcodes->cs_process_cs_shortcode_posts( $wp ); // Defer to the shortcodes class for this as the code is similar between our plugins.
 		}
 	} # End if function_exists
-			
+
 	/**
 	 * Sets the meta title tag for ClickSold generated pages
 	 */
 	function cs_set_head_title($title){
-		
+
 		// 2013-07-05 EZ - Genesis does not do it's filter correctly on pages (eg: listings/) where we should not be changing the title. So this is moved below once we know that we are actually responsible for updating the title.
 		//remove_filter("wp_title", "cs_set_head_title", 0);
-		
+
 		global $post;
 		global $wp_query;
 		global $CS_VARIABLE_LISTING_META_TITLE_VARS;
@@ -808,16 +807,16 @@ if( !is_admin() ){
 		global $CS_VARIABLE_ASSOCIATE_META_TITLE_VARS;
 		global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
 		global $CS_VARIABLE_LISTING_META_OG;
-		
+
 		global $page_vars;
 		global $meta_config;
 		global $post_param;
-		
+
 		$options = array();
-		
+
 		//Return the original title if any of the required config arrays are empty
 		if(empty($page_vars) || empty($meta_config) || empty($post_param)) return $title;
-		
+
 		// Below the above line we know that we are reponsible for the title update.
 		remove_filter("wp_title", "cs_set_head_title", 0); // 2013-07-05 EZ - I have no idea why this removes the Genesis filters but it appears to be doing just that.
 
@@ -830,10 +829,10 @@ if( !is_admin() ){
 		}else if($post_param == $CS_GENERATED_PAGE_PARAM_CONSTANTS['associates']){
 			$options = $CS_VARIABLE_ASSOCIATE_META_TITLE_VARS;
 		}
-		
+
 		// This is the configured format.
 		$cs_title = $meta_config['header_title'];
-		
+
 		// If the cs_title configured format is blank, we can just quit right here as there is nothing for us to do.
 		if( $cs_title == '' ) return;
 
@@ -842,7 +841,7 @@ if( !is_admin() ){
 			if(strpos($cs_title, $value) !== false){
 				$cs_title = str_replace($value, $page_vars[$key], $cs_title);
 			}
-			
+
 			$offset = strlen($cs_title) - strlen($value);
 			if(($offset >= strlen($cs_title) || $offset >= strlen($value)) && $offset < 1){
 				if($cs_title == $value){ $cs_title = $page_vars[$key]; }
@@ -852,7 +851,7 @@ if( !is_admin() ){
 				$cs_title = substr_replace($cs_title, $page_vars[$key], $offset, strlen($value));
 			}
 		}
-		
+
 		return $cs_title . " ";
 	}
 
@@ -860,38 +859,38 @@ if( !is_admin() ){
 	 * Sets the meta description tag for ClickSold generated pages
 	 */
 	function cs_set_meta_desc(){
-		
+
 		global $CS_VARIABLE_LISTING_META_DESC_VAR;
 		global $CS_VARIABLE_ASSOCIATE_META_DESC_VAR;
 		global $CS_VARIABLE_COMMUNITY_META_TITLE_VARS;  //Title vars are also available for description
 		global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
 		global $CS_VARIABLE_LISTING_META_OG;
-		
+
 		global $post;
 		global $wp_query;
-		
+
 		global $post_param;
 		global $page_vars;
 		global $meta_config;
-		
+
 		$options = array();
-				
+
 		if(empty($page_vars) || empty($meta_config) || empty($post_param)) return;
-		
+
 		$char_limit = (int) $meta_config['header_desc_char_limit'];
-		
-		if($char_limit <= 0){ 
+
+		if($char_limit <= 0){
 			return;
 		}else if($char_limit > 200){
 			$char_limit = 200;
 		}
-		
+
 		// This is the configured format.
 		$content = $meta_config['header_desc'];
-		
+
 		// If the content configured format is blank, we can just quit right here as there is nothing for us to do.
 		if( $content == '' ) { return; }
-		
+
 		/* NOTE: Subject to change once we decide on keying pages for use with this *
 		 * plugin                                                                   */
 		if($post_param == $CS_GENERATED_PAGE_PARAM_CONSTANTS['listings']){
@@ -901,28 +900,28 @@ if( !is_admin() ){
 		}else if($post_param == $CS_GENERATED_PAGE_PARAM_CONSTANTS['associates']){
 			$options = $CS_VARIABLE_ASSOCIATE_META_DESC_VAR;
 		}
-				
+
 		//replace wild cards with content, if found
 		foreach($options as $key => $value){
 			$pv_val = "";
 			if(array_key_exists($key, $page_vars)) $pv_val = $page_vars[$key];
-			
+
 			if(strpos($content, $value) !== false){
 				$content = str_replace($value, $pv_val, $content);
 			}
-			
+
 			$offset = strlen($content) - strlen($value);
 		}
-		
+
 		// Cut it off to the desired maximum length.
 		if(strlen($content) > $char_limit){
 			$content = substr($content, 0, $char_limit - 3);
 			$content .= "...";
 		}
-		
+
 		echo "\n<meta name='description' content='$content' />";
 	}
-	
+
 	/**
 	 * Sets the Open Graph namespace on the HTML starting tag
 	 */
@@ -930,23 +929,23 @@ if( !is_admin() ){
 	function cs_set_og_ns( $output ) {
 		return $output . ' xmlns:og="http://ogp.me/ns#"';
 	}
-	
+
 	/**
 	 * Function for setting some of the open graph meta tags - title and description are
 	 * added by the above two functions.
 	 */
 	function cs_set_open_graph_meta_data(){
-	
+
 		global $CS_VARIABLE_LISTING_META_OG;
 		global $CS_VARIABLE_LISTING_META_OG_ID;
 		global $page_vars;
-		
+
 		if(empty($page_vars)) return;
-		
+
 		$og_props = $CS_VARIABLE_LISTING_META_OG;
 		$og_ids = $CS_VARIABLE_LISTING_META_OG_ID;
 		$og_meta_tags = "\n";
-		
+
 		foreach($og_props as $key => $value){
 			// Skip title & desc as they've been set in cs_set_meta_title & cs_set_meta_desc
 			if(array_key_exists($value, $page_vars)) {
@@ -966,26 +965,26 @@ if( !is_admin() ){
 				}
 			}
 		}
-		
+
 		if(!empty($og_meta_tags)) echo $og_meta_tags;
 	}
-	
+
 	// Canonical Header - Override for CS generated pages e.g. site.com/communities/city/neigh
 	// Note: this section may need to be modified to accomodate other SEO-related plugins
 	// We fetch the post id differently depending on if permalinks are enabled or not.
 	if(get_template() === 'genesis') {
-		
+
 		// Genesis Framework - SEO
 		add_action('pre_get_posts', 'debug_param_output');
 		function debug_param_output($wp_query) {
-			
+
 			// Note calling get_queried_object_id directly confuses some plugins.
 			$page_id = cs_get_queried_object_id($wp_query);
 
 			if(empty($page_id)) $page_id = $wp_query->query_vars["page_id"];
-			
+
 			// 2012-12-10 EZ - I really don't think that this main query detection is working correctly it seems to always be 1, not a big deal as the corresponding page_id is blank for the other ones.
-			
+
 			$main_query = false;
 			if(method_exists($wp_query, 'is_main_query')) {
 				 $main_query = is_main_query();
@@ -993,7 +992,7 @@ if( !is_admin() ){
 				global $wp_the_query;
 				if($wp_query === $wp_the_query) $main_query = true;
 			}
-			
+
 			if($main_query && !empty($page_id)) {
 				$http_prefix = "";
 				if(strpos($_SERVER["HTTP_HOST"], "http://") === false) $http_prefix = "http://";
@@ -1001,14 +1000,14 @@ if( !is_admin() ){
 			}
 		}
 	} else {
-		
+
 		// Normal (No other SEO Plugins used)
 		add_action('template_redirect', 'cs_update_canonical_link');
 		function cs_update_canonical_link() {
 			remove_action('wp_head', 'rel_canonical');
 			add_action('wp_head', 'cs_fix_canonical_link', 5);
 		}
-		
+
 		function cs_fix_canonical_link() {
 			$http_prefix = "";
 			if(strpos($_SERVER["HTTP_HOST"], "http://") === false) $http_prefix = "http://";
@@ -1027,19 +1026,19 @@ function cs_register_cs_widgets() {
 	global $wpdb;
 	global $cs_posts_table;
 	global $CS_SECTION_PARAM_CONSTANTS;
-	
+
 	$load_widgets = true;
-	
+
 	if ( is_admin() ) {
 		$cs_admin = new CS_admin();
-		
+
 		//Do server check to see if creds are valid - for widgets page only
 		if( isset($pagenow) ) {
 			$is_wpmu = cs_is_multsite();
 			if( empty($is_wpmu) && 'widgets.php' == $pagenow ) {
 				$cs_request = new CS_request("pathway=20", "wp_admin");
 				$cs_response = new CS_response($cs_request->request());
-				
+
 				if(!$cs_response->is_error()) {
 					$resp = $cs_response->get_body_contents();
 					$resp = trim($resp);
@@ -1051,15 +1050,15 @@ function cs_register_cs_widgets() {
 			}
 		}
 	}
-	
+
 	if ( $load_widgets == true && get_option("cs_db_version", FALSE) != FALSE ) {  //Option check is to make sure the next query doesn't get executed on first setup
-		if( !class_exists('Personal_Profile_Widget') && !class_exists('Brokerage_Info_Widget') && 
-			!class_exists('Mobile_Site_Widget') && !class_exists('Buying_Info_Widget') && 
-			!class_exists('Selling_Info_Widget') && !class_exists('Listing_QS_Widget') && 
+		if( !class_exists('Personal_Profile_Widget') && !class_exists('Brokerage_Info_Widget') &&
+			!class_exists('Mobile_Site_Widget') && !class_exists('Buying_Info_Widget') &&
+			!class_exists('Selling_Info_Widget') && !class_exists('Listing_QS_Widget') &&
 			!class_exists('Feature_Listing_Widget')):
 		include_once( plugin_dir_path(__FILE__) . 'widgets.php');
 		endif;
-	
+
 		/* Load the widgets on widgets_init ************************************************************/
 		add_action('widgets_init', create_function('', 'register_widget("Personal_Profile_Widget");'));
 		add_action('widgets_init', create_function('', 'register_widget("Brokerage_Info_Widget");'));
@@ -1068,8 +1067,8 @@ function cs_register_cs_widgets() {
 		add_action('widgets_init', create_function('', 'register_widget("Selling_Info_Widget");'));
 		add_action('widgets_init', create_function('', 'register_widget("Feature_Listing_Widget");'));
 		add_action('widgets_init', create_function('', 'register_widget("VIP_Widget");'));
-	
-		/* Add these widgets if the IDX search page is available */	
+
+		/* Add these widgets if the IDX search page is available */
 		if(!is_null($wpdb->get_var('SELECT postid FROM ' . $wpdb->prefix . $cs_posts_table . ' WHERE prefix = "' . $CS_SECTION_PARAM_CONSTANTS['idx_pname'] . '" AND available = 1'))){
 			add_action('widgets_init', create_function('', 'register_widget("IDX_Search_Widget");'));
 			add_action('widgets_init', create_function('', 'register_widget("Listing_QS_Widget");'));

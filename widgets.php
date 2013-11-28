@@ -337,8 +337,11 @@ class CS_Widget extends WP_Widget {
 	
 /** New Media Upload **/
 	public function init_new_media_upload() {
-		add_action('admin_enqueue_scripts', array($this, 'call_admin_media_upload_files'));
-		$this->get_widget_scripts(true);
+		global $pagenow;
+		if ( 'widgets.php' == $pagenow ) {
+			add_action('admin_enqueue_scripts', array($this, 'call_admin_media_upload_files'));
+			$this->get_widget_scripts(true);
+		}
 	}
 }
 
@@ -1097,6 +1100,7 @@ class Feature_Listing_Widget extends CS_Widget{
 	private $PLUGIN_CLASSNAME = 'widget-feature-listing';
 	private $PLUGIN_FEAT_LIST_OPTS = array();
 	private $BROKERAGE = false;
+	private $IDX = false;
 	
 	function Feature_Listing_Widget(){
 	
@@ -1104,6 +1108,7 @@ class Feature_Listing_Widget extends CS_Widget{
 		global $PLUGIN_SLUG;
 		global $PLUGIN_CLASSNAME;
 		global $BROKERAGE;
+		global $IDX;
 		
 		$this->pluginDomain = 'feature_listing_widget';
 		
@@ -1119,10 +1124,13 @@ class Feature_Listing_Widget extends CS_Widget{
 		
 		$this->BROKERAGE = (bool) get_option("cs_opt_brokerage", "");
 		
+		if(get_option("cs_opt_tier_name", "") == "Platinum") $this->IDX = true;
+		else $this->IDX = false;
+		
 		if( defined( "WP_ADMIN" ) && WP_ADMIN && 'widgets.php' == $pagenow ) {
 			$this->get_feature_listing_options();
 			$this->get_widget_scripts(true);
-		}else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) && !wp_script_is($this->PLUGIN_SLUG . '-js') ) {
+		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) && !wp_script_is($this->PLUGIN_SLUG . '-js') ) {
 			$this->get_widget_scripts(false);
 		}
 	}
@@ -1131,9 +1139,11 @@ class Feature_Listing_Widget extends CS_Widget{
 		global $wpdb;
 		global $wp_rewrite;
 		global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
-		global $BROKERAGE;
 		global $blog_id;
-				
+		
+		// Check if we should even display anything in the first place
+		if($this->show_widget($instance) == false) return;
+		
 		$table_name = $wpdb->prefix . "cs_posts";
 		
 		//Get the ids of the idx and listings pages
@@ -1169,49 +1179,67 @@ class Feature_Listing_Widget extends CS_Widget{
 			$listings_excl_url = home_url($listings_excl_url);
 		}
 		
+		if( !array_key_exists('listing_type', $instance) || empty($instance['listing_type']) ) $instance['listing_type'] = 0;
+		if( !array_key_exists('listing_status', $instance) || empty($instance['listing_status']) ) $instance['listing_status'] = 0;
+		
 		extract( $args );
 		extract( $instance );
 		include( $this->getTemplateHierarchy( 'cs_template_feature-listing-widget_', 'feature-listing-widget' ) );
 	}
 	
 	function update( $new_instance, $old_instance ){
+		global $PLUGIN_FEAT_LIST_OPTS;
 		global $BROKERAGE;
-	
-		$instance['title'] = $new_instance['title'];
-	
-		if($this->BROKERAGE === false) $instance['listing_section'] = $new_instance['listing_section'];
-		$instance['listing_type'] = $new_instance['listing_type'];
-		$instance['listing_status'] = $new_instance['listing_status'];
+		global $IDX;
 		
-		if(empty($new_instance['freq']) || (int) $new_instance['freq'] < 1000){
-			$instance['freq'] = "1000";
-		}else{
-			$instance['freq'] = $new_instance['freq'];
+		if(empty($old_instance)) {
+			if(empty($PLUGIN_FEAT_LIST_OPTS)) $this->get_feature_listing_options();
+			$instance['listing_section'] = $PLUGIN_FEAT_LIST_OPTS['listing_section']['values'][0]['opt_val'];
+			$instance['listing_type'] = $PLUGIN_FEAT_LIST_OPTS['listing_type']['values'][0]['opt_val'];
+			$instance['listing_status'] = $PLUGIN_FEAT_LIST_OPTS['listing_status']['values'][0]['opt_val'];
+		} else {
+			$instance['title'] = $new_instance['title'];
+			$instance['listing_type'] = $new_instance['listing_type'];
+			$instance['listing_status'] = $new_instance['listing_status'];
+		
+			if($new_instance['listing_section'] == 3 && empty($new_instance['user_defined_listings'])) {
+				$instance['listing_section'] == $old_instance['listing_section'];
+				if(!empty($old_instance['user_defined_listings'])) $instance['user_defined_listings'] = $old_instance['user_defined_listings'];
+			} else {
+				$instance['listing_section'] = $new_instance['listing_section'];
+				$instance['user_defined_listings'] = $new_instance['user_defined_listings'];
+			}
 		}
 		
+		if(empty($new_instance['freq']) || (int) $new_instance['freq'] < 1000) {
+			$instance['freq'] = "1000";
+		} else {
+			$instance['freq'] = $new_instance['freq'];
+		}
+				
 		return $instance;
 	}
 	
 	function form( $instance ){	
 		global $PLUGIN_FEAT_LIST_OPTS;
 		global $BROKERAGE;
+		global $IDX;
 		
 		if(empty($PLUGIN_FEAT_LIST_OPTS)) $this->get_feature_listing_options();
 		
+		$listing_section_label = $PLUGIN_FEAT_LIST_OPTS['listing_section']['label'];
 		$listing_type_label = $PLUGIN_FEAT_LIST_OPTS['listing_type']['label'];
 		$listing_status_label = $PLUGIN_FEAT_LIST_OPTS['listing_status']['label'];
 		
 		$instance_opts = array(
+			'listing_section' => $PLUGIN_FEAT_LIST_OPTS['listing_section']['values'][0]['opt_val'],
 			'listing_type' => $PLUGIN_FEAT_LIST_OPTS['listing_type']['values'][0]['opt_val'],
 			'listing_status' => $PLUGIN_FEAT_LIST_OPTS['listing_status']['values'][1]['opt_val'],
 			'freq' => '10000',
-			'title' => ''
+			'title' => '',
+			'useDefault' => true,
+			'user_defined_listings' => array()
 		);
-		
-		if($this->BROKERAGE === false) {
-			$listing_section_label = $PLUGIN_FEAT_LIST_OPTS['listing_section']['label'];
-			$instance_opts['listing_section'] = $PLUGIN_FEAT_LIST_OPTS['listing_section']['values'][0]['opt_val'];
-		}
 		
 		$instance = wp_parse_args((array) $instance, $instance_opts);
 		include( $this->getTemplateHierarchy( 'cs_template_feature-listing-widget_', 'feature-listing-widget-admin' ) );
@@ -1230,6 +1258,28 @@ class Feature_Listing_Widget extends CS_Widget{
 		
 		$json_response = $cs_response->cs_get_json();
 		$PLUGIN_FEAT_LIST_OPTS = $json_response['featListWidgetOpts'];
+	}
+	
+	/**
+	 *  Tells us whether or not to show the widget based on if any results will be returned
+	 */
+	private function show_widget($instance){
+		global $CS_SECTION_PARAM_CONSTANTS;
+		
+		$params = '&listSection=' . $instance['listing_section'] . '&listType=' . $instance['listing_type'] . '&listStatus=' . $instance['listing_status'];
+		if(array_key_exists('user_defined_listings', $instance) && !empty($instance['user_defined_listings'])) {
+			foreach($instance['user_defined_listings'] as $mlsNum) {
+				$params .= '&userDefinedListings[]=' . $mlsNum;
+			}
+		}
+		
+		$cs_request = new CS_request('pathway=9' . $params, $CS_SECTION_ADMIN_PARAM_CONSTANT["listings_pname"]);
+		$cs_response = new CS_response($cs_request->request());
+		if($cs_response->is_error()) return false;
+		
+		$json_response = $cs_response->cs_get_json();
+		if($json_response['total'] > 0) return true;
+		else return false;
 	}
 }
 
