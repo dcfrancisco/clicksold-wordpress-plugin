@@ -59,6 +59,13 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 == Changelog ==
 
 
+= 1.47 =
+* Added Community Search Widget.
+* Fixed menu item management on plugin capabilities re-synch.
+* Fixed issue with header includes being added more than once on page load
+* Modified Feature Listings widget to not show if no results will be returned - and other bug fixes.
+* Added functionality for user defined listings in Featured Listings widget
+
 = 1.46 =
 * CS now correctly cleans up menu item posts when being deactivated assuming that the allow CS to update menus option is on.
 * CS now correctly re-links manually specified menu items corresponding to it's pages during a deactivation / reactivation cycle.

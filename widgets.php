@@ -1484,4 +1484,145 @@ class IDX_QS_Widget extends CS_WIDGET {
 		$PLUGIN_PROP_TYPES = $response['cs_idx_qs_prop_types'];
 	}
 }
+
+/**
+ * Community Search Widget
+ * @author ClickSold
+ */
+class Community_Search_Widget extends CS_Widget{
+	
+	private $PLUGIN_NAME = 'ClickSold Community Search Widget';
+	private $PLUGIN_SLUG = 'cs-community-search-widget';
+	private $PLUGIN_CLASSNAME = 'widget-community-search';
+	
+	function Community_Search_Widget(){
+		global $PLUGIN_NAME;
+		global $PLUGIN_SLUG;
+		global $PLUGIN_CLASSNAME;
+		
+		$this->pluginDomain = 'community_search_widget';
+		
+		$this->loadPluginTextDomain();
+		$widget_opts = array(
+			'classname' => $this->PLUGIN_CLASSNAME,
+			'description' => 'Widget that allows you to run a community search'
+		);
+		
+		$this->WP_Widget( $this->PLUGIN_SLUG, $this->PLUGIN_NAME, $widget_opts );
+		
+		global $pagenow;
+		if( defined( "WP_ADMIN" ) && WP_ADMIN && 'widgets.php' == $pagenow ) {
+			$this->get_widget_scripts(true);
+		} else if( is_admin() === false && is_active_widget(false, false, $this->id_base, true) && !wp_script_is($this->PLUGIN_SLUG . '-js') ) {
+			$this->get_widget_scripts(false);
+		}
+	}
+	
+	function widget( $args, $instance ){
+		global $wpdb;
+		global $wp_rewrite;
+		global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
+		global $blog_id;
+				
+		$table_name = $wpdb->prefix . "cs_posts";
+		
+		//Get the id of the community page
+		$page = $wpdb->get_row("SELECT postid, parameter FROM " . $table_name . " WHERE parameter = '" . $CS_GENERATED_PAGE_PARAM_CONSTANTS["community"] . "'");
+		
+		$community_id = $page->postid;
+		
+		if(is_null($community_id)) return;
+		
+		// Get the pathname or query string of those pages
+		if( $wp_rewrite->using_permalinks() ) $community_url = $wpdb->get_var("SELECT post_name FROM " . $wpdb->posts . " WHERE ID = " . $community_id . " AND post_type = 'page' AND post_status != 'trash'");
+		else $community_url = $wpdb->get_var("SELECT guid FROM " . $wpdb->posts . " WHERE ID = " . $community_id . " AND post_type = 'page' AND post_status != 'trash'");
+		
+		if(is_null($community_url)) return;
+				
+		if($wp_rewrite->using_permalinks()) {
+			$community_url .= '/<city>/<neigh>/1';
+			// Turn url absolute
+			if(method_exists($this, 'is_multisite') && is_multisite()) $community_url = network_home_url($community_url);
+			else $community_url = home_url($community_url);
+		} else $community_url .= '&city=<city>&neigh=<neigh>'; 
+				
+		// Get the cities & neighbourhoods
+		$regions_all = $this->get_regions($instance, $args['widget_id']);
+		$regions = array();
+		$city_list = array();
+		
+		foreach($regions_all as $city => $neigh) {
+			if(!array_key_exists($city, $regions)) {
+				$regions[$city] = $neigh;
+				$city_list[] = $city;
+			} else {
+				$regions[$city] = array_push($regions[$city], $neigh);
+			}
+		}
+		
+		extract( $args );
+		extract( $instance );
+		include( $this->getTemplateHierarchy( 'cs_template_community-search-widget_', 'community-search-widget' ) );
+	}
+	
+	function update( $new_instance, $old_instance ){
+		if(empty($old_instance)) {
+			$instance['title'] = 'Communities';
+			$instance['incOrExcSelected'] = 1;
+		} else {
+			$instance['title'] = $new_instance['title'];
+			$instance['incOrExcSelected'] = $new_instance['incOrExcSelected'];
+			$instance['cities'] = $new_instance['cities'];
+		}
+				
+		return $instance;
+	}
+	
+	function form( $instance ){	
+		$instance_opts = array(
+			'title' => 'Communities',
+			'incOrExcSelected' => 1,
+			'cities' => array()
+		);
+		
+		$instance = wp_parse_args((array) $instance, $instance_opts);
+		$city_list_avail = $this->get_init_config_regions($instance);
+		include( $this->getTemplateHierarchy( 'cs_template_community-search-widget_', 'community-search-widget-admin' ) );
+	}
+	
+	private function get_init_config_regions($instance){
+		global $CS_SECTION_ADMIN_PARAM_CONSTANT;
+		
+		$params = '&incOrExcSelected=' . $instance['incOrExcSelected'] . '&load_community_search_opts=true';
+		if(array_key_exists('cities', $instance) && !empty($instance['cities'])) {
+			foreach($instance['cities'] as $city) {
+				$params .= '&cities[]=' . $city;
+			}
+		}
+		
+		$cs_request = new CS_request('pathway=640' . $params, $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"]);
+		$cs_response = new CS_response($cs_request->request());
+		if($cs_response->is_error()) return;
+		
+		return $cs_response->get_body_contents();
+	}
+	
+	private function get_regions($instance, $widget_id){
+		global $CS_SECTION_PARAM_CONSTANTS;
+		
+		$widget_id_parts = explode("-", $widget_id);
+		$params = '&incOrExcSelected=' . $instance['incOrExcSelected'] . '&widgetId=' . end($widget_id_parts);
+		if(array_key_exists('cities', $instance) && !empty($instance['cities'])) {
+			foreach($instance['cities'] as $city) {
+				$params .= '&cities[]=' . $city;
+			}
+		}
+		
+		$cs_request = new CS_request('pathway=659' . $params, $CS_SECTION_PARAM_CONSTANTS["community_pname"]);
+		$cs_response = new CS_response($cs_request->request());
+		if($cs_response->is_error()) return;
+		
+		return $cs_response->cs_get_json();
+	}
+}
 ?>
