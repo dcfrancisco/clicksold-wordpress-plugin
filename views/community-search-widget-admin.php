@@ -33,8 +33,8 @@
   
   <p>
     <label for="<?php echo $this->get_field_id('incOrExcSelected'); ?>">Include / Exclude Selected Cities</label><br/>
-    <input class="radio" type="radio" name="<?php echo $this->get_field_name('incOrExcSelected'); ?>" value="0" <?php if($instance['incOrExcSelected'] == 0) { ?>checked<?php } ?> /> <span>Include</span><br/>
-    <input class="radio" type="radio" name="<?php echo $this->get_field_name('incOrExcSelected'); ?>" value="1" <?php if($instance['incOrExcSelected'] == 1) { ?>checked<?php } ?> /> <span>Exclude</span>
+    <input id="widget-<?php echo $this->id; ?>-inc" class="radio" type="radio" name="<?php echo $this->get_field_name('incOrExcSelected'); ?>" value="0" <?php if($instance['incOrExcSelected'] == 0) { ?>checked<?php } ?> /> <span>Include</span><br/>
+    <input id="widget-<?php echo $this->id; ?>-exc" class="radio" type="radio" name="<?php echo $this->get_field_name('incOrExcSelected'); ?>" value="1" <?php if($instance['incOrExcSelected'] == 1) { ?>checked<?php } ?> /> <span>Exclude</span>
   </p>
   
 </div>
