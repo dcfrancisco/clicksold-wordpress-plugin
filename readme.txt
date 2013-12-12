@@ -59,6 +59,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 == Changelog ==
 
 
+= 1.48 =
+* Fixed error notices when WP_DEBUG is enabled.
+* Fixes to Community Search Widget admin panel.
+
 = 1.47 =
 * Added Community Search Widget.
 * Fixed menu item management on plugin capabilities re-synch.

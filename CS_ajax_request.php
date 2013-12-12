@@ -28,8 +28,10 @@ define('DOING_AJAX', true);
 ob_start();
 require_once('../../../wp-load.php');
 require_once('../../../wp-admin/includes/admin.php'); // Will setup wp correctly if the user is logged in so we can use for example the is_admin() function and expect to get a sane response.
-// Sometimes plugins loaded by wordpress call ob_start() as well, this get's stacked so cleaning the buffer once is sometimes not enough. eg: NextGEN Gallery does this. We flush the buffer multiple times to make (relatively) sure we're at the top of the buffer.
-for($i = 0; $i < 5; $i++) {
+// Sometimes plugins loaded by wordpress call ob_start() as well, this get's stacked so cleaning the buffer once is sometimes not enough. eg: NextGEN Gallery does this. We flush the buffer until it's no longer enabled.
+while( ob_get_length() !== FALSE ) {
+
+	// 2013-12-12 EZ - We used to do this 5 times blindly, but today I noticed that with WP_DEBUG this issues warnings. So now we just flush the buffer until we have no more buffers.
 	ob_end_clean();
 }
 

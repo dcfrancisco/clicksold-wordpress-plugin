@@ -24,7 +24,10 @@
 ob_start();
 require_once('../../../wp-load.php');
 require_once('../../../wp-admin/includes/admin.php'); // Will setup wp correctly if the user is logged in so we can use for example the is_admin() function and expect to get a sane response.
-ob_end_clean();
+// Sometimes plugins loaded by wordpress call ob_start() as well, this get's stacked so cleaning the buffer once is sometimes not enough. eg: NextGEN Gallery does this. We flush the buffer until it's no longer enabled.
+while( ob_get_length() !== FALSE ) {
+	ob_end_clean();
+}
 
 class CS_ajax_utilities {
 	
