@@ -2,7 +2,7 @@
 Contributors: ClickSold
 Tags: idx, vow, rets, real estate, mls, realtor, listing, listings, craigslist, rental, google map, agent, broker, properties, trulia, zillow, dsidx
 Requires at least: 3.0.0
-Tested up to: 3.7.1
+Tested up to: 3.8
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -58,6 +58,14 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.49 =
+* Fix XSS on listing not found page editor.
+* CS Widgets now get restored should the widget sidebars be updated while the CS plugin is deactivated, before in this case all cs widgets would be removed.
+* Fix php warnings when adding widgets if wp_debug is on.
+* CS Debug Info now replaces post content with the length of that content as having that much html frequently messes up the display of the pages that have the debug data on them.
+* Upstream - Fix cs mobile site not showing office phone number.
+* Upstream - Fix QS Listing widget functionality when editing the suggestions already presented.
+* Upstream - MLS Search - Show listings in tabs now has extra option to use browser tabs instead of interface ones.
 
 = 1.48 =
 * Fixed error notices when WP_DEBUG is enabled.

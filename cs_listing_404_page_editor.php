@@ -27,6 +27,11 @@ require_once('cs_constants.php');
 require_once('CS_request.php');
 require_once('CS_response.php');
 
+// Make sure that the user is logged in.
+if( !cs_current_user_can_admin_cs() ) {
+	wp_die( __( 'Access denied, only users that can administer the cs plugin can modify the 404 page.' ) );
+}
+
 $cs_request = new CS_request("pathway=74&loadListing404Content=true", "wp_admin");
 $cs_response = new CS_response($cs_request->request());
 ?>
@@ -44,7 +49,7 @@ $cs_response = new CS_response($cs_request->request());
 <script type="text/javascript">
   (function($){
 	$(document).ready(function(){
-		$("#listingsManager").ListingsManager("initCSListing404EditorView", <?php echo $_GET['id'] ?>);
+		$("#listingsManager").ListingsManager("initCSListing404EditorView", <?php echo json_encode($_GET['id']) ?>);
 	});
   })(csJQ);
 </script>

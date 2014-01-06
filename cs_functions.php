@@ -329,6 +329,126 @@ function cs_restore_cs_post_state( $prefix ) {
 }
 
 /**
+ * Saves all of the state for any present CS widgets.
+ */
+function cs_save_cs_widgets_state() {
+
+	global $wpdb;
+
+	// Grab a fresh state object.
+	$cs_widgets_state = array();
+
+	// For each registered sidebar.
+	foreach( get_option('sidebars_widgets', array() ) as $sidebar_name => $sidebar_widget_list ) {
+
+		// In the sidebars_widgets array there is an element with the key of 'array_version' this is not a sidebar and it's value is numeric and not an array -- we skip it.
+		if( $sidebar_name == 'array_version' ) { continue; }
+
+		// Scan each registerd sidebar widget list to see if it contains any CS widgets.
+		$index_in_sidebar = -1;
+		foreach( $sidebar_widget_list as $sidebar_widget_name_and_id ) {
+			
+			// We do this first so we don't forget about it... this index starts at -1 so it's ok.
+			$index_in_sidebar++;
+
+			// Each Sidebar_widget_name_and_id is in the format <widget_name>-<id> where the id is an index into the configuration array for this type of widget... we split this up.
+			$sidebar_widget_name = substr( $sidebar_widget_name_and_id, 0, strrpos( $sidebar_widget_name_and_id, '-' ) );		// The name of the widget.
+			$sidebar_widget_config_id = substr( $sidebar_widget_name_and_id, strrpos( $sidebar_widget_name_and_id, '-' ) + 1 );		// The index into it's configuration array where this widget's private configuration is stored.
+
+			// If this is one of the CS widgets we save it's details.
+			if( cs_is_cs_widget( $sidebar_widget_name ) ) {
+				
+				// If not present create an entry for this sidebar.
+				if( !isset( $cs_widgets_state[ $sidebar_name ] ) ) { $cs_widgets_state[ $sidebar_name ] = array(); }
+				
+				// Compile the widget definition (state).
+				$widget_state = array();
+				$widget_state[ 'index-in-sidebar' ] = $index_in_sidebar;
+				
+				// The configuration of this instance of the widget.
+				$widget_active_config = get_option( 'widget_' . $sidebar_widget_name, array() ); // The widget configurations are stored in the widget_<widget_name> option under the array index specified by $sidebar_widget_config_id
+				if( isset( $widget_active_config[ $sidebar_widget_config_id ] ) ) {
+					$widget_state[ 'config' ] = $widget_active_config[ $sidebar_widget_config_id ];
+				}
+
+				// Save the bare name and id, may come in handy.
+				$widget_state[ 'widget-name' ] = $sidebar_widget_name;
+				$widget_state[ 'widget-config-id' ] = $sidebar_widget_config_id;
+				
+				// Save the widget definition to the sidebar.
+				$cs_widgets_state[ $sidebar_name ][ $sidebar_widget_name_and_id ] = $widget_state;
+			}
+		}
+	}
+
+	// Finally save the data that we've collected.
+	update_option( "cs_widgets_state", $cs_widgets_state );
+
+}
+
+/**
+ * Restores the state of all cs widgets that were active before the plugin was deactivated.
+ */
+function cs_restore_cs_widgets_state() {
+
+	global $wpdb;
+
+	// Load any current saved state (or initialize if not found)
+	$cs_widgets_state = get_option( "cs_widgets_state", array() );
+
+	// Load the current definition of all of the sidebars and their widgets.
+	$current_sidebars_widgets = get_option( 'sidebars_widgets', array() );
+
+	/* The cs_widgets_state is stored as follows:
+	 *   [sidebar]
+	 *     [old_widget_name_and_id] - eg: cs-widget-personal-profile-2
+	 *       [index-in-sidebar] -- the index in the sidebar where we found this widget.
+	 *       [config] -- the configuration of this widget.
+	 *       [widget-name] -- the bare name of the widget w/o the old config id.
+	 *       [widget-config-id] -- the old configuration id belonging to this widget.
+	 */
+
+	// For each saved widget sidebar.
+	foreach( $cs_widgets_state as $sidebar_name => $saved_side_bar_widgets ) {
+		
+		// If the sidebar where this widget was no longer exists, well we can't do much about that.
+		if( !array_key_exists( $sidebar_name, $current_sidebars_widgets ) ) {
+			continue;
+		}
+
+		// For each widget that was in this sidebar.
+		foreach( $saved_side_bar_widgets as $sidebar_widget_name_and_id => $widget_state ) {
+			
+			// If this widget still exists in the sidebar that means that nothing was toasted and we can skip it, CS widgets only disappear from sidebars if the sidebars are updated while the CS plugin is disabled.
+			if( in_array( $sidebar_widget_name_and_id, $current_sidebars_widgets[ $sidebar_name ] ) ) {
+				continue;
+			} else {
+				// Nothing will continue on and re-add the widget.
+			}
+			
+			// Add the widget to the sidebar.
+			array_splice( $current_sidebars_widgets[ $sidebar_name ], $widget_state[ 'index-in-sidebar' ], 0, $sidebar_widget_name_and_id ); // Trying to insert the elements at the previous location.
+			
+			// Restore the configuration of the widget in it's config.
+			$widget_config = get_option( 'widget_' . $widget_state[ 'widget-name' ], array() );
+
+			$widget_config[ $widget_state[ 'widget-config-id' ] ] = $widget_state[ 'config' ];
+			update_option( 'widget_' . $widget_state[ 'widget-name' ],  $widget_config );
+		}
+	}
+
+	// Write the widgets array back to the db ... to save our changes.
+	update_option( 'sidebars_widgets', $current_sidebars_widgets );
+	
+	// Clear the saved widget state.
+	delete_option( "cs_widgets_state" );
+	
+
+
+}
+
+
+/**
  * Encode any special chars in the string such that we can put them on
  * an html page as enteties and therefore not have them mess up if the page
  * is being served as ISO-8859-1 while (by default) wordpress is utf-8.
@@ -411,9 +531,9 @@ function cs_generate_degbug_info() {
 	global $wp_filter;
 	$output .= cs_print_r_html( $wp_filter['the_content'], true);
 
-	// Options table - CS options (Goes last as it's usually stupid long).
+	// Posts table - (Goes last as it's usually stupid long).
 	$output .= "<br>\n-------------------- posts --------------------<br>\n";
-	$output .= cs_generate_html_table_from_db_result_set( $wpdb->get_results("SELECT * FROM " . $wpdb->posts . "", ARRAY_A ) );
+	$output .= cs_generate_html_table_from_db_result_set( $wpdb->get_results("SELECT ID, post_author, post_date, post_date_gmt, length(post_content) as post_content_length, post_title, post_excerpt, post_status, comment_status, ping_status, post_password, post_name, to_ping, pinged, post_modified, post_modified_gmt, post_content_filtered, post_parent, guid, menu_order, post_type, post_mime_type, comment_count FROM " . $wpdb->posts . "", ARRAY_A ) );
 
 	return cs_kill_script( $output );
 } 

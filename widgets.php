@@ -26,6 +26,27 @@ global $cs_widgets_cssjs_included;
 $cs_widgets_cssjs_included = false;
 
 /**
+ * Returns true if the widget name is one of the ones defined in this file. Defined UP HERE so that you remember to update
+ * this list every time that a new widget is added.
+ */
+function cs_is_cs_widget( $name ) {
+	
+	if( $name == 'cs-brokerage-info-widget' )		{ return true; }
+	if( $name == 'cs-widget-personal-profile' )		{ return true; }
+	if( $name == 'cs-widget-idx-search' )			{ return true; }
+	if( $name == 'cs-widget-mobile-site' )			{ return true; }
+	if( $name == 'cs-widget-buying-info' )			{ return true; }
+	if( $name == 'cs-widget-selling-info' )			{ return true; }
+	if( $name == 'cs-listing-quick-search-widget' )	{ return true; }
+	if( $name == 'cs-feature-listing-widget' )		{ return true; }
+	if( $name == 'cs-vip-widget' )					{ return true; }
+	if( $name == 'cs-idx-qs-widget' )				{ return true; }
+	if( $name == 'cs-community-search-widget' )		{ return true; }
+
+	return false;
+}
+
+/**
 *  Base class for ClickSold widgets.  Contains re-usable functions for plugin functionality.
 *  @author ClickSold
 */
@@ -410,7 +431,7 @@ class Personal_Profile_Widget extends CS_Widget {
 		$instance['height'] = $new_instance['height'];
 		$instance['image'] = $new_instance['image'];
 		$instance['imageurl'] = $this->get_image_url($new_instance['image'],$new_instance['width'],$new_instance['height']);  // image resizing not working right now
-		if( $_SERVER["HTTPS"] == "on" ) {
+		if( isset( $_SERVER["HTTPS"] ) && $_SERVER["HTTPS"] == "on" ) {
 			$instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);
 		}
 		$instance['phone'] = $new_instance['phone'];
@@ -639,7 +660,10 @@ class IDX_Search_Widget extends CS_Widget {
 			$instance['imageurl'] = $new_instance['image'];
 		}
 		
-		if( $_SERVER["HTTPS"] == "on" ) $instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);
+		if( isset( $_SERVER["HTTPS"] ) && $_SERVER["HTTPS"] == "on" ) {
+			$instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);
+		}
+
 		return $instance;
 	}
 
@@ -842,7 +866,9 @@ class Buying_Info_Widget extends CS_Widget{
 		if($new_instance['imagetype'] == "custom") $instance['imageurl'] = $this->get_image_url($new_instance['image'],$new_instance['width'],$new_instance['height']);  // image resizing not working right now
 		else $instance['imageurl'] = $new_instance['image'];
 		
-		if( $_SERVER["HTTPS"] == "on" ) $instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);		
+		if( isset( $_SERVER["HTTPS"] ) && $_SERVER["HTTPS"] == "on" ) {
+			$instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);		
+		}
 		
 		return $instance;
 	}
@@ -931,7 +957,9 @@ class Selling_Info_Widget extends CS_Widget{
 		if($new_instance['imagetype'] == "custom") $instance['imageurl'] = $this->get_image_url($new_instance['image'],$new_instance['width'],$new_instance['height']);  // image resizing not working right now
 		else $instance['imageurl'] = $new_instance['image'];
 		
-		if( $_SERVER["HTTPS"] == "on" ) $instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);		
+		if( isset( $_SERVER["HTTPS"] ) && $_SERVER["HTTPS"] == "on" ) {
+			$instance['imageurl'] = str_replace('http://', 'https://', $instance['imageurl']);		
+		}
 		
 		return $instance;
 	}

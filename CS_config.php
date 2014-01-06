@@ -118,7 +118,8 @@ require_once('cs_functions.php');
 				delete_option('cs_front_page');
 			}
 			
-			// Load page settings from previously deactivated plugin (if available)
+			// Load the widgets and widget settings from before the plugin got deactivated.
+			cs_restore_cs_widgets_state();
 
 			// Request a re-synch from the cs server to see which ones (if any) of these freshly added pages have to be
 			// hidden because they are not allowed by the current tier.
@@ -177,6 +178,7 @@ require_once('cs_functions.php');
 			global $wp_rewrite;
 			$this->cs_remove_plugin_pages();
 			$this->cs_remove_cs_posts();
+			cs_save_cs_widgets_state(); // Save info about any active or configured widgets that belong to CS (this info is lost if any of the widget sidebards is updated while the cs plugin is disabled)
 			remove_filter('rewrite_rules_array', 'cs_add_rewrite_rules');
 			$wp_rewrite->flush_rules();
 			update_option("cs_change_products_request",1);
