@@ -1,7 +1,7 @@
 <div class="<?php echo $this->id; ?>">
   <p>
     <label for="<?php echo $this->get_field_id('default_prop_type'); ?>">Default Property Type</label><br/>
-    <select class="widefat" id="<?php echo $this->get_field_id('default_prop_type'); ?>" name="<?php echo $this->get_field_name('default_prop_type'); ?>" onchange="initUnsavedBrokInfoWidget(this, 'change')" >
+    <select class="widefat" id="<?php echo $this->get_field_id('default_prop_type'); ?>" name="<?php echo $this->get_field_name('default_prop_type'); ?>">
 <?php foreach($prop_types as $prop_type) { 
         if($instance['default_prop_type'] == $prop_type['val']) { ?>
       <option selected value="<?php echo $prop_type['val']; ?>"><?php echo $prop_type['name']; ?></option>

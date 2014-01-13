@@ -227,7 +227,8 @@ class CS_request {
 			"full_plugin_dir_url" => plugin_dir_url(__FILE__),
 			"client_ip_address" => getenv("REMOTE_ADDR"),
 			"wpHomeUrl" => home_url(),
-			"wpHost" => $_SERVER['HTTP_HOST']
+			"wpHost" => $_SERVER['HTTP_HOST'],
+			"wp_vers" => get_bloginfo('version')
 		);
 
 		// Set section and page name variable, if section is available

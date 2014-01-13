@@ -58,6 +58,12 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.50 =
+* CS Widgets now correctly initalize from the moment that they are placed in a sidebar (as opposed to having to reload the widgets page or save the widget).
+* Upstream - Fix Mobile VIP signup and features.
+* Upstream - Added Exclusive Listings Only filter for listings manager.
+* Upstream - MLS Search - Search By Code interface now does not show up when viewing the listing details in an in interface tab. 
+
 = 1.49 =
 * Fix XSS on listing not found page editor.
 * CS Widgets now get restored should the widget sidebars be updated while the CS plugin is deactivated, before in this case all cs widgets would be removed.

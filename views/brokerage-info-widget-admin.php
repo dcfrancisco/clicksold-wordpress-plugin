@@ -13,7 +13,7 @@ if($this->use_new_media_upload()) {
   </p>
   <p>
     <label for="<?php echo $this->get_field_id('logo_src'); ?>">Logo</label><br/>
-    <select class="widefat" id="<?php echo $this->get_field_id('logo_src'); ?>" name="<?php echo $this->get_field_name('logo_src'); ?>" onchange="initUnsavedBrokInfoWidget(this, 'change')" >
+    <select class="widefat" id="<?php echo $this->get_field_id('logo_src'); ?>" name="<?php echo $this->get_field_name('logo_src'); ?>" >
 <?php foreach($brok_logos as $brok_logo) { 
         if($instance['logo_src'] == $brok_logo['src']) { ?>
       <option selected value="<?php echo $brok_logo['src']; ?>"><?php echo $brok_logo['name']; ?></option>
@@ -56,47 +56,52 @@ else echo "<img src=\"{$instance['logo_src']}\" style=\"border:1px solid black;m
   <script type="text/javascript">
 	(function($){
 		$(document).ready(function() {
-			if("<?php echo $this->id; ?>".match("__i__$") == null) {
-				$('.<?php echo $this->id; ?>:not(div[class$="__i__"])').csBrokerageInfoWidget({
-					"logo_src_id" : "<?php echo $this->get_field_id('logo_src'); ?>",
-					"upload_logo_src_id" : "<?php echo $this->get_field_id('upload_logo_src'); ?>",
-					"img_upload_src" : "<?php echo $image_upload_iframe_src; ?>",
-			<?php if($this->use_new_media_upload()) { ?>"use_new_media_upload" : true, <?php } ?>
-					"preview_img_cnt" : "display-<?php echo $this->get_field_id('logo_src'); ?>"
+			
+			// Compile the options, they will be the same in structure for both our types of initialization.
+			var default_opts = {
+				"logo_src_id" : "<?php echo $this->get_field_id('logo_src'); ?>",
+				"upload_logo_src_id" : "<?php echo $this->get_field_id('upload_logo_src'); ?>",
+				"img_upload_src" : "<?php echo $image_upload_iframe_src; ?>",
+				<?php if($this->use_new_media_upload()) { ?>"use_new_media_upload" : true, <?php } ?>
+				"preview_img_cnt" : "display-<?php echo $this->get_field_id('logo_src'); ?>"
+			};
+			
+			// Initialize the JavaScript -- This has to be done differently based on if this is the first adding of the widget or if the widget is already present in a sidebar. NOTE: if we're on the first add case then none of the $this->xyz values will be correct.
+			if("<?php echo $this->id; ?>".match("__i__$") == null) { // Widget is already initialized, aka it has NOT just been added.
+			
+				$('.<?php echo $this->id; ?>:not(div[class$="__i__"])').csBrokerageInfoWidget(default_opts);
+			} else { // Widget has just now been added to a sidebar.
+				
+				// Here we register an ajaxSuccess callback so that once the widget has been added we can initalize it properly once it has been added.
+				// NOTE / WARNING - This will be registered once on the widgets page load and then again each time this widget is added -- so the initialization routine for the widget MUST be able to deal with being called more than once. (I know of no way to remove these callback functions once they have been added - EZ).
+				jQuery(document).ajaxSuccess(function(e, xhr, settings) {
+					var widget_id_base = 'cs-brokerage-info-widget';
+					if(	settings.data.search('action=save-widget') != -1 &&				// Present on each widget save.
+						settings.data.search('id_base=' + widget_id_base) != -1 &&		// Only proceed if the widget save is for one of *these* widgets (a random widget won't do).
+						settings.data.search('add_new=multi') != -1) {					// This parameter is present when a widget is added to a sidebar but is not present when you click the save button.
+	
+						// Get the class name for this widget (which is used as it's unique identifier) eg: cs-community-search-widget-6
+						var widget_id = settings.data.match(/widget-id=[^&]*/g);
+						widget_id = widget_id[0].replace(/widget-id=/g, ''); // Clear the parameter name from the above match.
+	
+						// Now out of that we need to get the widget numeric id so we can update the options array correctly.
+						var widget_id_numeric = widget_id.split("-");
+						widget_id_numeric = widget_id_numeric[widget_id_numeric.length - 1];
+
+						// Clone the opts object as updating it here would update it for any other of this widget that we are adding.
+						var opts = jQuery.extend({}, default_opts);
+	
+						//modify the opts - replace "__i__" with the found id
+						for(var key in opts) {
+							if(typeof opts[key] == "string") opts[key] = opts[key].replace(/__i__/g, widget_id_numeric);
+						}
+
+						// Initialize the widget based on the widget-id (the class name) that we were provided by the ajaxSuccess subsystem.
+						$('.'+widget_id+':not(div[class$="__i__"])').csBrokerageInfoWidget(opts);
+					}
 				});
 			}
 		});
 	})(csJQ);
-	
-	function initUnsavedBrokInfoWidget(self, eventType){
-		(function($){ 
-			if("<?php echo $this->id; ?>".match("__i__$")) {
-				//Widget has been added to a sidebar (not saved yet) - extract the id
-				var bi_w = $(self).parent().parent().attr("class");
-				var bi_w_id = bi_w.split("-");
-				bi_w_id = bi_w_id[bi_w_id.length - 1];
-					
-				var opts = {
-					"logo_src_id" : "<?php echo $this->get_field_id('logo_src'); ?>",
-					"upload_logo_src_id" : "<?php echo $this->get_field_id('upload_logo_src'); ?>",
-					"img_upload_src" : "<?php echo $image_upload_iframe_src; ?>",
-			<?php if($this->use_new_media_upload()) { ?>"use_new_media_upload" : true, <?php } ?>
-					"preview_img_cnt" : "display-<?php echo $this->get_field_id('logo_src'); ?>"
-				};
-					
-				//modify the opts - replace "__i__" with the found id
-				for(var key in opts) {
-					if(typeof opts[key] == "string") opts[key] = opts[key].replace(/__i__/g, bi_w_id);
-				}
-				
-				$("." + bi_w + ":not(div[class$='__i__'])").csBrokerageInfoWidget("checkInit", opts, function(){
-					/* NOTE: this is for firing the change event after initializing the change event itself - IE7 & IE8 will automatically
-					   fire the event after the change event is initialized so we need to prevent it from being fired twice. */
-					//$("#" + opts.logo_src_id, "." + bi_w).change();
-					$(self).trigger(eventType);
-				}); 
-			}
-		})(csJQ);
-	}
   </script>
 </div>
