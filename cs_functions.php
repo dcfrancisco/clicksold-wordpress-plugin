@@ -812,7 +812,16 @@ function cs_deregister_cs_hooks() {
 	remove_action('widgets_init','cs_register_cs_widgets', 1);
 }
 
-
-
+/**
+ * Disables the inclusion of CS js and css scripts -- must be called before wp_head.
+ * 
+ * $type is a hash of the include types defined in CS_response.php cs_set_includes(). Define the "ALL" key for all.
+ * 
+ * eg: cs_disable_script_includes(array("ALL" => '1')); or cs_disable_script_includes(array("CSS_JAWR" => '1')); to just remove jawr based css.
+ */
+function cs_disable_script_includes( $type ) {
+	global $cs_disable_script_includes_types;
+	$cs_disable_script_includes_types = $type;
+}
 
 ?>

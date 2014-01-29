@@ -166,6 +166,9 @@ function render_cs_page_settings_form( $cs_page_settings, $is_update ) {
 			    <select tabindex="<?php echo($tabindex); ?>" name="cs_cust_list_url_sep"  type="text" class="regular-text" >
 			      <option value="_" <?php if( $cs_cust_list_url_sep == "_" ) { ?>selected="selected"<?php } ?>>Underscore (_)</option>
 				  <option value="-" <?php if( $cs_cust_list_url_sep == "-" ) { ?>selected="selected"<?php } ?>>Dash (-)</option>
+			      <option value="~" <?php if( $cs_cust_list_url_sep == "~" ) { ?>selected="selected"<?php } ?>>Tilde (~)</option>
+			      <option value="|" <?php if( $cs_cust_list_url_sep == "|" ) { ?>selected="selected"<?php } ?>>Pipe (|)</option>
+			      <option value="*" <?php if( $cs_cust_list_url_sep == "*" ) { ?>selected="selected"<?php } ?>>Asterisk (*)</option>
                 </select>				  
 			  </td>
             </tr>

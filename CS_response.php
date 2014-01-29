@@ -149,6 +149,7 @@ class CS_response
 	 * $skip_inline - skip the inline types of includes (JS_IN / CSS_IN and IN_RAW).
 	 */
 	private function cs_set_includes($block, $skip_linked = 0, $skip_inline = 0){
+		global $cs_disable_script_includes_types;
 		
 		//Array checks used for suppressing errors due to relative links in the
 		//content that reinvoke the loop
@@ -158,7 +159,14 @@ class CS_response
 		//error_log("cs_set_includes($block)skipLinked(".$skip_linked.")skipInline(".$skip_inline.")");
 		//error_log(print_r($this->resource_includes[$block], true));
 				
-		foreach($this->resource_includes[$block] as $include_item){
+		foreach($this->resource_includes[$block] as $include_item) {
+			
+			// If the user has decided to disable some script includes using the cs_disable_script_includes($type) function we honour that here.
+			if( $cs_disable_script_includes_types != null ) { // Assuming that this system has even been triggered.
+				if( array_key_exists( "ALL", $cs_disable_script_includes_types ) ) { continue; }		// Special case where they want to skip all of the includes.
+				if( array_key_exists( $include_item["type"], $cs_disable_script_includes_types ) ) { continue; }		// Skipping only specific types.
+			}
+			
 			if(($include_item["type"] == "JS" || $include_item["type"] == "CSS" || $include_item["type"] == "JS_JAWR" || 
 			    $include_item["type"] == "CSS_JAWR"|| $include_item["type"] == "WP_ENQ_JS"|| $include_item["type"] == "WP_ENQ_CSS") && 
 				$include_item["name"] == "") { continue; } //JS, CSS, JS_JAWR, CSS_JAWR, WP_ENQ_JS & WP_ENQ_CSS types require a name field!

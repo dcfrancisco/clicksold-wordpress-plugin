@@ -58,6 +58,15 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.51 =
+* Added feature to supress the output of CS included CSS and JS.
+* Added '~', '|' and '*' as possible delimiters for the listing details links.
+* Add support for Facebook and Google vip login.
+* Upstream - FB and Google VIP login feature.
+* Upstream - MLS Search now pops up warning when user tries to draw using double clicks.
+* Upstream - Fix Community Search Results 'Browse All' link disappears on second change of property type.
+* Upstream - Listing Details page titles now correctly get the neighbourhood variable.
+
 = 1.50 =
 * CS Widgets now correctly initalize from the moment that they are placed in a sidebar (as opposed to having to reload the widgets page or save the widget).
 * Upstream - Fix Mobile VIP signup and features.

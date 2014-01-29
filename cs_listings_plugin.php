@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.50
+Version: 1.51
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.50';
+$cs_plugin_version = '1.51';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -438,6 +438,14 @@ if( !is_admin() ){
 	}else if(!empty($_GET["s_s"])){
 		add_action('init', 'cs_saved_search_redirect', 5);
 
+	// For handling VIP login via facebook
+	}else if((isset($_GET["fbLogin"]) || isset($_GET["gLogin"])) && isset($_GET["clientNumber"]) && isset($_GET["accessToken"])){
+		add_action('init', 'cs_social_media_auto_login');
+	
+	// For handling VIP add account via facebook
+	} else if((isset($_GET["fbSignUp"]) || isset($_GET["gSignUp"])) && isset($_GET["accessToken"])){
+		add_action('wp_head', 'cs_social_media_login_add_account_tos', 500);
+		
 	// For handling email clicks
 	}else if(isset($_GET["em"]) && isset($_GET["z"]) && isset($_GET["uid"]) && isset($_GET["out"])){
 		add_action('init', 'cs_process_email_click', 5);
@@ -519,6 +527,57 @@ if( !is_admin() ){
 		echo "</script>";
 	}
 
+	function cs_social_media_auto_login(){
+		global $wpdb;
+		global $CS_SECTION_PARAM_CONSTANTS;
+		global $wp_rewrite;
+
+		$vars = $_GET;
+		$vars['pathway'] = '661';
+		
+		$cs_request = new CS_request(http_build_query($vars), "");
+		$cs_response = new CS_response($cs_request->request());
+
+		$protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
+
+		// Run redirect to site
+		echo '<script type="text/javascript">';
+		echo 'location.href="' . $protocol . '://' . $_SERVER['HTTP_HOST'] . '";';
+		echo '</script>';
+	}
+	
+	function cs_social_media_login_add_account_tos(){
+		global $wpdb;
+		global $CS_SECTION_PARAM_CONSTANTS;
+		global $wp_rewrite;
+
+		$vars = $_GET;
+		$vars['pathway'] = '662';
+
+		$cs_request = new CS_request(http_build_query($vars), "");
+		$cs_response = new CS_response($cs_request->request());
+		
+		$content_str = preg_replace( "/\r|\n/", "", $cs_response->get_body_contents());
+		$content_str = str_replace("\"", "\\\"", $content_str);
+		$content_str = str_replace("</script>", "</scr\" + \"ipt>", $content_str);
+		
+		// Display TOS
+		echo '<script type="text/javascript">';
+		echo '(function($){';
+		echo '  $(document).ready(function(){';
+		echo '    var csFBTOS = "' . $content_str . '";';
+		echo '    $.clickSoldUtils("infoBoxCreate", { ';
+		echo '      html : csFBTOS,';
+		echo '      scrolling : true,';
+		echo '      onComplete : function() {';
+		echo '        $.clickSoldUtils("infoBoxResize");';
+		echo '      }';
+		echo '    });';
+		echo '  });';
+		echo '})(csJQ);';
+		echo '</script>';
+	}
+	
 	function cs_process_email_click(){
 		global $wpdb;
 		global $CS_SECTION_PARAM_CONSTANTS;
