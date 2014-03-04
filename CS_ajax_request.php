@@ -22,6 +22,8 @@
 // 2013-03-27 - this was deemed necessary for wp-control.php at some point in time... so I'm including it here as it appears correct.
 // 2013-07-26 - this is normally done in wp-admin/admin-ajax.php and may make the loading wp slightly faster.
 define('DOING_AJAX', true);
+// 2014-02-24 - EZ - Added this as it was described as a best practice on: http://codex.wordpress.org/Integrating_WordPress_with_Your_Website
+define('WP_USE_THEMES', false);
 
 /** We start and then clean the output buffer while running the wp load in between to make our ajax requests not include
     any error text that the actual loading of wordpress may produce. This error text messes up json responses and image requests (captcha). */
@@ -29,10 +31,15 @@ ob_start();
 require_once('../../../wp-load.php');
 require_once('../../../wp-admin/includes/admin.php'); // Will setup wp correctly if the user is logged in so we can use for example the is_admin() function and expect to get a sane response.
 // Sometimes plugins loaded by wordpress call ob_start() as well, this get's stacked so cleaning the buffer once is sometimes not enough. eg: NextGEN Gallery does this. We flush the buffer until it's no longer enabled.
+$ob_clear_counter = 0;
 while( ob_get_length() !== FALSE ) {
+
+	// 2014-02-24 EZ - Some hosts have php configured weird or wrong which causes the above call to ob_get_lenght to not work, we must therefore have a hard limit for this as it will crash this page load on these hosts (as it gets into an infinite loop).
+	if($ob_clear_counter > 10) { break; }
 
 	// 2013-12-12 EZ - We used to do this 5 times blindly, but today I noticed that with WP_DEBUG this issues warnings. So now we just flush the buffer until we have no more buffers.
 	ob_end_clean();
+	$ob_clear_counter++;
 }
 
 // Here we start buffering the ajax output once more. This script needs to be able to set the headers so we can't allow ANY output till that's done.

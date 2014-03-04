@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.51
+Version: 1.52
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.51';
+$cs_plugin_version = '1.52';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -438,12 +438,12 @@ if( !is_admin() ){
 	}else if(!empty($_GET["s_s"])){
 		add_action('init', 'cs_saved_search_redirect', 5);
 
-	// For handling VIP login via facebook
-	}else if((isset($_GET["fbLogin"]) || isset($_GET["gLogin"])) && isset($_GET["clientNumber"]) && isset($_GET["accessToken"])){
+	// For handling VIP login via oauth
+	}else if(isset($_GET["oauth_login"]) && isset($_GET["clientNumber"]) && isset($_GET["accessToken"]) && isset($_GET["op_id"])){
 		add_action('init', 'cs_social_media_auto_login');
 	
 	// For handling VIP add account via facebook
-	} else if((isset($_GET["fbSignUp"]) || isset($_GET["gSignUp"])) && isset($_GET["accessToken"])){
+	} else if(isset($_GET["oauth_signup"]) && isset($_GET["accessToken"]) && isset($_GET["op_id"])){
 		add_action('wp_head', 'cs_social_media_login_add_account_tos', 500);
 		
 	// For handling email clicks

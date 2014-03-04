@@ -2,7 +2,7 @@
 Contributors: ClickSold
 Tags: idx, vow, rets, real estate, mls, realtor, listing, listings, craigslist, rental, google map, agent, broker, properties, trulia, zillow, dsidx
 Requires at least: 3.0.0
-Tested up to: 3.8
+Tested up to: 3.8.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -57,6 +57,11 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
+
+= 1.52 =
+* Fix Social login.
+* Fix ajax endpoint so it works with certain hosting platforms where the ob_get_length function does not work correctly.
+* Upstream - System now tracks statistics on the views of individual listings. Available in My Listings -> A Listing -> View Stats (tab).
 
 = 1.51 =
 * Added feature to supress the output of CS included CSS and JS.
