@@ -444,7 +444,7 @@ if( !is_admin() ){
 	
 	// For handling VIP add account via facebook
 	} else if(isset($_GET["oauth_signup"]) && isset($_GET["accessToken"]) && isset($_GET["op_id"])){
-		add_action('wp_head', 'cs_social_media_login_add_account_tos', 500);
+		add_action('parse_query', 'cs_social_media_login_add_account_tos', 5);
 		
 	// For handling email clicks
 	}else if(isset($_GET["em"]) && isset($_GET["z"]) && isset($_GET["uid"]) && isset($_GET["out"])){
@@ -556,6 +556,10 @@ if( !is_admin() ){
 
 		$cs_request = new CS_request(http_build_query($vars), "");
 		$cs_response = new CS_response($cs_request->request());
+
+		// This is needed if the home page of the site does not have any CS components -- in this case these will add the js includes required to display the tos.
+		add_action("wp_head", array($cs_response, "cs_get_header_contents_linked_only"), 0);
+		add_action("wp_head", array($cs_response, "cs_get_header_contents_inline_only"), 11); // Needs to be ran at a highier priority as it needs to go AFTER the enqueue stuff.
 		
 		$content_str = preg_replace( "/\r|\n/", "", $cs_response->get_body_contents());
 		$content_str = str_replace("\"", "\\\"", $content_str);
