@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.52
+Version: 1.53
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.52';
+$cs_plugin_version = '1.53';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -1201,5 +1201,48 @@ function cs_offers_popup_init(){
 	$adDisabled = get_option("cs_opt_disable_offers_popup", "0");
 	if($tier == "Bronze" && $adDisabled == "0") update_option("cs_opt_show_offers_popup", "1");
 }
+
+/**
+ * This filter adds the non wordpress pages for ClickSold to the Better Wordpress Google XML Sitemaps plugin's external pages section.
+ * 
+ * 2014-03-12 EZ - This is the initial simple implementation, the next extension of this should add all of the cities and communities as well.
+ * NOTE: I checked this routine does not get called if the sitemap has been cached, so it's OK, performance wise to put a call to the community
+ * section and get a list of the Cities and Neighbourhoods.
+ */
+add_filter('bwp_gxs_external_pages', 'cs_bwp_gxs_external_sitemap');
+function cs_bwp_gxs_external_sitemap() {
+	
+	$external_pages = array();
+	
+	// Get all the post ids of the cs pages.
+	global $wpdb;
+	global $cs_posts_table;
+	$table_name = $wpdb->prefix . $cs_posts_table;
+	$cs_page_post_ids = $wpdb->get_results( "SELECT postid FROM $table_name GROUP BY parameter" );
+	
+	// For each post id, grab the post and if applicable add it to the external pages list.
+	foreach($cs_page_post_ids as $cs_page_post_id) {
+		
+		// Grab the post - Returns a WP_Post object on success.
+		$post = get_post( $cs_page_post_id->postid );
+
+		// If it's null then we could not load the post, which should not happen but still.
+		if( $post == null ) { continue; }
+		
+		// If the post is not set to be published we skip it.
+		if( $post->post_status != 'publish' ) { continue; }
+		
+		// Here we have to fake things out a bit, the cs posts are never updated, as far as wordpress is concerned anyways. The content on them is updated however by CS so, we set the last updated to a day ago.
+		$yesterday = date( 'Y-m-d', ( time() - 1 * 24 * 60 * 60 ) ); // Current timestamp - 1 day's worth of seconds.
+		
+		// Now we can add the post to the sitemap.
+		array_push ( $external_pages, array( 'location' => home_url( $post->post_name ), 'lastmod' => $yesterday, 'priority' => '1.0' ) );
+	}
+
+	return $external_pages;
+}
+
+
+
 
 ?>

@@ -58,6 +58,15 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+
+= 1.53 =
+* Basic Better Wordpress Google XML Sitemaps plugin integration.
+* Fix Social Login when site does not have any CS components on the main page (and therefore cs js is not included)
+* Upstream - Communities section now allows sort for the 'All' property type.
+* Upstream - Mobile site now uses contact form as opposed to exposing the e-mail address.
+* Upstream - ClickSold is now available for the Central Alberta Realtors Association (CARA).
+* Upstream - Updated jQuery Mobile to 1.4.2 
+
 = 1.52 =
 * Fix Social login.
 * Fix ajax endpoint so it works with certain hosting platforms where the ob_get_length function does not work correctly.
