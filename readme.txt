@@ -2,7 +2,7 @@
 Contributors: ClickSold
 Tags: idx, vow, rets, real estate, mls, realtor, listing, listings, craigslist, rental, google map, agent, broker, properties, trulia, zillow, dsidx
 Requires at least: 3.0.0
-Tested up to: 3.8.1
+Tested up to: 3.9
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -58,6 +58,12 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.54 =
+* Enhanced Better Wordpress Google XML Sitemaps plugin integration.
+* Upstream - MLS Community Search - Sorting for "All" property type.
+* Upstream - MLS Community Search - List - Quick filter by name.
+* Upstream - Featured Listings - Ability to view ONLY Exclusive listings.
+* Upstream - Client Manager - Grid - now supports pagination.
 
 = 1.53 =
 * Basic Better Wordpress Google XML Sitemaps plugin integration.

@@ -290,7 +290,7 @@ $cs_help_page = "";
 				//Check if the slug is one of ours
 				if(strpos($slug, "cs_plugin_") == 0){
 					foreach($menu as $item){
-						if($item['server'] == true && $item['menu_slug'] == $slug){
+						if((array_key_exists('server', $item) && $item['server'] == true) && $item['menu_slug'] == $slug){
 							$org_req = $item['request'];
 							//Check for any extra query string params (other than the page param) and add to the
 							//request

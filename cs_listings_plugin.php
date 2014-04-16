@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.53
+Version: 1.54
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.53';
+$cs_plugin_version = '1.54';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -1050,7 +1050,7 @@ if( !is_admin() ){
 
 			$main_query = false;
 			if(method_exists($wp_query, 'is_main_query')) {
-				 $main_query = is_main_query();
+				 $main_query = $wp_query->is_main_query();
 			} else { // For WP < 3.3
 				global $wp_the_query;
 				if($wp_query === $wp_the_query) $main_query = true;
@@ -1217,6 +1217,9 @@ function cs_bwp_gxs_external_sitemap() {
 	// Get all the post ids of the cs pages.
 	global $wpdb;
 	global $cs_posts_table;
+	global $wp_rewrite;
+	global $CS_GENERATED_PAGE_PARAM_CONSTANTS;
+	
 	$table_name = $wpdb->prefix . $cs_posts_table;
 	$cs_page_post_ids = $wpdb->get_results( "SELECT postid FROM $table_name GROUP BY parameter" );
 	
@@ -1235,10 +1238,48 @@ function cs_bwp_gxs_external_sitemap() {
 		// Here we have to fake things out a bit, the cs posts are never updated, as far as wordpress is concerned anyways. The content on them is updated however by CS so, we set the last updated to a day ago.
 		$yesterday = date( 'Y-m-d', ( time() - 1 * 24 * 60 * 60 ) ); // Current timestamp - 1 day's worth of seconds.
 		
+		// Generate location value based on whether or not permalinks are being used
+		if( $wp_rewrite->using_permalinks()) {
+			$location = home_url( $post->post_name );
+		} else {
+			$location = home_url() . '/?page_id=' . $post->ID;
+		}
+		
 		// Now we can add the post to the sitemap.
-		array_push ( $external_pages, array( 'location' => home_url( $post->post_name ), 'lastmod' => $yesterday, 'priority' => '1.0' ) );
+		array_push ( $external_pages, array( 'location' => $location, 'lastmod' => $yesterday, 'priority' => '1.0' ) );
 	}
-
+	
+	// Get the post id of the communities page
+	$cs_comm_post_id = $wpdb->get_results( "SELECT postid FROM $table_name WHERE parameter = '" . $CS_GENERATED_PAGE_PARAM_CONSTANTS['community'] . "'" );
+	
+	if(!is_null($cs_comm_post_id) && count($cs_comm_post_id) == 1) {
+		
+		$post = get_post( $cs_comm_post_id['0']->postid );
+		
+		if( !is_null($post) && $post->post_status == 'publish') {
+		
+			// Get community data
+			$cs_request = new CS_request( "pathway=527&sitemap=true", "" );
+			$cs_response = new CS_response( $cs_request->request() );
+			$comm_data = $cs_response->cs_get_json();
+			
+			if(!empty($comm_data)) {
+				foreach($comm_data as $city => $neighs) {
+					foreach($neighs as $neigh) {
+						$yesterday = date( 'Y-m-d', ( time() - 1 * 24 * 60 * 60 ) );
+						if( $wp_rewrite->using_permalinks()) {
+							$location = home_url( $post->post_name . '/' . $city . '/' . $neigh . '/1/' );
+						} else {
+							$location = home_url() . '/?page_id=' . $post->ID . '&city=' . $city . '&neigh=' . $neigh . '&page=1';
+						}
+						array_push ( $external_pages, array( 'location' => $location, 'lastmod' => $yesterday, 'priority' => '1.0' ) );
+					}
+				}
+			}
+		
+		}
+	}
+	
 	return $external_pages;
 }
 
