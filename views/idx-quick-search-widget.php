@@ -12,8 +12,9 @@
 		$("#<?php echo $widget_id ?>").IDXQuickSearchWidget({
 			ajaxTarget : "<?php echo plugins_url( 'CS_ajax_request.php', dirname(__FILE__) ) ?>",
 			plugin : true,
-            idxSearchUrl : "<?php echo $idx_url ?>",
-			csInitPropType : <?php echo $default_prop_type ?>
+			idxSearchUrl : "<?php echo $idx_url ?>",
+			csInitPropType : <?php echo $default_prop_type ?>,
+			compactVers : <?php echo $compact_vers ?>
 		});
 	});
 })(csJQ);

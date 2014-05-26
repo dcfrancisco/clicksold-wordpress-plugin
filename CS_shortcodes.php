@@ -251,7 +251,23 @@ class CS_shortcodes {
 	 * Registeres the js TinyMCE plugin that handles our buttons.
 	 */
 	function cs_register_mce_buttons_handler_plugin($plugin_array) {
-		$plugin_array['cs_shortcodes'] = plugins_url( '/js/cs_shortcodes_tinymce_handler.js', __FILE__ );
+		
+		// Figure out the version of TinyMCE that we're using.
+		global $tinymce_version;
+
+		// The version number above is in a <vers#>-<date> format -- we just need the version.
+		$tinymce_version_components = explode( "-", $tinymce_version);
+
+		if( $tinymce_version_components[0] > 359 ) { // vers 359 was shipped with wp 3.8.3 (latest before they moved to the new TinyMCE version).
+		
+			// Use the new version.
+			$plugin_array['cs_shortcodes'] = plugins_url( '/js/cs_shortcodes_tinymce_handler_since_wp39.js', __FILE__ );
+		} else {
+			
+			// Use the old version.
+			$plugin_array['cs_shortcodes'] = plugins_url( '/js/cs_shortcodes_tinymce_handler.js', __FILE__ );
+		}
+		
 		return $plugin_array;
 	}  
 

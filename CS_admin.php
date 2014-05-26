@@ -171,7 +171,8 @@ $cs_help_page = "";
 		 * Initializes the TinyMCE Editor for use with the plugin
 		 */
 		function init_editor(){
-			if(function_exists('wp_tiny_mce')) wp_tiny_mce(false);
+			global $tinymce_version;
+			if(version_compare($tinymce_version, '4021', 'lt') && function_exists('wp_tiny_mce')) wp_tiny_mce(false);
 		}
 		
 		/**

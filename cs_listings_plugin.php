@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.54
+Version: 1.55
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.54';
+$cs_plugin_version = '1.55';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -538,13 +538,12 @@ if( !is_admin() ){
 		$cs_request = new CS_request(http_build_query($vars), "");
 		$cs_response = new CS_response($cs_request->request());
 
-		$protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
-
 		// Run redirect to site
 		echo '<script type="text/javascript">';
-		echo 'location.href="' . $protocol . '://' . $_SERVER['HTTP_HOST'] . '";';
+		echo 'location.href="' . home_url() . '";'; // home_url uses is_ssl to determine http vs. https for us.
 		echo '</script>';
 	}
+	
 	
 	function cs_social_media_login_add_account_tos(){
 		global $wpdb;
@@ -593,11 +592,9 @@ if( !is_admin() ){
 		$cs_request = new CS_request(http_build_query($vars), "");
 		$cs_response = new CS_response($cs_request->request());
 
-		$protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
-
 		// Run redirect to site
 		echo '<script type="text/javascript">';
-		echo 'location.href="' . $protocol . '://' . $_SERVER['HTTP_HOST'] . '";';
+		echo 'location.href="' . home_url() . '";'; // home_url uses is_ssl to determine http vs. https for us.
 		echo '</script>';
 	}
 
@@ -1057,9 +1054,7 @@ if( !is_admin() ){
 			}
 
 			if($main_query && !empty($page_id)) {
-				$http_prefix = "";
-				if(strpos($_SERVER["HTTP_HOST"], "http://") === false) $http_prefix = "http://";
-				update_post_meta( (Int)$page_id, '_genesis_canonical_uri', $http_prefix . $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] );
+				update_post_meta( (Int)$page_id, '_genesis_canonical_uri', home_url() . $_SERVER['REQUEST_URI'] );
 			}
 		}
 	} else {
@@ -1072,9 +1067,7 @@ if( !is_admin() ){
 		}
 
 		function cs_fix_canonical_link() {
-			$http_prefix = "";
-			if(strpos($_SERVER["HTTP_HOST"], "http://") === false) $http_prefix = "http://";
-			echo '<link rel="canonical" href="' . $http_prefix . $_SERVER["HTTP_HOST"] . $_SERVER['REQUEST_URI'] . '" />';
+			echo '<link rel="canonical" href="' . home_url() . $_SERVER['REQUEST_URI'] . '" />';
 		}
 	}
 }

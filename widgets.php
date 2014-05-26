@@ -1301,7 +1301,7 @@ class Feature_Listing_Widget extends CS_Widget{
 			}
 		}
 		
-		$cs_request = new CS_request('pathway=9' . $params, $CS_SECTION_ADMIN_PARAM_CONSTANT["listings_pname"]);
+		$cs_request = new CS_request('pathway=9' . $params, $CS_SECTION_PARAM_CONSTANTS["listings_pname"]);
 		$cs_response = new CS_response($cs_request->request());
 		if($cs_response->is_error()) return false;
 		
@@ -1478,6 +1478,8 @@ class IDX_QS_Widget extends CS_WIDGET {
 		if(!is_numeric($new_instance['min_height'])) $new_instance['min_height'] = '';
 		if(!is_numeric($new_instance['max_width'])) $new_instance['max_width'] = '';
 		if(!is_numeric($new_instance['max_height'])) $new_instance['max_height'] = '';
+		$new_instance['compact_vers'] = !empty($new_instance['compact_vers']) ? 1 : 0;
+
 		return $new_instance;
 	}
 	
@@ -1491,8 +1493,12 @@ class IDX_QS_Widget extends CS_WIDGET {
 			'min_width' => '',
 			'min_height' => '',
 			'max_width' => '',
-			'max_height' => ''
+			'max_height' => '',
+			'compact_vers' => ''
 		);
+		
+		$compact_vers = isset( $instance['compact_vers'] ) ? (bool) $instance['compact_vers'] : false;
+
 		$instance = wp_parse_args((array) $instance, $instance_opts);
 		include( $this->getTemplateHierarchy( 'cs_template_idx-qs-widget_', 'idx-quick-search-widget-admin' ) );
 	}

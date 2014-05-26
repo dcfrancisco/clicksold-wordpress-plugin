@@ -1,10 +1,8 @@
 <?php 
 /*
-* DEPRECATED
-* Form used for customizing the contents of the mobile site's front page.
-* Used in the ClickSold - My Website page.
+* Used for displaying TinyMCE on ClickSold forms.
 *
-* Copyright (C) 2013 ClickSold.com
+* Copyright (C) 2014 ClickSold.com
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -28,14 +26,32 @@ require_once('cs_constants.php');
 require_once('CS_request.php');
 require_once('CS_response.php');
 
-$cs_request = new CS_request("pathway=63&loadMobileSiteFrontPageContent=true", "wp_admin");
-$cs_response = new CS_response($cs_request->request());
+$response_text = '';
+if(!is_null($_SERVER['QUERY_STRING'])) {
+	$cs_request = new CS_request($_SERVER['QUERY_STRING'], "wp_admin");
+	$cs_response = new CS_response($cs_request->request());
+	$response_text = $cs_response->get_body_contents();
+}
+
+global $tinymce_version;
+if(version_compare($tinymce_version, '4021-20140423', 'ge')) {
+	// TinyMCE 4
+	wp_editor($response_text, $_GET['editor_id'], array("wpautop" => false)); 	
+	\_WP_Editors::enqueue_scripts();
+	\_WP_Editors::editor_js();
+} else { 
+	// TinyMCE 3
+	the_editor($response_text);
+}
 ?>
-<?php the_editor($cs_response->get_body_contents()); ?>
 <script type="text/javascript">
-  (function($){
-	$(document).ready(function(){
-		$("#websiteManagerSettings").WebsiteManagerSettings("initMobilePageEditor");
+(function($){
+	//Initialize File Upload
+	tinyMCE.execCommand('mceAddControl', false, '<?php echo $_GET['editor_id'] ?>');
+	$('.add_media').off('click').on('click', function() {
+		formfield = $('#upload_image').attr('name');
+		tb_show('', 'media-upload.php?type=image&amp;TB_iframe=true');
+		return false;
 	});
-  })(csJQ);
+})(csJQ);
 </script>

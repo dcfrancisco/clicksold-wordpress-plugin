@@ -31,5 +31,10 @@
     <label for="<?php echo $this->get_field_id('max_height'); ?>">Maximum Height (px)</label><br/>
     <input class="widefat" type="text" id="<?php echo $this->get_field_id('max_height'); ?>" name="<?php echo $this->get_field_name('max_height'); ?>" value="<?php echo $instance['max_height']; ?>">
   </p>
+
+  <p>
+    <label for="<?php echo $this->get_field_id('compact_vers'); ?>">Compact</label><br/>
+    <input type="checkbox" class="checkbox" id="<?php echo $this->get_field_id('compact_vers'); ?>" name="<?php echo $this->get_field_name('compact_vers'); ?>"<?php checked( $compact_vers ); ?> />
+  </p>
   
 </div>
