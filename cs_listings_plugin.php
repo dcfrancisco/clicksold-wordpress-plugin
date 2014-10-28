@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.56
+Version: 1.57
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.56';
+$cs_plugin_version = '1.57';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -16,8 +16,8 @@ $cs_plugin_type = 'cs_listings_plugin';
 require_once('cs_constants.php');
 
 global $cs_db_version;
-$cs_db_version =  "1.1"; //change this db version,deactivate,activate the plugin
-			  //to regenerate the table that it uses
+$cs_db_version =  "1.1"; 	// change this db version,deactivate,activate the plugin
+							// to regenerate the table that it uses
 
 global $cs_posts_table;
 $cs_posts_table = "cs_posts";
@@ -98,7 +98,7 @@ endif;
 require_once('CS_request.php');
 require_once('CS_response.php');
 require_once('CS_shortcodes.php');
-require_once('CS_admin.php');
+if(is_admin()) { require_once('CS_admin.php'); }
 require_once('CS_config.php');
 require_once('CS_utilities.php');
 

@@ -171,8 +171,9 @@ class CS_request {
 		}
 		
 		// Get and store the number of failed server attempts since the last failure to connect
-		$this->req_timeout_failed_attempts = get_option('cs_req_timeout_failed_attempts', false);
-		if(!$this->req_timeout_failed_attempts) update_option('cs_req_timeout_failed_attempts', 0);
+		$this->req_timeout_failed_attempts = get_option('cs_req_timeout_failed_attempts', 0);
+		// 2014-10-23 EZ - This was robbing us of about 18 req / sec of speed on my tests and looks to be totally useless -- the above get_option has a default of false for some reason, changed that to 0.
+		//if(!$this->req_timeout_failed_attempts) update_option('cs_req_timeout_failed_attempts', 0);
 		
 		// Get and store the current request timeout value
 		$this->req_timeout = get_option('cs_req_timeout', false);

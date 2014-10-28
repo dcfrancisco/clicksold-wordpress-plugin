@@ -329,8 +329,9 @@ class CS_response
 		
 	    $comment = false;
 	    $out = '$x=';
+	    $json_length = strlen($json);
 		try{
-		    for ($i=0; $i<strlen($json); $i++)
+		    for ($i=0; $i<$json_length; $i++)
 		    {
 		        if (!$comment){
 		            if (($json[$i] == '{') || ($json[$i] == '[')) { $out .= ' array('; }

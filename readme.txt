@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.57 =
+* Performance related updates.
+* Upstream - VIP functionality can now be disabled on mobile site.
+
 = 1.56 =
 * Updated form styles and minor fixes.
 * Upstream - Featured Listings Widget - fixes.

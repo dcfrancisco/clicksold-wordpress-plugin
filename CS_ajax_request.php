@@ -19,16 +19,40 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+/** We start and then clean the output buffer while running the wp load in between to make our ajax requests not include
+    any error text that the actual loading of wordpress may produce. This error text messes up json responses and image requests (captcha). */
+ob_start();
+
+/** wp-settings.php - uses a SHORTINIT constant... this is used by the wp file uploader, we can use it here too to speed up our ajax queries.
+ *  that said, we have to be very careful as we're fiddling with the way that wp loads, so we have to know which version we're working with
+ *  then we can use the correct (but modified) wp-settings.php to load whatever we want. */
+$use_short_init = false;
+require_once('../../../wp-includes/version.php');	// We need to load this manually so we can get the version out.
+if( version_compare( $wp_version, '3.9', '>=' ) ) { // Currently only versions newer than this are supported.
+	$use_short_init = true;
+	define('SHORTINIT', true); // Let wp-settings.php know that we want to do a short init and not a full one.
+}
+
 // 2013-03-27 - this was deemed necessary for wp-control.php at some point in time... so I'm including it here as it appears correct.
 // 2013-07-26 - this is normally done in wp-admin/admin-ajax.php and may make the loading wp slightly faster.
 define('DOING_AJAX', true);
 // 2014-02-24 - EZ - Added this as it was described as a best practice on: http://codex.wordpress.org/Integrating_WordPress_with_Your_Website
 define('WP_USE_THEMES', false);
 
-/** We start and then clean the output buffer while running the wp load in between to make our ajax requests not include
-    any error text that the actual loading of wordpress may produce. This error text messes up json responses and image requests (captcha). */
-ob_start();
 require_once('../../../wp-load.php');
+
+// If we instructed wp to do a short init, we need to finish the initalization. Note, the custom version of wp-settings.php is simply the regular version w all of the stuff up to the SHORTINIT exit point stripped out as well as all of the stuff that is useless for our ajax requests.
+if( $use_short_init ) {
+	
+	// Select the correct include based on the wp version being used.
+	
+	if( version_compare( $wp_version, '4.0', '>=' ) ) {
+		require_once('wp-settings-cs_short_init-4.0.php');
+	} else if( version_compare( $wp_version, '3.9', '>=' ) ) {
+		require_once('wp-settings-cs_short_init-3.9.2.php');
+	}
+}
+
 require_once('../../../wp-admin/includes/admin.php'); // Will setup wp correctly if the user is logged in so we can use for example the is_admin() function and expect to get a sane response.
 // Sometimes plugins loaded by wordpress call ob_start() as well, this get's stacked so cleaning the buffer once is sometimes not enough. eg: NextGEN Gallery does this. We flush the buffer until it's no longer enabled.
 $ob_clear_counter = 0;

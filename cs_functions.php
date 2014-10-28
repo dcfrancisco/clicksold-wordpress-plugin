@@ -126,7 +126,19 @@ function cs_add_cs_post( $post_id, $default_page, $prefix, $post_parameter, $tit
 function cs_is_hosted(){
 	global $CS_VARIABLE_HOSTING_ID;
 	global $CS_VARIABLE_HOSTING_ID2;
-	$plugin_host = gethostbyname($_SERVER['SERVER_NAME']);
+	
+	// NOTE: using gethostbyname is surprisingly slow, it should be cached somewhere but it does not appear to work very well, so we cache this value ourselves.
+	$plugin_host = get_option( "plugin_host_name_lookup_" . $_SERVER['SERVER_NAME'], "" );
+
+	// While the plugin_host value should never change in any way that we actually care about it's still good form to allow it to be re-checked periodically.
+	$plugin_host_last_checked = get_option( "plugin_host_name_lookup_last_checked", "0" );
+	
+	// If it has not yet been cached we do so now -- or is too old
+	if( $plugin_host == "" || $plugin_host_last_checked < time() - 24 * 60 * 60 ) {
+		$plugin_host = gethostbyname($_SERVER['SERVER_NAME']);
+		update_option( "plugin_host_name_lookup_" . $_SERVER['SERVER_NAME'], $plugin_host );
+		update_option( "plugin_host_name_lookup_last_checked", time() );
+	}
 
 	// Special var in the config to make the plugin think that it's on a 3rd party wp host.
 	if(defined("CS_FORCE_3RD_PARTYHOST") && CS_FORCE_3RD_PARTYHOST) {
