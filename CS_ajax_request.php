@@ -73,6 +73,12 @@ require_once('CS_request.php');
 require_once('CS_response.php');
 require_once('cs_constants.php');
 
+// If we're doing a short init - the cs plugin's cs_init_session is never defined, never hooked up and never ran -- we do this here so we can support sessions in ajax calls (think VIP login).
+if( $use_short_init ) {
+	require_once('cs_listings_plugin.php');
+	cs_init_session();
+}
+
 class CS_ajax_request{
 	protected $request_vars;
 	protected $content_type;
