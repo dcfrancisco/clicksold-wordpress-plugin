@@ -229,7 +229,8 @@ class CS_request {
 			"client_ip_address" => getenv("REMOTE_ADDR"),
 			"wpHomeUrl" => home_url(),
 			"wpHost" => $_SERVER['HTTP_HOST'],
-			"wp_vers" => get_bloginfo('version')
+			"wp_vers" => get_bloginfo('version'),
+			"wp_user_can_admin_cs" => cs_current_user_can_admin_cs()
 		);
 
 		// Set section and page name variable, if section is available

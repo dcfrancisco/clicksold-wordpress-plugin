@@ -25,6 +25,7 @@ class CS_response
 	private $response_contents = array();
 	private $resource_includes; //JSON object converted to associative array
 	private $response_content_type = "text/plain";
+	private $response_status_code = "";
 	private $plugin_section = '';
 	private $error_state = false; //True when passed in an array with "cs_req_err_msg" as one of the keys
 
@@ -43,6 +44,7 @@ class CS_response
 		$this->cs_parse_response($data);
 		if(!$this->error_state) {
 			$this->response_content_type = $data['headers']['content-type'];
+			$this->response_status_code = $data['response']['code'];
 			$this->set_resource_includes();
 			$this->check_vars_for_requests(); // Checks the variables sent by the server to see if the server wants us to do something.
 		}
@@ -250,6 +252,10 @@ class CS_response
 	
 	public function cs_get_response_content_type(){
 		return $this->response_content_type;
+	}
+	
+	public function cs_get_response_status_code(){
+		return $this->response_status_code;
 	}
 	
 	/**

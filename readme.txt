@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.59 =
+* Performance optimization fixes / updates.
+
 = 1.58 =
 * Fix VIP clients unable to login via username / pass - due to performance updates.
 

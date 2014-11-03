@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.58
+Version: 1.59
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.58';
+$cs_plugin_version = '1.59';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -98,7 +98,7 @@ endif;
 require_once('CS_request.php');
 require_once('CS_response.php');
 require_once('CS_shortcodes.php');
-if(is_admin()) { require_once('CS_admin.php'); }
+require_once('CS_admin.php'); // 2014-10-31 - EZ - this can't be loaded selectively on if is_admin() as routines from here are needed for wp-control.php
 require_once('CS_config.php');
 require_once('CS_utilities.php');
 
@@ -340,8 +340,11 @@ function attempt_autologin_auth(){
  *
  * The plugin server needs to know this as now we have some admin components that appear in the front office as opposed to being called from the back office. Before
  * we could just assume that if we are hitting the Admin controller then that we are autorized to do so.
+ * 
+ * 2014-10-31 NOTE: As of plugin 1.59 this is no longer required -- the plugin sends this info with each request now and the cs plugin server will respond accordingly.
+ * This whole section is being left here as a reminder of this fact.
  */
-add_action('wp_login', 'cs_wp_login');
+//add_action('wp_login', 'cs_wp_login');
 function cs_wp_login($user_login) {
 
 	/**
@@ -368,19 +371,18 @@ function cs_wp_login($user_login) {
 //		$request->request();
 //	}
 }
-
-add_action('wp_logout', 'cs_wp_logout');
+//add_action('wp_logout', 'cs_wp_logout');
 function cs_wp_logout() {
 
-	global $CS_SECTION_ADMIN_PARAM_CONSTANT;
-
-	// Only report if the user can cs_current_user_can_admin_cs
-	if( cs_current_user_can_admin_cs() ) {
-
-		// Report that the user has logged out.
-		$request = new CS_request( "pathway=407", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); // 407 corresponds to SystemInfo.RPM_PLUGIN_ADMIN_REPORT_WP_ADMIN_LOGOUT
-		$request->request();
-	}
+//	global $CS_SECTION_ADMIN_PARAM_CONSTANT;
+//
+//	// Only report if the user can cs_current_user_can_admin_cs
+//	if( cs_current_user_can_admin_cs() ) {
+//
+//		// Report that the user has logged out.
+//		$request = new CS_request( "pathway=407", $CS_SECTION_ADMIN_PARAM_CONSTANT["wp_admin_pname"] ); // 407 corresponds to SystemInfo.RPM_PLUGIN_ADMIN_REPORT_WP_ADMIN_LOGOUT
+//		$request->request();
+//	}
 }
 
 /**

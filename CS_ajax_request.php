@@ -72,6 +72,7 @@ ob_start();
 require_once('CS_request.php');
 require_once('CS_response.php');
 require_once('cs_constants.php');
+require_once('cs_functions.php');
 
 // If we're doing a short init - the cs plugin's cs_init_session is never defined, never hooked up and never ran -- we do this here so we can support sessions in ajax calls (think VIP login).
 if( $use_short_init ) {
@@ -82,6 +83,7 @@ if( $use_short_init ) {
 class CS_ajax_request{
 	protected $request_vars;
 	protected $content_type;
+	protected $response_status_code;
 	
 	public $captcha;
 	
@@ -151,7 +153,9 @@ class CS_ajax_request{
 			update_option($cs_change_products_request, "1");
 		}
 	
+		// Save the meta data that we care about.
 		$this->content_type = $cs_response->cs_get_response_content_type();
+		$this->response_status_code = $cs_response->cs_get_response_status_code();
 		
 		return $cs_response->get_body_contents();
 	}
@@ -168,6 +172,10 @@ class CS_ajax_request{
 		return $this->content_type;
 	}
 	
+	public function get_status_code(){
+		return $this->response_status_code;
+	}
+
 	/**
 	 * Returns true if this is a request from the admin panel (ClickSold)
 	 */
@@ -199,7 +207,7 @@ class CS_ajax_request{
 	$ajax_request = new CS_ajax_request;
 	$response_body = $ajax_request->get_response();
 	$response_body = trim($response_body);
-
+	
 	if( $ajax_request->captcha == true ) { // Make sure that it reports itself as an image if it's an image request.
 		header('Content-Type: image/jpeg');
 		
@@ -211,7 +219,14 @@ class CS_ajax_request{
 			echo $response_body;
 		}
 	} else {
+		
+		// Set the content type that the plugin server sent us.
 		header('Content-Type: ' . $ajax_request->get_content_type());
+		
+		// Grab the status of the response that the plugin server sent us.
+		// NOTE: php < 5.4 does not have this function, it is optionally implemented in cs_functions.php.
+		http_response_code( $ajax_request->get_status_code() );
+		
 		echo $response_body;
 	}
 	
