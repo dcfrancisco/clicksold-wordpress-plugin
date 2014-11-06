@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.60 =
+* Fix file uploads in the back office.
+
 = 1.59 =
 * Performance optimization fixes / updates.
 

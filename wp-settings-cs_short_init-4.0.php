@@ -174,27 +174,28 @@ wp_plugin_directory_constants();
 
 $GLOBALS['wp_plugin_paths'] = array();
 
-// CS - shortinit - disabled // Load must-use plugins.
-// CS - shortinit - disabled foreach ( wp_get_mu_plugins() as $mu_plugin ) {
-// CS - shortinit - disabled 	include_once( $mu_plugin );
-// CS - shortinit - disabled }
-// CS - shortinit - disabled unset( $mu_plugin );
+// CS - MU plugins must be loaded as we need the domain mapping one on our wpmu setup.
+// Load must-use plugins.
+foreach ( wp_get_mu_plugins() as $mu_plugin ) {
+	include_once( $mu_plugin );
+}
+unset( $mu_plugin );
 
-// CS - shortinit - disabled // Load network activated plugins.
-// CS - shortinit - disabled if ( is_multisite() ) {
-// CS - shortinit - disabled 	foreach( wp_get_active_network_plugins() as $network_plugin ) {
-// CS - shortinit - disabled 		wp_register_plugin_realpath( $network_plugin );
-// CS - shortinit - disabled 		include_once( $network_plugin );
-// CS - shortinit - disabled 	}
-// CS - shortinit - disabled 	unset( $network_plugin );
-// CS - shortinit - disabled }
+// Load network activated plugins.
+if ( is_multisite() ) {
+	foreach( wp_get_active_network_plugins() as $network_plugin ) {
+		wp_register_plugin_realpath( $network_plugin );
+		include_once( $network_plugin );
+	}
+	unset( $network_plugin );
+}
 
-// CS - shortinit - disabled /**
-// CS - shortinit - disabled  * Fires once all must-use and network-activated plugins have loaded.
-// CS - shortinit - disabled  *
-// CS - shortinit - disabled  * @since 2.8.0
-// CS - shortinit - disabled  */
-// CS - shortinit - disabled do_action( 'muplugins_loaded' );
+/**
+ * Fires once all must-use and network-activated plugins have loaded.
+ *
+ * @since 2.8.0
+ */
+do_action( 'muplugins_loaded' );
 
 if ( is_multisite() )
 	ms_cookie_constants(  );
