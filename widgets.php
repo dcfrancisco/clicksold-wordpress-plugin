@@ -1097,24 +1097,107 @@ class Listing_QS_Widget extends CS_Widget{
 			$comm_url .= '&city=#&neigh=#'; //Note: the js will fill in the "neigh" query param
 		}
 		
+		$widgetStyles = "";
+		$formContainerStyles = "";
+		$backgroundStyles = "";
+		$vertStyles = "";
+		
+		if(!empty($instance['widgetHeight'])) { $widgetStyles = ' style="height:'.$instance['widgetHeight'].';"'; }
+		
+		if(!empty($instance['minWidth'])) { $formContainerStyles .= 'min-width:'.$instance['minWidth'].';'; }
+		if(!empty($instance['maxWidth'])) { $formContainerStyles .= 'max-width:'.$instance['maxWidth'].';'; }
+		if(!empty($instance['minHeight'])) { $formContainerStyles .= 'min-height:'.$instance['minHeight'].';'; }
+		if(!empty($instance['maxHeight'])) { $formContainerStyles .= 'max-height:'.$instance['maxHeight'].';'; }
+		
+		if(!empty($instance['backgroundColor'])) { 
+			if(substr_compare($instance['backgroundColor'], "rgba", 0, 4, true) === 0) {
+				$backgroundStyles = $instance['backgroundColor'];
+			} else if(substr_compare($instance['backgroundColor'], "rgb", 0, 3, true) === 0) {
+				preg_match('/\((.*?)\)/', $instance['backgroundColor'], $rgb);
+				if(!empty($instance['backgroundOpacity']) && count($rgb) == 3) {
+					$backgroundStyles = 'background:rgba('.$rgb[0].', '.$rgb[1].', '.$rgb[2].', '.$instance['backgroundOpacity'].');'; 
+				} else {
+					$backgroundStyles = 'background:'.$instance['backgroundColor'].';';
+				}
+			} else if(substr_compare($instance['backgroundColor'], "#", 0, 1) === 0) {
+				if(!empty($instance['backgroundOpacity'])) {
+					$color = ltrim($instance['backgroundColor'], "#");
+					if(strlen($color) == 6) {
+						$color_parts = str_split($color, 2);
+						$rgb = array_map('hexdec', $color_parts);
+						$backgroundStyles = 'background:rgba('.$rgb[0].', '.$rgb[1].', '.$rgb[2].', '.$instance['backgroundOpacity'].');'; 
+					} else if(strlen($color) == 3) {
+						$color_parts = str_split($color);
+						$hex = array($color_parts[0].$color_parts[0], $color_parts[1].$color_parts[1], $color_parts[2].$color_parts[2]);
+						$rgb = array_map('hexdec', $hex);
+						$backgroundStyles = 'background:rgba('.$rgb[0].', '.$rgb[1].', '.$rgb[2].', '.$instance['backgroundOpacity'].');'; 
+					} else {
+						$backgroundStyles = 'background-color:'.$instance['backgroundColor'].';';
+					}
+				} else {
+					$backgroundStyles = 'background-color:'.$instance['backgroundColor'].';';
+				}
+			}
+		}
+		
+		if(!empty($instance['top'])) {
+			$vertStyles .= 'position:relative;top:'.$instance['top'].';';
+		}
+		
+		if(!empty($instance['translateY'])) {
+			$vertStyles .= 'transform:translateY('.$instance['translateY'].');-webkit-transform:translateY('.$instance['translateY'].');-ms-transform:translateY('.$instance['translateY'].');';
+			//$vertStyles .= 'transform-style:preserve-3d;-webkit-transform-style:preserve-3d;-moz-transform-style:preserve-3d;';
+		}
+		
+		if(!empty($formContainerStyles) || !empty($backgroundStyles) || !empty($vertStyles)) {
+			$formContainerStyles = ' style="' . $vertStyles . $formContainerStyles . $backgroundStyles . '"'; 
+		}
+		
 		extract( $args );
 		extract( $instance );
-				
+		
 		include( $this->getTemplateHierarchy( 'cs_template_listing-quick-search-widget_', 'listing-quick-search-widget' ) );
 	}
 	
 	function update( $new_instance, $old_instance ){
 		$instance['title'] = $new_instance['title'];
+		$instance['showMLSSearchLogo'] = !empty($new_instance['showMLSSearchLogo']) ? 1 : 0;
+		$instance['showSearchButton'] = !empty($new_instance['showSearchButton']) ? 1 : 0;
+		$instance['backgroundColor'] = $new_instance['backgroundColor'];
+		$instance['backgroundOpacity'] = $new_instance['backgroundOpacity'];
+		$instance['minWidth'] = $new_instance['minWidth'];
+		$instance['maxWidth'] = $new_instance['maxWidth'];
+		$instance['minHeight'] = $new_instance['minHeight'];
+		$instance['maxHeight'] = $new_instance['maxHeight'];
+		$instance['translateY'] = $new_instance['translateY'];
+		$instance['widgetHeight'] = $new_instance['widgetHeight'];
+		$instance['top'] = $new_instance['top'];
 		return $instance;
 	}
 	
 	function form( $instance ){	
-		$instance = wp_parse_args((array) $instance, array( 
-			'title' => ''
-		));
+		$instance_opts = array( 
+			'title' => '',
+			'showMLSSearchLogo' => '',
+			'showSearchButton' => '',
+			'backgroundColor' => '',
+			'backgroundOpacity' => '',
+			'minWidth' => '',
+			'maxWidth' => '',
+			'minHeight' => '',
+			'maxHeight' => '',
+			'translateY' => '-50',
+			'widgetHeight' => '',
+			'top' => '50%'
+		);
+	
+		$showMLSSearchLogo = isset( $instance['showMLSSearchLogo'] ) ? (bool) $instance['showMLSSearchLogo'] : true;
+		$showSearchButton = isset( $instance['showSearchButton'] ) ? (bool) $instance['showSearchButton'] : false;
+		
+		$instance = wp_parse_args((array) $instance, $instance_opts);
+		
 		include( $this->getTemplateHierarchy( 'cs_template_listing-quick-search-widget_', 'listing-quick-search-widget-admin' ) );
 	}
-	
 }
 
 /**

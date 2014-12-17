@@ -2,7 +2,7 @@
 Contributors: ClickSold
 Tags: idx, vow, rets, real estate, mls, realtor, listing, listings, craigslist, rental, google map, agent, broker, properties, trulia, zillow, dsidx
 Requires at least: 3.0.0
-Tested up to: 4.0
+Tested up to: 4.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -57,6 +57,13 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
+
+= 1.61 =
+* Added header quick search widget.  Ideal use would be in the header or page title sections.
+* Upstream - Updated Mortgage calculator to make the CMHC optional while at the same time providing warnings if the options selected don't make sense. 
+* Upstream - Updated contact form anti spam measures.
+* Upstream - New JQ versions on mobile site.
+* Upstream - ACTRIS better handling of subdivision data.
 
 = 1.60 =
 * Fix file uploads in the back office.
