@@ -78,6 +78,9 @@ $cs_help_page = "";
 			add_action('admin_init', array($this, 'cs_show_offers_popup_config'));
 		}
 		
+		/**
+		 * 2015-01-02 EZ - this appears to be incomplete!
+		 */
 		function cs_show_offers_popup_config(){
 			global $cs_offers_config;
 			global $CS_SECTION_ADMIN_PARAM_CONSTANT;
@@ -91,6 +94,7 @@ $cs_help_page = "";
 				if($cs_response->is_error()) return;
 				
 				$cs_offers_config = $cs_response->cs_get_json();
+				
 				if(!empty($cs_offers_config)) {
 					add_action('admin_enqueue_scripts', array($cs_response, 'cs_get_header_contents_linked_only'), 0);
 					add_action('admin_print_scripts', array($this, 'cs_show_offers_popup'), 20);
@@ -98,6 +102,9 @@ $cs_help_page = "";
 			}
 		}
 		
+		/**
+		 * 2015-01-02 EZ - this appears to be incomplete!
+		 */
 		function cs_show_offers_popup() {
 			global $cs_offers_config;
 			if(empty($cs_offers_config)) return;
@@ -464,14 +471,56 @@ $cs_help_page = "";
 						<div class='cs_dashboard_widget_upgrade_img_wrapper'>
 						  <a href='admin.php?page=cs_plugin_product_config_direct' class='cs-dashboard-icon'>
 						    <div class='cs-dashboard-icon-image'><img src='".plugins_url( 'images/welcome-upgrade.png', __FILE__ ) ."'></div>
-						    <div class='cs-dashboard-icon-text'>Upgrade my Account</div>
+						    <div class='cs-dashboard-icon-text'>Upgrade my Account (One month free trial)</div>
 						  </a>
 						</div>
 
 						";
+					
+					// Show the popup explaining the upgrade procedure.
+					$show_upgrade_popup = get_option("cs_opt_show_upgrade_popup", "1");
+					//$show_upgrade_popup = 1;
+					if($show_upgrade_popup == "1") {
+						update_option("cs_opt_show_upgrade_popup", "0"); // Never show this again.
+
+						echo
+							"<script>
+								(function($){ 
+									$(document).ready(function(){				 
+										var csPopupHtml =	\"<div id=\\\"cs_upgrade_popup\\\" class='cs_upgrade_popup'>\" +
+															\"  <div class=\\\"cs_dashboard_widget_upgrade_img_wrapper\\\">\" +
+															\"    <a href=\\\"admin.php?page=cs_plugin_product_config_direct\\\" target=\\\"_blank\\\"  class='cs-dashboard-icon'>\" +
+															\"      <div class='cs-dashboard-icon-image'><img src=\\\"".plugins_url( 'images/welcome-upgrade.png', __FILE__ )."\\\"></div>\" +
+															\"      <div class='cs-dashboard-icon-text'>Upgrade my Account (One month free trial)</div>\" + 
+															\"    </a>\" +
+															\"  </div>\" +
+
+															\"  <div class='cs_dashboard_widget_help_links_msg_wrapper cs_dashboard_widget_help_links_msg_wrapper_with_bottom_border'>\" + 
+															\"    <p class='cs_dashboard_widget_help_links_msg_header'>Welcome to ClickSold:</p>\" + 
+															\"    <p>Clicking the above image or the same image in the Dashboard widget will allow you to upgrade your account or try a free demo package. Free demo packages allow you to see exactly how your plugin would behave after upgrading to the full ClickSold Platinum package.</p>\" + 
+															\"    <p class='cs_dashboard_widget_help_links_msg_header'>Free Tral:</p>\" + 
+															\"    <p>ClickSold offers a one month free trial of our flagship Platinum package.</p>\" + 
+															\"  </div>\" + 
+
+															\"</div>\" +
+															\"\" + 
+															\"\";
+												
+										var csPopupOpts = {
+											html : csPopupHtml,
+											className : \"cs_offers_popup_modal\",
+											width : \"500\",
+										};
+										
+										$.clickSoldUtils(\"infoBoxCreate\", csPopupOpts);
+									});
+								})(csJQ);
+							</script>";
+					}
 				}
 
 				if( cs_is_hosted() ) { // Only display the welcome to wordpress if it's a ClickSold hosted wordpress install.
+				
 					echo 	"
 						<div class='cs_dashboard_widget_help_links_msg_wrapper cs_dashboard_widget_help_links_msg_wrapper_with_bottom_border'>
 						  <p class='cs_dashboard_widget_help_links_msg_header'> Welcome to your new WordPress site: </p>
@@ -501,6 +550,7 @@ $cs_help_page = "";
 
 						</div>
 					";
+					
 				}
 				
 				echo 	"
