@@ -57,7 +57,7 @@ require_once('../../../wp-load.php');
       </a>
       <a href="http://www.clicksold.com/wiki/index.php/How_to_Upgrade_Your_ClickSold_Package" target="_blank" class="cs-admin-icon">
         <div class="cs-admin-icon-image"><img src="<?php echo plugins_url( "images/welcome-upgrade.png", __FILE__ ); ?>"></div>
-        <div class="cs-admin-icon-text">Upgrade my Account or try a free demo package</div>
+        <div class="cs-admin-icon-text">Upgrade my Account (One month free trial)</div>
       </a>
     </div>
   </div>
