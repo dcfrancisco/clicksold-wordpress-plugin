@@ -34,7 +34,12 @@ if ( !empty( $title ) ) { echo $before_title . $title . $after_title; }
 			listingStatus : "<?php echo $instance['listing_status']; ?>",
 			listingUrl : "<?php echo $listings_url; ?>",
 			listingExclUrl : "<?php echo $listings_excl_url; ?>",
-			cycleFrequency : "<?php echo $instance['freq']; ?>"
+			cycleFrequency : "<?php echo $instance['freq']; ?>",
+			numDisp : <?php echo $instance['numDisp']; ?>,
+			minCntWidth : "<?php echo $instance['minCntWidth']; ?>",
+			maxCntWidth : "<?php echo $instance['maxCntWidth']; ?>",
+			minCntHeight : "<?php echo $instance['minCntHeight']; ?>",
+			maxCntHeight : "<?php echo $instance['maxCntHeight']; ?>"
 		});
 	});
 })(csJQ);

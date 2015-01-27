@@ -1292,6 +1292,7 @@ class Feature_Listing_Widget extends CS_Widget{
 		
 		if( !array_key_exists('listing_type', $instance) || empty($instance['listing_type']) ) $instance['listing_type'] = 0;
 		if( !array_key_exists('listing_status', $instance) || empty($instance['listing_status']) ) $instance['listing_status'] = 0;
+		if( !array_key_exists('numDisp', $instance) || empty($instance['numDisp']) ) $instance['numDisp'] = '1';
 		
 		extract( $args );
 		extract( $instance );
@@ -1327,7 +1328,18 @@ class Feature_Listing_Widget extends CS_Widget{
 		} else {
 			$instance['freq'] = $new_instance['freq'];
 		}
-				
+			
+		if(empty($new_instance['numDisp']) || !is_numeric($new_instance['numDisp']) || ((int) $new_instance['numDisp'] < 1 && (int) $new_instance['numDisp'] > 10) ) {
+			$instance['numDisp'] = "1";
+		} else {
+			$instance['numDisp'] = $new_instance['numDisp'];
+		}
+		
+		$instance['minCntWidth'] = $new_instance['minCntWidth'];
+		$instance['maxCntWidth'] = $new_instance['maxCntWidth'];
+		$instance['minCntHeight'] = $new_instance['minCntHeight'];
+		$instance['maxCntHeight'] = $new_instance['maxCntHeight'];
+		
 		return $instance;
 	}
 	
@@ -1348,6 +1360,11 @@ class Feature_Listing_Widget extends CS_Widget{
 			'listing_status' => $PLUGIN_FEAT_LIST_OPTS['listing_status']['values'][1]['opt_val'],
 			'freq' => '10000',
 			'title' => '',
+			'numDisp' => '1',
+			'minCntWidth' => '',
+			'maxCntWidth' => '',
+			'minCntHeight' => '',
+			'maxCntHeight' => '',
 			'useDefault' => true,
 			'user_defined_listings' => array()
 		);
@@ -1378,6 +1395,12 @@ class Feature_Listing_Widget extends CS_Widget{
 		global $CS_SECTION_PARAM_CONSTANTS;
 		
 		$params = '&listSection=' . $instance['listing_section'] . '&listType=' . $instance['listing_type'] . '&listStatus=' . $instance['listing_status'];
+		if(array_key_exists('numDisp', $instance) && !empty($instance['numDisp'])) {
+			$params .= '&numDisp=' . $instance['numDisp'];
+		} else {
+			$params .= '&numDisp=1';
+		}
+				
 		if(array_key_exists('user_defined_listings', $instance) && !empty($instance['user_defined_listings'])) {
 			foreach($instance['user_defined_listings'] as $mlsNum) {
 				$params .= '&userDefinedListings[]=' . $mlsNum;

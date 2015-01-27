@@ -4,6 +4,10 @@
     <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr(strip_tags($instance['title'])); ?>" />
   </p>
   <p>
+    <label for="<?php echo $this->get_field_id('numDisp'); ?>">Number of listings shown at once:</label>
+    <input class="widefat" id="<?php echo $this->get_field_id('numDisp'); ?>" name="<?php echo $this->get_field_name('numDisp'); ?>" type="text" value="<?php echo esc_attr(strip_tags($instance['numDisp'])); ?>" />
+  </p>
+  <p>
     <label for="<?php echo $this->get_field_id('listing_section'); ?>"><?php echo $listing_section_label; ?></label><br/>
 	<select class="widefat" id="<?php echo $this->get_field_id('listing_section'); ?>" name="<?php echo $this->get_field_name('listing_section'); ?>">
 <?php   foreach($PLUGIN_FEAT_LIST_OPTS['listing_section']['values'] as $value) { 
@@ -46,6 +50,26 @@
     <input class="widefat" type="text" id="<?php echo $this->get_field_id('freq'); ?>" name="<?php echo $this->get_field_name('freq'); ?>" value="<?php echo $instance['freq']; ?>" />
   </p>
 
+  <p>
+    <label for="<?php echo $this->get_field_id('minCntWidth'); ?>">Min Listing Container Width</label><br/>
+    <input class="widefat" type="text" id="<?php echo $this->get_field_id('minCntWidth'); ?>" name="<?php echo $this->get_field_name('minCntWidth'); ?>" value="<?php echo $instance['minCntWidth']; ?>" />
+  </p>
+  
+  <p>
+    <label for="<?php echo $this->get_field_id('maxCntWidth'); ?>">Max Listing Container Width</label><br/>
+    <input class="widefat" type="text" id="<?php echo $this->get_field_id('maxCntWidth'); ?>" name="<?php echo $this->get_field_name('maxCntWidth'); ?>" value="<?php echo $instance['maxCntWidth']; ?>" />
+  </p>
+  
+  <p>
+    <label for="<?php echo $this->get_field_id('minCntHeight'); ?>">Min Listing Container Height</label><br/>
+    <input class="widefat" type="text" id="<?php echo $this->get_field_id('minCntHeight'); ?>" name="<?php echo $this->get_field_name('minCntHeight'); ?>" value="<?php echo $instance['minCntHeight']; ?>" />
+  </p>
+  
+  <p>
+    <label for="<?php echo $this->get_field_id('maxCntHeight'); ?>">Max Listing Container Height</label><br/>
+    <input class="widefat" type="text" id="<?php echo $this->get_field_id('maxCntHeight'); ?>" name="<?php echo $this->get_field_name('maxCntHeight'); ?>" value="<?php echo $instance['maxCntHeight']; ?>" />
+  </p>
+  
   <div id="user_defined_listings_select" style="display:none;">
     <p>
       <label for="userDefinedListingsType">Listing Type</label><br/>
