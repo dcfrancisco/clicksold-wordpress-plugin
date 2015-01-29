@@ -27,7 +27,7 @@ ClickSold adds real estate related features to Agent and Brokerage websites buil
 
 **How Much?**
 
-From FREE to $45/month. 
+From FREE to $45/month. (Platinum package includes one month free trial).
 
 **Work with REALTORS&reg;?**
 
@@ -57,6 +57,13 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
+
+= 1.62 =
+* Featured Listings widget updates.
+* Upstream - Reorganize Community data for ACTRIS(Austin) region.
+* Upstream - Mitigate compatability issues between CS and other plugins that use the Google Maps api.
+* Upstream - Listing view statistics are now global as opposed to per account.
+* Upstream - MLS Search Engine - polygon searching is now more efficient.
 
 = 1.61 =
 * Added header quick search widget.  Ideal use would be in the header or page title sections.
