@@ -1293,6 +1293,10 @@ class Feature_Listing_Widget extends CS_Widget{
 		if( !array_key_exists('listing_type', $instance) || empty($instance['listing_type']) ) $instance['listing_type'] = 0;
 		if( !array_key_exists('listing_status', $instance) || empty($instance['listing_status']) ) $instance['listing_status'] = 0;
 		if( !array_key_exists('numDisp', $instance) || empty($instance['numDisp']) ) $instance['numDisp'] = '1';
+		if( !array_key_exists('minCntWidth', $instance)) $instance['minCntWidth'] = '';
+		if( !array_key_exists('maxCntWidth', $instance)) $instance['maxCntWidth'] = '';
+		if( !array_key_exists('minCntHeight', $instance)) $instance['minCntHeight'] = '';
+		if( !array_key_exists('maxCntHeight', $instance)) $instance['maxCntHeight'] = '';
 		
 		extract( $args );
 		extract( $instance );
