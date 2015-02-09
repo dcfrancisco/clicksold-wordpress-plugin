@@ -323,6 +323,15 @@
 			'server' => true,
 			'request' => 'domain_manager'
 		),
+		'My Emails' => array(  //Domain Mgmt / SEO
+			'level' => 'sub',
+			'menu_slug' => 'cs_plugin_admin_emails',
+			'parent_slug' => 'cs_plugin_admin',
+			'page_title' => 'ClickSold < My Emails',
+			'callback' => 'cs_generated_form',
+			'server' => true,
+			'request' => 'email_manager'
+		),
 		'My Listings' => array(  //Listings
 			'level' => 'sub',
 			'menu_slug' => 'cs_plugin_admin_listings',

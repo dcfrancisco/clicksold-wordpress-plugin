@@ -478,15 +478,15 @@ function cs_encode_for_html( $str ) {
 }
 
 /**
- * Wrapper around WP_Query.queried_object_id - some plugins get confused if we call get_queried_object_id so we query the instance var directly, however as of
- * WP 3.5 (I think) we're getting non defined warnings when WP_Debug is on. So we test to see if the var is defined and only use it if it is.
- * 
- * Reminder the incompatible plugin was WP-Property
+ * Wrapper around WP_Query.queried_object_id - some plugins get confused if we call get_queried_object_id so we query the instance var directly if it's filled out - if it's not filled out
+ * we just return nothing. We leave it to the calling code to make sure that this is only called from places where the queried_object_id is already defined in the wp_query object given.
+ *
+ * Reminder the incompatible plugin was WP-Property -- specifically, when you define a property trying to look it up on the front end results in a 404 error if we use the get_queried_object_id() function in our cs_process_cs_section_posts (parse_query hook).
  */
 function cs_get_queried_object_id( $wp_query ) {
 
 	if(! isset( $wp_query->queried_object_id ) ) {
-		//$wp_query->get_queried_object_id(); // This is as of WP 3.5 throwing warnings regarding the $post object....
+		//return $wp_query->get_queried_object_id();
 		return;
 	} else {
 		return $wp_query->queried_object_id;

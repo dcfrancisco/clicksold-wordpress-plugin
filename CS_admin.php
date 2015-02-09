@@ -233,6 +233,12 @@ $cs_help_page = "";
 						//Remove the item
 						unset($menu[$key]);
 					}
+					
+					// Also e-mail can't be managed if we are not hosted.
+					if( $item['menu_slug'] == 'cs_plugin_admin_email' ) {
+						//Remove the item
+						unset($menu[$key]);
+					}
 				}
 
 				// Supress the "Upgrade!" menu item if we are platinum.

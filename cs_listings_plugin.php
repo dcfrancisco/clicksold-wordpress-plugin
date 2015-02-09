@@ -712,10 +712,17 @@ if( !is_admin() ){
 	 */
 	function cs_process_cs_section_posts( $wp_query ){
 
-		/** 2013-05-06 EZ - Note added this junk add action so that when we remove the cs_process_cs_section_posts hook the 5 level does not get empty. The Thesis theme
-		 * framework freaks out if we remove this action from the '5' priority level therefore leaving that level blank. */
-		add_action("parse_query", "cs_null_function", 5);
-		remove_action('parse_query', 'cs_process_cs_section_posts', 5);
+		/** 2015-02-03 EZ - Over the years we've had a bunch of obscure cases where the [cs_]get_queried_object_id calls below were not working or were confusing other plugins.
+		 *                  I had always thought that it was because we were (or the other plugins were calling it too early). Turns out that we were attempting this process on
+		 *                  non main queries which don't always have all of the information in wp_query. This is here to resolve these issues.
+		 *                  NOTE: The code below to remove the action is no longer necessary because of this is_main_query check.
+		 */
+		if(! $wp_query->is_main_query() ) { return; }
+
+		///** 2013-05-06 EZ - Note added this junk add action so that when we remove the cs_process_cs_section_posts hook the 5 level does not get empty. The Thesis theme
+		// * framework freaks out if we remove this action from the '5' priority level therefore leaving that level blank. */
+		//add_action("parse_query", "cs_null_function", 5);
+		//remove_action('parse_query', 'cs_process_cs_section_posts', 5);
 
 		global $wpdb;
 		global $wp_rewrite;
