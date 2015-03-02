@@ -70,6 +70,8 @@
     <input class="widefat" type="text" id="<?php echo $this->get_field_id('maxCntHeight'); ?>" name="<?php echo $this->get_field_name('maxCntHeight'); ?>" value="<?php echo $instance['maxCntHeight']; ?>" />
   </p>
   
+  <p>Please include units (px, em, %) to container width/height values</p>
+  
   <div id="user_defined_listings_select" style="display:none;">
     <p>
       <label for="userDefinedListingsType">Listing Type</label><br/>

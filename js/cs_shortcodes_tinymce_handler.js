@@ -13,9 +13,10 @@
 		{ title: 'Listing Details (by MLS Num)', shortcode: '[cs_listing_details mlsNumber="&lt;mls_number&gt;"]' },
 		{ title: 'Listing Details (by List Num)', shortcode: '[cs_listing_details listingNumber="&lt;listing_number&gt;"]' },
 		{ title: 'Featured Listings Search', shortcode: '[cs_featured_listings]' },
+		{ title: 'Featured Listings Search - Tags', shortcode: '[cs_featured_listings tag="&lt;tag&gt;"]' },
 		{ title: 'Community List (Platinum Only)', shortcode: '[cs_community_list]' },
 		{ title: 'Community Search Results (Platinum Only)', shortcode: '[cs_community_results city="&lt;city_name&gt;" neigh="&lt;community_name&gt;"]' },
-		{ title: 'MLS Map Search (Platinum Only)', shortcode: '[cs_idx_search]' },
+		{ title: 'MLS Map Search (Platinum Only)', shortcode: '[cs_idx_search]' }		
 	];
 		
 	tinymce.create('tinymce.plugins.cs_shortcodes', {

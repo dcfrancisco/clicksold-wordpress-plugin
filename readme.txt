@@ -58,6 +58,13 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.63 =
+* Compatability fix on trying to figure out if CS is supposed to process on a given page load.
+* Added My Emails section on plugins hosted with ClickSold
+* Feature Listings - Tags shortcode functionality
+* Upstream - Listing tagging feature for Featured Listings section.
+* Upstream - ACTRIS - quick search now searches subdivisions.
+
 = 1.62 =
 * Featured Listings widget updates.
 * Upstream - Reorganize Community data for ACTRIS(Austin) region.
