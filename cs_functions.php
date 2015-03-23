@@ -907,6 +907,22 @@ if (!function_exists('http_response_code')) {
 	}
 }
 
+/**
+ * True or false if we are in the customizer or not. This is the customiser that allows you to check changes to the live site before making them permanent.
+ */
+function cs_is_customizer() {
+
+//	// The standard way of figuring out if we're in the customizer appears to be the below, but it does not work from the plugin (likely theme only).
+//	global $wp_customize;
+//	return is_a( $wp_customize, 'WP_Customize_Manager' ) && $wp_customize->is_preview(); 
+
+	// So instead we just check the page name... not quite as clean but should work well enough.
+	global $pagenow;
+	if($pagenow === 'customize.php') { return 1; } else { return 0; }
+	
+	
+}
+
 
 
 ?>

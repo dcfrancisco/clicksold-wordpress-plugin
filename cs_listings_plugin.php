@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.63
+Version: 1.64
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. Go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to get a plugin key and number.
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.63';
+$cs_plugin_version = '1.64';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -103,6 +103,16 @@ require_once('CS_config.php');
 require_once('CS_utilities.php');
 
 require_once(ABSPATH. 'wp-includes/pluggable.php');
+
+/**
+ * WP - Customizer - is the component in the wp-admin area that allows you to make changes to a live site that don't go live until you publish them.
+ * This section breaks as we don't enqueue our widget scripts correctly (it uses diff hooks). I've tried to fix this 2015-03-19 EZ but ran out of time,
+ * so for the time being if we are running the customizer call we just exit. The downside of this is that CS widgets are not available via the customizer
+ * but are still present correctly on the widgets.php page.
+ */
+if(cs_is_customizer()) {
+	return;
+}
 
 //hook add_query_vars function to query_vars.
 //query_vars: applied to the list of public WordPress query variables before the SQL query is formed.
@@ -1091,6 +1101,7 @@ function cs_register_cs_widgets() {
 	global $wpdb;
 	global $cs_posts_table;
 	global $CS_SECTION_PARAM_CONSTANTS;
+	global $pagenow;
 
 	$load_widgets = true;
 
