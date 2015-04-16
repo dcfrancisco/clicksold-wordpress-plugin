@@ -58,6 +58,11 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.65 =
+* Shortcode support for new Advanced Search feature from upstream.
+* Upstream - Advanced Search feature.
+* Upstream - Nearest town filter added for CREB
+
 = 1.64 =
 * Fix incompatability with theme customizer
 

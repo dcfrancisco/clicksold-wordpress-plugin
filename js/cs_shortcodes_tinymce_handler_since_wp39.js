@@ -16,7 +16,8 @@
 		{ title: 'Featured Listings Search - Tags', shortcode: '[cs_featured_listings tag="&lt;tag&gt;"]' },
 		{ title: 'Community List (Platinum Only)', shortcode: '[cs_community_list]' },
 		{ title: 'Community Search Results (Platinum Only)', shortcode: '[cs_community_results city="&lt;city_name&gt;" neigh="&lt;community_name&gt;"]' },
-		{ title: 'MLS Map Search (Platinum Only)', shortcode: '[cs_idx_search]' }
+		{ title: 'MLS Map Search (Platinum Only)', shortcode: '[cs_idx_search]' },
+		{ title: 'Advanced Search (Platinum Only)', shortcode: '[cs_advanced_search searchName="&lt;search_name&gt;"]' }
 	];
 
 

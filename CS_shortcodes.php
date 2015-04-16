@@ -63,6 +63,7 @@ class CS_shortcodes {
 			$this->register_cs_shortcode( 'cs_community_list',	'cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_community_results',	'cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_idx_search',		'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_advanced_search',		'cs_response_shortcode_handler' );
 		} elseif ( $this->plugin_type == "cs_admin" ) { // shortcodes for the admin plugin
 			$this->register_cs_shortcode( 'cs_admin_cs_signup_form','cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_admin_cs_account_info_retrieval_form','cs_response_shortcode_handler' );
@@ -112,6 +113,12 @@ class CS_shortcodes {
 
 			$this->shortcode_meta_data['cs_idx_search'] = array(
 										array( 'pathway' => '5' ),	// Default parameters.
+										array( 'pathway' => ''  ),	// Params that can't be overriden.
+										false						// Introspect on the query string
+									);
+
+			$this->shortcode_meta_data['cs_advanced_search'] = array(
+										array( 'pathway' => '714' ), // Default parameters.
 										array( 'pathway' => ''  ),	// Params that can't be overriden.
 										false						// Introspect on the query string
 									);
