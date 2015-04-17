@@ -58,18 +58,20 @@ class CS_shortcodes {
 
 		/** register_cs_shortcode checks to see if the short code is alreay registered with wp and ourselves. */
 		if( $this->plugin_type == "cs_listings" ) { // shortcodes for the listings plugin.
-			$this->register_cs_shortcode( 'cs_listing_details',	'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_listing_details',		'cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_featured_listings',	'cs_response_shortcode_handler' );
-			$this->register_cs_shortcode( 'cs_community_list',	'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_community_list',		'cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_community_results',	'cs_response_shortcode_handler' );
-			$this->register_cs_shortcode( 'cs_idx_search',		'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_idx_search',			'cs_response_shortcode_handler' );
 			$this->register_cs_shortcode( 'cs_advanced_search',		'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_associate_list',		'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_associate_profile',	'cs_response_shortcode_handler' );
 		} elseif ( $this->plugin_type == "cs_admin" ) { // shortcodes for the admin plugin
-			$this->register_cs_shortcode( 'cs_admin_cs_signup_form','cs_response_shortcode_handler' );
-			$this->register_cs_shortcode( 'cs_admin_cs_account_info_retrieval_form','cs_response_shortcode_handler' );
-			$this->register_cs_shortcode( 'cs_admin_cs_affiliate_signup_form','cs_response_shortcode_handler' );
-			$this->register_cs_shortcode( 'cs_admin_cs_mls_integration','cs_response_shortcode_handler' );
-			$this->register_cs_shortcode( 'cs_admin_cs_generic','cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_admin_cs_signup_form',					'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_admin_cs_account_info_retrieval_form',	'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_admin_cs_affiliate_signup_form',			'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_admin_cs_mls_integration',				'cs_response_shortcode_handler' );
+			$this->register_cs_shortcode( 'cs_admin_cs_generic',						'cs_response_shortcode_handler' );
 		}
 
 		/*
@@ -119,6 +121,18 @@ class CS_shortcodes {
 
 			$this->shortcode_meta_data['cs_advanced_search'] = array(
 										array( 'pathway' => '714' ), // Default parameters.
+										array( 'pathway' => ''  ),	// Params that can't be overriden.
+										false						// Introspect on the query string
+									);
+
+			$this->shortcode_meta_data['cs_associate_list'] = array(
+										array( 'pathway' => '408' ), // Default parameters.
+										array( 'pathway' => ''  ),	// Params that can't be overriden.
+										false						// Introspect on the query string
+									);
+
+			$this->shortcode_meta_data['cs_associate_profile'] = array(
+										array( 'pathway' => '409' ), // Default parameters.
 										array( 'pathway' => ''  ),	// Params that can't be overriden.
 										false						// Introspect on the query string
 									);

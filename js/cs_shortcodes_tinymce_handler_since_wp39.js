@@ -17,7 +17,9 @@
 		{ title: 'Community List (Platinum Only)', shortcode: '[cs_community_list]' },
 		{ title: 'Community Search Results (Platinum Only)', shortcode: '[cs_community_results city="&lt;city_name&gt;" neigh="&lt;community_name&gt;"]' },
 		{ title: 'MLS Map Search (Platinum Only)', shortcode: '[cs_idx_search]' },
-		{ title: 'Advanced Search (Platinum Only)', shortcode: '[cs_advanced_search searchName="&lt;search_name&gt;"]' }
+		{ title: 'Advanced Search (Platinum Only)', shortcode: '[cs_advanced_search searchName="&lt;search_name&gt;"]' },
+		{ title: 'Associate List (Brokerage Only)', shortcode: '[cs_associate_list]' },
+		{ title: 'Associate Profile (Brokerage Only)', shortcode: '[cs_associate_profile brokerageAgentId="&lt;associate_id&gt;"]' }
 	];
 
 
