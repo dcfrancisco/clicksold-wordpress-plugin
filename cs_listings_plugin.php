@@ -436,12 +436,8 @@ if( !is_admin() ){
 	// For mobile user agents, redirect to the mobile site, unless it's disabled and unless it's the CS_ajax_request.php file.
 	if(isset($_SERVER['HTTP_USER_AGENT']) && !cs_str_ends_with( $_SERVER["PHP_SELF"], "CS_ajax_request.php" )) {
 		if((stripos(basename($_SERVER['REQUEST_URI']), 'cs_mobile.php') === FALSE) && (!isset($_COOKIE["csFullSite"]) || $_COOKIE["csFullSite"] != "true") && (strpos($_SERVER['HTTP_USER_AGENT'], 'iPad') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPod') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'BlackBerry') !== FALSE) ){
-			error_log("ez ez ez ez ez ez ez ez 1 (".$_SERVER["REQUEST_URI"].") (".$_SERVER["PHP_SELF"].")");
 			if(cs_mobile_site_disabled() == false) {
-				error_log("ez ez ez ez ez ez ez ez 2");
 				header('location:' . plugin_dir_url(__FILE__) . 'cs_mobile.php');
-				error_log("ez ez ez ez ez ez ez ez 3");
-
 				die();
 			}
 		}
