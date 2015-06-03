@@ -923,6 +923,19 @@ function cs_is_customizer() {
 	
 }
 
+/**
+ * String starts with and ends with functions - shamelessly stolen from http://stackoverflow.com/questions/834303/startswith-and-endswith-functions-in-php
+ */
+function cs_str_starts_with($haystack, $needle) {
+    // search backwards starting from haystack length characters from the end
+    return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== FALSE;
+}
+function cs_str_ends_with($haystack, $needle) {
+    // search forward starting from end minus needle length characters
+    return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+}
+
+
 
 
 ?>

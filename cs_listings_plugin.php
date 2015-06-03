@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.65
+Version: 1.66
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. If you need wordpress hosting go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to sign up for an account. Alternatively you can sign up for an account directly from the WP admin area, ClickSold(Menu) -> My Account -> Plugin Activation (Tab).
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.65';
+$cs_plugin_version = '1.66';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -433,11 +433,15 @@ if( !is_admin() ){
 	// Check if we need to blog listing updates
 	add_action('pre_get_posts', 'cs_listing_auto_blog_update');
 
-	// For handling mobile site stuff
-	if(isset($_SERVER['HTTP_USER_AGENT'])) {
+	// For mobile user agents, redirect to the mobile site, unless it's disabled and unless it's the CS_ajax_request.php file.
+	if(isset($_SERVER['HTTP_USER_AGENT']) && !cs_str_ends_with( $_SERVER["PHP_SELF"], "CS_ajax_request.php" )) {
 		if((stripos(basename($_SERVER['REQUEST_URI']), 'cs_mobile.php') === FALSE) && (!isset($_COOKIE["csFullSite"]) || $_COOKIE["csFullSite"] != "true") && (strpos($_SERVER['HTTP_USER_AGENT'], 'iPad') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPod') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'BlackBerry') !== FALSE) ){
+			error_log("ez ez ez ez ez ez ez ez 1 (".$_SERVER["REQUEST_URI"].") (".$_SERVER["PHP_SELF"].")");
 			if(cs_mobile_site_disabled() == false) {
+				error_log("ez ez ez ez ez ez ez ez 2");
 				header('location:' . plugin_dir_url(__FILE__) . 'cs_mobile.php');
+				error_log("ez ez ez ez ez ez ez ez 3");
+
 				die();
 			}
 		}

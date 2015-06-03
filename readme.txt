@@ -2,7 +2,7 @@
 Contributors: ClickSold
 Tags: idx, vow, rets, real estate, mls, realtor, listing, listings, craigslist, rental, google map, agent, broker, properties, trulia, zillow, dsidx
 Requires at least: 3.0.0
-Tested up to: 4.2
+Tested up to: 4.2.2
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -57,6 +57,11 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 5. Listing details display
 
 == Changelog ==
+
+= 1.66 =
+* Fix Captcha on mobile site (when browsed on mobile defices).
+* Brokerage - Added Associate list and profile shortcodes.
+* Upstream - Added Grande Prairie - GPREB support.
 
 = 1.65 =
 * Shortcode support for new Advanced Search feature from upstream.
