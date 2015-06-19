@@ -173,6 +173,7 @@ class CS_ajax_request{
 	}
 	
 	public function get_status_code(){
+		if( !isset($this->response_status_code) || $this->response_status_code == "" ) { return 200; }
 		return $this->response_status_code;
 	}
 
