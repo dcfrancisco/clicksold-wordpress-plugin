@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.67 =
+* Fix php notice in strict mode.
+
 = 1.66 =
 * Fix Captcha on mobile site (when browsed on mobile defices).
 * Brokerage - Added Associate list and profile shortcodes.
