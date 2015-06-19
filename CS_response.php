@@ -43,8 +43,8 @@ class CS_response
 		$this->plugin_section = $plugin_section;
 		$this->cs_parse_response($data);
 		if(!$this->error_state) {
-			$this->response_content_type = $data['headers']['content-type'];
-			$this->response_status_code = $data['response']['code'];
+			if( isset( $data['headers']['content-type'] ) ) { $this->response_content_type = $data['headers']['content-type']; }
+			if( isset( $data['headers']['code'] ) ) { $this->response_status_code = $data['response']['code']; }
 			$this->set_resource_includes();
 			$this->check_vars_for_requests(); // Checks the variables sent by the server to see if the server wants us to do something.
 		}

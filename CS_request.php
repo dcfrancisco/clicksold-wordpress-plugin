@@ -99,7 +99,11 @@ class CS_request {
 		global $cs_plugin_version;
 
 		// Detect which server is to be used.
-		if(defined("CS_DEBUG") && CS_DEBUG) {
+		if(defined("CS_DEV_PLUGIN_SERVER")) {
+			
+			$this->proxy_server = CS_DEV_PLUGIN_SERVER;
+		} else if(defined("CS_DEBUG") && CS_DEBUG) {
+			
 			if($_SERVER['SERVER_NAME'] == 'localhost' || preg_match("/127.0.0./", $_SERVER['SERVER_NAME']) || preg_match("/127.0.0./", $_SERVER['SERVER_ADDR']) || preg_match("/142.244.253./", $_SERVER['SERVER_NAME'])) { // We're on localhost or 127.0.0.* ==> DEV
 				//echo "DEV<br>";
 				$this->proxy_server = $this->test_proxy_server;
