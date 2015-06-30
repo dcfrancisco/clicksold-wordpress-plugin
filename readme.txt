@@ -58,6 +58,9 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+= 1.68 =
+* Added support for JS Api based plugins.
+
 = 1.67 =
 * Fix php notice in strict mode.
 

@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.67
+Version: 1.68
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. If you need wordpress hosting go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to sign up for an account. Alternatively you can sign up for an account directly from the WP admin area, ClickSold(Menu) -> My Account -> Plugin Activation (Tab).
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.67';
+$cs_plugin_version = '1.68';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -37,6 +37,8 @@ global $cs_opt_first_login;
 $cs_opt_first_login = "cs_opt_first_login";
 global $cs_opt_tier_name;
 $cs_opt_tier_name = "cs_opt_tier_name";
+global $cs_opt_acct_type;
+$cs_opt_acct_type = "cs_opt_acct_type";
 
 // options for the auto blogger
 global $cs_autoblog_new;
@@ -236,6 +238,7 @@ function check_product_update(){
 	global $cs_opt_tier_name;
 	global $cs_opt_plugin_key;
 	global $cs_opt_plugin_num;
+	global $cs_opt_acct_type;
 
 	if ( get_option( $cs_change_products_request ) == "1" && !get_option( $cs_opt_plugin_key, "" ) == "" && !get_option( $cs_opt_plugin_num, "" ) == "" ) {
 
@@ -321,6 +324,10 @@ function check_product_update(){
 			update_option( $cs_opt_tier_name, $vars["tierName"] );
 		}
 
+		// Set the account type
+		if ( $vars["csAccountType"] != "" ) {
+			update_option( $cs_opt_acct_type, $vars['csAccountType'] );
+		}
 	}
 }
 
@@ -543,6 +550,7 @@ if( !is_admin() ){
 		global $wpdb;
 		global $CS_SECTION_PARAM_CONSTANTS;
 		global $wp_rewrite;
+		global $cs_opt_acct_type;
 
 		$vars = $_GET;
 		$vars['pathway'] = '661';
@@ -550,10 +558,22 @@ if( !is_admin() ){
 		$cs_request = new CS_request(http_build_query($vars), "");
 		$cs_response = new CS_response($cs_request->request());
 
-		// Run redirect to site
-		echo '<script type="text/javascript">';
-		echo 'location.href="' . home_url() . '";'; // home_url uses is_ssl to determine http vs. https for us.
-		echo '</script>';
+		// On regular CS sites we just forward to the root of the site. However for the js api based ones this is not guaranteed to have any valid content on it.
+		// So for the js api plugin we simply force the load of the listings/ page which is always there.
+		if( get_option( $cs_opt_acct_type, 'unknown' ) == "10" || get_option( $cs_opt_acct_type, 'unknown' ) == "11" ) { // We are the js-api plugin type.
+
+			// Run redirect to site
+			echo '<script type="text/javascript">';
+			echo 'location.href="' . home_url() . '/listings";'; // home_url uses is_ssl to determine http vs. https for us.
+			echo '</script>';
+
+		} else { // Regular clicksold.
+
+			// Run redirect to site
+			echo '<script type="text/javascript">';
+			echo 'location.href="' . home_url() . '";'; // home_url uses is_ssl to determine http vs. https for us.
+			echo '</script>';
+		}
 	}
 	
 	
@@ -740,6 +760,7 @@ if( !is_admin() ){
 		global $cs_posts_table;
 		global $cs_opt_plugin_key, $cs_opt_plugin_num;
 		global $cs_opt_tier_name;
+		global $cs_opt_acct_type;
 		global $cs_opt_brokerage;
 		global $CS_SECTION_PARAM_CONSTANTS;
 

@@ -209,6 +209,7 @@ $cs_help_page = "";
 			global $cs_opt_brokerage;
 			global $current_blog;
 			global $cs_opt_tier_name;
+			global $cs_opt_acct_type;
 
 			$menu = $CS_ADMIN_MENU_ITEMS;
 			
@@ -245,6 +246,21 @@ $cs_help_page = "";
 				if( $item['menu_slug'] == "cs_plugin_product_config_direct" && get_option( $cs_opt_tier_name, 'Bronze' ) == "Platinum" ) {
 					//Remove the item
 					unset($menu[$key]);
+				}
+				
+				// We need some menu changes if we are a js-api plugin.
+				if( get_option( $cs_opt_acct_type, 'unknown' ) == "10" || get_option( $cs_opt_acct_type, 'unknown' ) == "11" ) { // We are the js-api plugin type.
+
+					// These are all of the sections that we can just blanket remove when we are a js-api type plugin.
+					if( $item['menu_slug'] == "cs_plugin_admin_domains" ) { unset($menu[$key]); }
+					if( $item['menu_slug'] == "cs_plugin_admin_emails" ) { unset($menu[$key]); }
+					if( $item['menu_slug'] == "cs_plugin_product_config_direct" ) { unset($menu[$key]); }
+
+				} else { // We are not the js-api plugin type.
+					
+					// Just remove the js-api settings menu item.
+					if( $item['menu_slug'] == "cs_plugin_admin_js_api" ) { unset($menu[$key]); }
+					
 				}
 			}
 			

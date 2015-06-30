@@ -391,6 +391,15 @@
 			'server' => true,
 			'request' => 'plugin_manager'
 		),
+		'JS Api' => array(  // JS Api Settings
+			'level' => 'sub',
+			'menu_slug' => 'cs_plugin_admin_js_api',
+			'parent_slug' => 'cs_plugin_admin',
+			'page_title' => 'ClickSold < JS Api',
+			'callback' => 'cs_generated_form',
+			'server' => true,
+			'request' => 'js_api_manager'
+		),
 		'Upgrade!' => array(
 			'level' => 'sub',
 			'menu_slug' => 'cs_plugin_product_config_direct',

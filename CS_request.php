@@ -300,6 +300,11 @@ class CS_request {
 				$parameters[ self::cs_org_req_param_name_prefix . '_' . $sec_num ] = $sec_cs_org_req_value; // Format is cs_org_req_n => org_req (where n is the section)
 			}
 		}else{
+			
+			/**
+			 * 2015-06-24 EZ - This appears very wrong. What happens here is that all of the $parameters values that we've carefully compiled are blown away by the cs_org_req_arr[0] query string values.
+			 *                 This appears to be necessary to correctly load captcha requests but any GET based requests that need authentication will not work.
+			 */
 			parse_str($this->cs_org_req_arr[ 0 ], $parameters);
 		}
 		
@@ -331,7 +336,6 @@ class CS_request {
 			}
 		}
 		
-		//error_log(print_r($parameters, true));
 		//echo "CS_request about to hit \"" . $this->proxy_server . "\"<br>";
 
 		// We need to send the original user-agent string for headers that have behaviors of "conditional comments" not handled by the WordPress API
