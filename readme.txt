@@ -58,6 +58,10 @@ Just go to http://www.clicksold.com/sign-up/ and register. We'll email you a num
 
 == Changelog ==
 
+
+= 1.69 =
+* Fix some warnings.
+
 = 1.68 =
 * Added support for JS Api based plugins.
 

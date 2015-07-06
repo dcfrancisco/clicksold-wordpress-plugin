@@ -2,13 +2,13 @@
 /*
 Plugin Name: ClickSold IDX
 Author: ClickSold | <a href="http://www.ClickSold.com">Visit plugin site</a>
-Version: 1.68
+Version: 1.69
 Description: This plugin allows you to have a full map-based MLS&reg; search on your website, along with a bunch of other listing tools. If you need wordpress hosting go to <a href="http://www.clicksold.com/">www.ClickSold.com</a> to sign up for an account. Alternatively you can sign up for an account directly from the WP admin area, ClickSold(Menu) -> My Account -> Plugin Activation (Tab).
 Author URI: http://www.ClickSold.com/
 */
 /** NOTE NOTE NOTE NOTE ---------------------- The plugin version here must match what is in the header just above -----------------------*/
 global $cs_plugin_version;
-$cs_plugin_version = '1.68';
+$cs_plugin_version = '1.69';
 
 global $cs_plugin_type;
 $cs_plugin_type = 'cs_listings_plugin';
@@ -186,7 +186,11 @@ if(! function_exists('cs_init_session') ) {
 	function cs_init_session() {
 
 		if( !get_option( 'cs_opt_use_cookies_instead_of_sessions', 0 ) ) { // Use regular sessions.
-			if(!session_id()){
+			
+			// Don't attempt to start the session if it will not work (thus preventing the warning from showing up).
+			// 2015-07-06 EZ - had to add the headers_sent() check here cause some sites with warnings turned on send the output to the browser too soon and therefore generate a warning here. NOTE this won't work
+			//                 100% correctly in these cases, it's just to prevent the error from showing up which gets blamed on us becasue our plugin appears in the error message.
+			if( !session_id() && !headers_sent() ){
 				session_start();
 			}
 		} else { // Use cookie based user tracking (for hosts that don't support php sessions).

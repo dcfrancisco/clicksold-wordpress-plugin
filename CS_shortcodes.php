@@ -183,7 +183,7 @@ class CS_shortcodes {
 	 * $content - the content of the shortcode if the shortcode is being used in the enclosing form.
 	 * $tag - the shortcode name.
 	 */
-	public function cs_response_shortcode_handler($atts, $content, $tag) {
+	public static function cs_response_shortcode_handler($atts, $content, $tag) {
 		global $cs_response;
 		global $cs_delayed_shortcodes_captured_values; // Will capture our shortcode output if the cs_delayed_shortcodes option is set.
 		
